@@ -249,6 +249,105 @@ input::placeholder {
   color: #b0b7c0;
 }
 
+/* ─── Stepper input (age / weight) ──────────────────────────────── */
+.stepper-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  height: 34px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.stepper-input:focus-within {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(13, 115, 119, 0.12);
+}
+
+.stepper-input.stepper-error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.12);
+}
+
+.stepper-input.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--surface-alt);
+}
+
+.stepper-btn {
+  width: 32px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--surface-alt);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+  user-select: none;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: var(--teal-light);
+  color: var(--teal);
+}
+
+.stepper-btn:active:not(:disabled) {
+  background: var(--teal-mid);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepper-value {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none !important;
+  border-radius: 0 !important;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: transparent;
+  outline: none;
+  box-shadow: none !important;
+  padding: 0 4px;
+  -moz-appearance: textfield;
+}
+
+.stepper-value::-webkit-outer-spin-button,
+.stepper-value::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.stepper-display {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal);
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+/* ─── Field validation hints ────────────────────────────────────── */
+.field-error-hint {
+  color: var(--danger);
+  font-weight: 500;
+  font-size: 10px;
+}
+
 textarea {
   width: 100%;
   padding: 6px 8px;

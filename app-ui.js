@@ -56,6 +56,67 @@
     _toastTimer = setTimeout(() => el.classList.remove('visible'), 2000);
   }
 
+  // ─── DOMAIN FILTERING BY PATIENT CONTEXT ────────────────────────
+  // Returns which domains are irrelevant for the current patient
+  function getExcludedDomains() {
+    const s = app.state;
+    const excluded = new Set();
+
+    // Male patients: exclude women's health & obstetrics
+    if (s.sex === 'male') {
+      excluded.add('womens-health');
+      excluded.add('obstetrics');
+    }
+
+    // Children (age < 13 or child preset): exclude certain adult domains
+    const isChild = s.patientPresetId === 'child' || (s.age > 0 && s.age < 13);
+    if (isChild) {
+      excluded.add('womens-health');
+      excluded.add('obstetrics');
+      excluded.add('urology');         // prostate/ED not relevant
+      excluded.add('geriatrics');      // geriatrics not relevant
+    }
+
+    // Non-child: exclude pediatrics domain
+    if (!isChild && s.age >= 13) {
+      excluded.add('pediatrics');
+    }
+
+    // Men: exclude gynecology subtype but don't block the whole STI domain
+    // Older adults: deprioritize pediatrics (already handled above)
+
+    // Pregnancy = yes: exclude domains with mostly contraindicated content
+    // (handled by rules, not exclusion — keep domains visible)
+
+    return excluded;
+  }
+
+  // Check if current domain selection conflicts with patient context
+  function isDomainConflict() {
+    const excluded = getExcludedDomains();
+    return app.state.domain && excluded.has(app.state.domain);
+  }
+
+  // Get age validation state for current preset
+  function getAgeValidation() {
+    const s = app.state;
+    const preset = s.patientPresetId;
+    const age = s.age;
+
+    if (!preset || age <= 0) return null;
+
+    if ((preset === 'adult-f' || preset === 'adult-m') && age < 13) {
+      return { error: true, msg: 'Age must be 13+ for adult preset' };
+    }
+    if (preset === 'older' && age < 60) {
+      return { error: true, msg: 'Age must be 60+ for older preset' };
+    }
+    if (preset === 'child' && age > 12) {
+      return { error: true, msg: 'Age must be 12 or under for child preset' };
+    }
+    return null;
+  }
+
   function isReady() {
     const s = app.state;
     if (s.workflowMode === 'lookup') return false;
@@ -63,6 +124,7 @@
     if (s.workflowMode === 'guided' && !s.condition) return false;
     if (s.workflowMode === 'template' && !s.templateId) return false;
     if (!s.region || !s.emrType || !s.policyModel) return false;
+    if (getAgeValidation()?.error) return false;
     return true;
   }
 
@@ -99,10 +161,37 @@
     }
 
     const ageDisabled = s.patientPresetId === 'child' && app._childBucket;
+    const ageVal = getAgeValidation();
+
     h += `<div class="section-label">Demographics</div>`;
     h += `<div class="field-row">`;
-    h += `<div class="field"><span>Age${ageDisabled ? ' (set by range)' : ''}</span><input type="number" class="input-sm" min="0" max="120" step="any" value="${s.age}" data-number-field="age" ${ageDisabled ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} /></div>`;
-    h += `<div class="field"><span>Weight (kg)</span><input type="number" class="input-sm" min="1" max="300" value="${s.weight}" data-number-field="weight" /></div>`;
+
+    // Age field with stepper and validation
+    h += `<div class="field">`;
+    if (ageDisabled) {
+      const bucket = CHILD_AGE_BUCKETS.find(b => b.id === app._childBucket);
+      h += `<span>Age <span style="font-weight:400;color:var(--teal)">(${escape(bucket?.label || 'range')})</span></span>`;
+      h += `<div class="stepper-input disabled"><span class="stepper-display">${escape(bucket?.label || '-')}</span></div>`;
+    } else {
+      h += `<span>Age${ageVal ? ` <span class="field-error-hint">${escape(ageVal.msg)}</span>` : ''}</span>`;
+      h += `<div class="stepper-input${ageVal?.error ? ' stepper-error' : ''}">`;
+      h += `<button type="button" class="stepper-btn" data-stepper="age" data-dir="-1" ${s.age <= 0 ? 'disabled' : ''}>-</button>`;
+      h += `<input type="number" class="stepper-value" min="0" max="120" step="1" value="${s.age || ''}" placeholder="0" data-number-field="age" />`;
+      h += `<button type="button" class="stepper-btn" data-stepper="age" data-dir="1">+</button>`;
+      h += `</div>`;
+    }
+    h += `</div>`;
+
+    // Weight field with stepper
+    h += `<div class="field">`;
+    h += `<span>Weight (kg)</span>`;
+    h += `<div class="stepper-input">`;
+    h += `<button type="button" class="stepper-btn" data-stepper="weight" data-dir="-1" ${s.weight <= 0 ? 'disabled' : ''}>-</button>`;
+    h += `<input type="number" class="stepper-value" min="1" max="300" step="1" value="${s.weight || ''}" placeholder="0" data-number-field="weight" />`;
+    h += `<button type="button" class="stepper-btn" data-stepper="weight" data-dir="1">+</button>`;
+    h += `</div>`;
+    h += `</div>`;
+
     h += `</div>`;
 
     h += `<div class="section-label">Sex</div>`;
@@ -244,10 +333,12 @@
 
   function renderGuidedSearchResults(query) {
     const q = query.toLowerCase();
+    const excluded = getExcludedDomains();
     const results = [];
 
-    // Search conditions
+    // Search conditions (filtered by patient context)
     app.data.CONDITIONS.forEach((c) => {
+      if (excluded.has(c.domain)) return;
       const label = text(c);
       const summary = text(c.summary);
       const domainLabel = text(app.getDomainMeta(c.domain));
@@ -264,8 +355,9 @@
       }
     });
 
-    // Search subtypes too
+    // Search subtypes too (filtered by patient context)
     app.config.SUBTYPES.forEach((st) => {
+      if (excluded.has(st.domain)) return;
       const label = text(st);
       if (label.toLowerCase().includes(q) && !results.some((r) => r.type === 'subtype' && r.value === st.value)) {
         const domainLabel = text(app.getDomainMeta(st.domain));
@@ -311,12 +403,15 @@
 
   function renderGuidedBrowse() {
     const s = app.state;
+    const excluded = getExcludedDomains();
     let h = '';
 
-    // Step 1: Clinical area (domain)
+    // Step 1: Clinical area (domain) — filtered by patient context
     h += `<div class="section-label" style="margin-top:8px">1. Clinical area</div>`;
     h += `<div class="chip-group">`;
     app.config.DOMAINS.forEach((d) => {
+      const isExcluded = excluded.has(d.value);
+      if (isExcluded) return; // hide irrelevant domains entirely
       h += `<button type="button" class="chip chip-lg ${s.domain === d.value ? 'active' : ''}" data-set-field="domain" data-value="${d.value}">${escape(text(d))}</button>`;
     });
     h += `</div>`;
@@ -1385,6 +1480,13 @@
       app.state.patientPresetId = '';
       if (value === 'male') app.state.pregnancy = 'na';
       if (value === 'female' && app.state.pregnancy === 'na') app.state.pregnancy = 'no';
+      // Clear domain if it conflicts with new sex
+      if (app.state.domain && getExcludedDomains().has(app.state.domain)) {
+        app.state.domain = '';
+        app.state.subtype = '';
+        app.state.condition = '';
+        app.state.symptoms = [];
+      }
     } else {
       app.state[field] = value;
       // Reset subRegion when region changes
@@ -1403,7 +1505,6 @@
     app.state.sex = p.sex;
     app.state.pregnancy = p.pregnancy;
     if (p.isChild) {
-      // Show age bucket picker — don't set age/weight yet
       app._childBucket = null;
       app.state.age = 0;
       app.state.weight = 0;
@@ -1412,6 +1513,13 @@
       app.state.age = p.age;
       app.state.weight = p.weight;
     }
+    // Clear domain if it now conflicts with the new preset
+    if (app.state.domain && getExcludedDomains().has(app.state.domain)) {
+      app.state.domain = '';
+      app.state.subtype = '';
+      app.state.condition = '';
+      app.state.symptoms = [];
+    }
     render();
   }
 
@@ -1419,8 +1527,19 @@
     const b = CHILD_AGE_BUCKETS.find((x) => x.id === bucketId);
     if (!b) return;
     app._childBucket = b.id;
-    app.state.age = b.age;
-    app.state.weight = b.weight;
+    // Don't fill age into the input — keep it greyed out
+    // Store the bucket's representative values for internal calculations
+    app._childBucketAge = b.age;
+    app._childBucketWeight = b.weight;
+    app.state.age = b.age;      // used by engine for scoring/rules
+    app.state.weight = b.weight; // used by engine for dosing
+    // Clear domain if it now conflicts
+    if (app.state.domain && getExcludedDomains().has(app.state.domain)) {
+      app.state.domain = '';
+      app.state.subtype = '';
+      app.state.condition = '';
+      app.state.symptoms = [];
+    }
     render();
   }
 
@@ -1556,6 +1675,25 @@
       const egfr = e.target.closest('[data-egfr-preset]');
       if (egfr) return applyEgfrPreset(egfr.dataset.egfrPreset);
 
+      const stepper = e.target.closest('[data-stepper]');
+      if (stepper) {
+        const field = stepper.dataset.stepper;
+        const dir = Number(stepper.dataset.dir);
+        const step = field === 'weight' ? 1 : 1;
+        let val = (app.state[field] || 0) + dir * step;
+        val = Math.max(0, val);
+        if (field === 'age') val = Math.min(val, 120);
+        if (field === 'weight') val = Math.min(val, 300);
+        app.state[field] = val;
+        if (app.state.domain && getExcludedDomains().has(app.state.domain)) {
+          app.state.domain = '';
+          app.state.subtype = '';
+          app.state.condition = '';
+          app.state.symptoms = [];
+        }
+        return render();
+      }
+
       const setBtn = e.target.closest('[data-set-field]');
       if (setBtn) return updateState(setBtn.dataset.setField, setBtn.dataset.value);
 
@@ -1612,18 +1750,15 @@
       const numField = e.target.dataset.numberField;
       if (numField) {
         let val = Number(e.target.value || 0);
-        if (numField === 'age') {
-          // Enforce preset age limits
-          if (app.state.patientPresetId === 'adult-f' || app.state.patientPresetId === 'adult-m') {
-            val = Math.max(val, 13);
-          } else if (app.state.patientPresetId === 'older') {
-            val = Math.max(val, 60);
-          } else if (app.state.patientPresetId === 'child') {
-            val = Math.min(val, 12);
-          }
+        // Don't clamp — let it through, validation will show a warning
+        app.state[numField] = Math.max(0, val);
+        // Check if domain conflicts after age change
+        if (numField === 'age' && app.state.domain && getExcludedDomains().has(app.state.domain)) {
+          app.state.domain = '';
+          app.state.subtype = '';
+          app.state.condition = '';
+          app.state.symptoms = [];
         }
-        app.state[numField] = val;
-        if (numField === 'age' || numField === 'weight') app.state.patientPresetId = app.state.patientPresetId || '';
         return render();
       }
       const selectField = e.target.dataset?.selectField;
