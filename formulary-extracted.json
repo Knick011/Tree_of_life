@@ -1,0 +1,4698 @@
+{
+  "Allergy & Immunology": {
+    "Allergic Rhinitis": [
+      {
+        "line": "1st",
+        "drugClass": "Antihistamine",
+        "drug": "Cetirizine",
+        "dose": "10 mg once daily",
+        "comments": "Relieves sneezing, itching, rhinorrhea",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Intranasal corticosteroid",
+        "drug": "Fluticasone nasal spray",
+        "dose": "2 sprays per nostril once daily",
+        "comments": "More effective for nasal congestion",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Leukotriene receptor antagonist",
+        "drug": "Montelukast",
+        "dose": "10 mg once daily",
+        "comments": "Adjunct therapy; consider in asthma comorbidity",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Anaphylaxis": [
+      {
+        "line": "1st",
+        "drugClass": "Adrenergic agonist",
+        "drug": "Epinephrine",
+        "dose": "0.3 mg IM into thigh; repeat every 5–15 min if needed",
+        "comments": "First-line life-saving intervention",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "H1 antihistamine",
+        "drug": "Diphenhydramine",
+        "dose": "25–50 mg IV/IM or orally",
+        "comments": "Adjunct to epinephrine for cutaneous symptoms",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Corticosteroid",
+        "drug": "Methylprednisolone",
+        "dose": "125 mg IV once",
+        "comments": "May prevent biphasic reaction",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Angioedema": [
+      {
+        "line": "1st",
+        "drugClass": "Antihistamine",
+        "drug": "Cetirizine",
+        "dose": "10 mg daily",
+        "comments": "For histamine-mediated angioedema",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Epinephrine",
+        "drug": "Epinephrine auto-injector",
+        "dose": "0.3 mg IM for severe swelling or airway compromise",
+        "comments": "Use immediately if tongue or throat swelling",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Corticosteroid",
+        "drug": "Prednisone",
+        "dose": "40–60 mg daily for 3–5 days",
+        "comments": "Adjunct therapy to reduce inflammation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Food Allergy": [
+      {
+        "line": "1st",
+        "drugClass": "Anaphylaxis prevention",
+        "drug": "Avoidance of allergen",
+        "dose": "—",
+        "comments": "Strict avoidance and education",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Symptomatic treatment",
+        "drug": "Cetirizine",
+        "dose": "10 mg once daily",
+        "comments": "For mild reactions such as itching or urticaria",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Self-injectable epinephrine",
+        "drug": "Epinephrine auto-injector",
+        "dose": "0.3 mg IM in thigh at first sign of anaphylaxis; may repeat after 5–15 min",
+        "comments": "Carry at all times; lifesaving for severe reactions",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Cardiology": {
+    "Atrial Fibrillation/Flutter": [
+      {
+        "line": "1st",
+        "drugClass": "Rate control – beta blocker",
+        "drug": "Metoprolol tartrate",
+        "dose": "25–50 mg orally twice daily; titrate to HR <100 bpm",
+        "comments": "Preferred for rate control in AF",
+        "citation": "【495624693244496†L94-L113】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Rate control – non‑DHP CCB",
+        "drug": "Diltiazem",
+        "dose": "120–360 mg/day in divided doses or extended release",
+        "comments": "Alternative rate control agent; avoid in heart failure",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Rate control – cardiac glycoside",
+        "drug": "Digoxin",
+        "dose": "0.125–0.25 mg orally once daily",
+        "comments": "Useful in sedentary patients; monitor levels",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Rhythm control – antiarrhythmic",
+        "drug": "Amiodarone",
+        "dose": "Load 800–1,600 mg/day until arrhythmia controlled then 200–400 mg/day maintenance",
+        "comments": "Use when rate control fails or rhythm control desired; multiple adverse effects",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "1st (stroke prevention)",
+        "drugClass": "Anticoagulation – direct oral anticoagulant",
+        "drug": "Apixaban (Eliquis) / Rivaroxaban (Xarelto) / Dabigatran (Pradaxa) / Edoxaban (Lixiana)",
+        "dose": "Apixaban 5 mg BID (reduce to 2.5 mg BID if ≥80 years, ≤60 kg or creatinine ≥133 μmol/L); Rivaroxaban 20 mg once daily (15 mg with CrCl 15–49 mL/min); Dabigatran 150 mg BID (110 mg BID for age ≥80 or high bleeding risk); Edoxaban 60 mg once daily (30 mg once daily if CrCl 15–50 mL/min)",
+        "comments": "Preferred anticoagulation for non‑valvular AF with CHADS‑65/CHADS‑VASc stroke risk; evaluate renal function and bleeding risk; do not use in mechanical valves or moderate–severe mitral stenosis",
+        "citation": "【771449252329841†L867-L887】",
+        "specialist": "No",
+        "brands": "Eliquis; Xarelto; Pradaxa; Lixiana"
+      },
+      {
+        "line": "2nd (stroke prevention)",
+        "drugClass": "Anticoagulation – vitamin K antagonist",
+        "drug": "Warfarin (Coumadin)",
+        "dose": "Adjust dose to maintain INR 2–3; start 1–5 mg orally daily and titrate based on INR with frequent monitoring; overlap with heparin in some cases",
+        "comments": "Use when DOAC contraindicated (mechanical heart valve, moderate/severe mitral stenosis, severe renal impairment, cost issues); requires regular INR monitoring and dietary counselling",
+        "citation": "【771449252329841†L867-L887】",
+        "specialist": "No",
+        "brands": "Coumadin"
+      }
+    ],
+    "Chest Pain (initial)": [
+      {
+        "line": "1st",
+        "drugClass": "Organic nitrate",
+        "drug": "Nitroglycerin SL",
+        "dose": "0.3–0.6 mg sublingually every 5 minutes up to 3 doses",
+        "comments": "Rapid relief of ischemic chest pain",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antiplatelet",
+        "drug": "Chewable Aspirin",
+        "dose": "160–325 mg chewed once at presentation",
+        "comments": "Reduces mortality in suspected acute coronary syndrome",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Beta blocker",
+        "drug": "Metoprolol",
+        "dose": "5 mg IV every 5 minutes up to 15 mg then 25–50 mg orally every 6 hours",
+        "comments": "Use if hypertensive/tachycardic; avoid in acute heart failure",
+        "citation": "【495624693244496†L94-L113】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Dyslipidemia": [
+      {
+        "line": "1st",
+        "drugClass": "Statin",
+        "drug": "Atorvastatin (Lipitor)",
+        "dose": "Start 10–20 mg once daily; maintenance 10–80 mg/day",
+        "comments": "Cornerstone therapy; titrate to LDL target",
+        "citation": "【352165482964793†L96-L100】",
+        "specialist": "No",
+        "brands": "Lipitor"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Cholesterol absorption inhibitor",
+        "drug": "Ezetimibe",
+        "dose": "10 mg orally once daily",
+        "comments": "Add if statin not achieving goal or not tolerated",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "PCSK9 inhibitor",
+        "drug": "Alirocumab (Praluent)",
+        "dose": "75 mg subcutaneous every 2 weeks; may increase to 150 mg",
+        "comments": "Use in very high risk patients when LDL remains high",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Praluent"
+      },
+      {
+        "line": "4th",
+        "drugClass": "Bile acid sequestrant",
+        "drug": "Cholestyramine",
+        "dose": "4 g orally once or twice daily, titrating to 12–16 g/day",
+        "comments": "Adjunct when statins and ezetimibe inadequate",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Edema": [
+      {
+        "line": "1st",
+        "drugClass": "Loop diuretic",
+        "drug": "Furosemide",
+        "dose": "20–80 mg orally once daily, titrate per response",
+        "comments": "Relieves volume overload in HF and renal disease",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Thiazide diuretic",
+        "drug": "Chlorthalidone",
+        "dose": "25 mg once daily; up to 50 mg/day",
+        "comments": "May potentiate loop diuretics in refractory edema",
+        "citation": "【149856151471849†L87-L94】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Mineralocorticoid antagonist",
+        "drug": "Spironolactone",
+        "dose": "25–100 mg orally once daily",
+        "comments": "Useful in cirrhotic ascites; monitor potassium",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Heart Failure": [
+      {
+        "line": "1st",
+        "drugClass": "ACE inhibitor",
+        "drug": "Ramipril",
+        "dose": "Start 2.5 mg daily; titrate to 5–10 mg twice daily",
+        "comments": "Foundation therapy in HFrEF; monitor renal function",
+        "citation": "【308310583336387†L88-L93】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "1st",
+        "drugClass": "Beta blocker",
+        "drug": "Metoprolol succinate",
+        "dose": "Start 12.5–25 mg once daily; titrate to 200 mg/day",
+        "comments": "Use evidence-based beta blocker; start low and go slow",
+        "citation": "【495624693244496†L94-L113】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "ARNI",
+        "drug": "Sacubitril/valsartan (Entresto)",
+        "dose": "49/51 mg orally twice daily; titrate to 97/103 mg BID",
+        "comments": "Replace ACE/ARB when tolerated; requires washout of ACE inhibitor",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Entresto"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Mineralocorticoid antagonist",
+        "drug": "Spironolactone (Aldactone)",
+        "dose": "12.5–25 mg orally once daily; up to 50 mg/day",
+        "comments": "Add in symptomatic HFrEF; monitor potassium and creatinine",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Aldactone"
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Loop diuretic",
+        "drug": "Furosemide (Lasix)",
+        "dose": "20–80 mg orally once daily; titrate per volume status",
+        "comments": "For fluid overload; adjust dose to achieve euvolemia",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Lasix"
+      },
+      {
+        "line": "4th",
+        "drugClass": "SGLT2 inhibitor",
+        "drug": "Dapagliflozin",
+        "dose": "10 mg orally once daily",
+        "comments": "Improves cardiovascular outcomes in HFrEF",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Hypertension": [
+      {
+        "line": "1st",
+        "drugClass": "ACE inhibitor",
+        "drug": "Ramipril (Altace)",
+        "dose": "Start 2.5 mg orally daily; titrate to 2.5–20 mg daily in 1–2 doses",
+        "comments": "Preferred in diabetes/CKD; monitor creatinine & potassium",
+        "citation": "【308310583336387†L88-L93】",
+        "specialist": "No",
+        "brands": "Altace"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "ARB",
+        "drug": "Losartan (Cozaar)",
+        "dose": "Start 50 mg orally daily; titrate to 50–100 mg/day",
+        "comments": "Use if ACE‑i intolerant; monitor kidney function & potassium",
+        "citation": "【405652466278764†L91-L117】",
+        "specialist": "No",
+        "brands": "Cozaar"
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Thiazide diuretic",
+        "drug": "Chlorthalidone",
+        "dose": "Initial 25 mg once daily; maintain 25–100 mg/day",
+        "comments": "Useful in elderly or salt‑sensitive hypertension",
+        "citation": "【149856151471849†L87-L94】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Calcium channel blocker",
+        "drug": "Amlodipine (Norvasc)",
+        "dose": "5 mg once daily; max 10 mg/day",
+        "comments": "Add when BP uncontrolled; watch for edema and flushing",
+        "citation": "【119034676548720†L97-L103】",
+        "specialist": "No",
+        "brands": "Norvasc"
+      }
+    ],
+    "Hypertension – Combination Therapy": [
+      {
+        "line": "1st Line",
+        "drugClass": "ACE inhibitor + CCB",
+        "drug": "Perindopril/amlodipine (Coveram)",
+        "dose": "5/5 mg once daily, titrate to 10/10 mg once daily",
+        "comments": "Fixed‑dose combo improves adherence; for patients uncontrolled on monotherapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Coveram"
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "ARB + thiazide diuretic",
+        "drug": "Losartan/hydrochlorothiazide (Hyzaar)",
+        "dose": "50/12.5 mg once daily, titrate to 100/25 mg once daily",
+        "comments": "Consider in volume‑dependent hypertension",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Hyzaar"
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "ACE inhibitor + diuretic",
+        "drug": "Perindopril/indapamide (Coversyl Plus)",
+        "dose": "4/1.25 mg once daily, titrate as needed",
+        "comments": "Alternate combination when CCB not tolerated",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Coversyl Plus"
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Triple therapy",
+        "drug": "Perindopril/indapamide/amlodipine (Triplixam)",
+        "dose": "5/1.25/5 mg once daily; adjust to 10/2.5/10 mg",
+        "comments": "For resistant hypertension; monitor electrolytes and renal function",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Triplixam"
+      }
+    ],
+    "Hypertensive Emergency/Urgency": [
+      {
+        "line": "1st",
+        "drugClass": "Central alpha agonist",
+        "drug": "Clonidine",
+        "dose": "0.1–0.2 mg orally then 0.1 mg every hour until goal or max 0.7 mg",
+        "comments": "Short-term BP lowering while awaiting transfer",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "ACE inhibitor (short acting)",
+        "drug": "Captopril",
+        "dose": "25 mg orally; may repeat every 1–2 hours",
+        "comments": "Useful for oral management of severe hypertension",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Mixed alpha/beta blocker",
+        "drug": "Labetalol",
+        "dose": "20 mg IV over 2 minutes; may repeat 40–80 mg every 10 min (max 300 mg)",
+        "comments": "Used in emergency settings; not typically in office",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Peripheral Arterial Disease": [
+      {
+        "line": "1st",
+        "drugClass": "Antiplatelet",
+        "drug": "Clopidogrel (Plavix)",
+        "dose": "75 mg orally once daily",
+        "comments": "Preferred for PAD; reduces cardiovascular events",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Plavix"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antiplatelet",
+        "drug": "Aspirin",
+        "dose": "81–325 mg orally once daily",
+        "comments": "Alternative antiplatelet if clopidogrel not used",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Phosphodiesterase inhibitor",
+        "drug": "Cilostazol",
+        "dose": "100 mg orally twice daily",
+        "comments": "For intermittent claudication; contraindicated in heart failure",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Statin",
+        "drug": "Atorvastatin",
+        "dose": "10–80 mg once daily",
+        "comments": "All patients with PAD should receive statins",
+        "citation": "【352165482964793†L96-L100】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Stable Angina/CAD": [
+      {
+        "line": "1st",
+        "drugClass": "Beta blocker",
+        "drug": "Metoprolol tartrate",
+        "dose": "50 mg orally twice daily; titrate to 100–200 mg/day",
+        "comments": "Reduces myocardial oxygen demand; avoid in bradycardia",
+        "citation": "【495624693244496†L94-L113】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Nitrate",
+        "drug": "Isosorbide mononitrate",
+        "dose": "30–60 mg extended release once daily; max 120 mg/day",
+        "comments": "Provides symptomatic relief; ensure nitrate‑free interval",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Calcium channel blocker",
+        "drug": "Amlodipine",
+        "dose": "5–10 mg once daily",
+        "comments": "Use when beta blockers contraindicated or ineffective",
+        "citation": "【119034676548720†L97-L103】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Antianginal agent",
+        "drug": "Ranolazine (Ranexa)",
+        "dose": "500 mg orally twice daily, up to 1,000 mg BID",
+        "comments": "Adjunct for chronic angina when other agents insufficient",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Ranexa"
+      }
+    ]
+  },
+  "Dermatology": {
+    "Acne Vulgaris": [
+      {
+        "line": "1st Line",
+        "drugClass": "Topical antimicrobial",
+        "drug": "Benzoyl peroxide 2.5–10% gel/wash",
+        "dose": "Apply thin layer once daily, increase to twice daily as tolerated",
+        "comments": "Start at low concentration for sensitive skin",
+        "citation": "【869000344474577†L50-L58】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Topical combination",
+        "drug": "Adapalene 0.1% gel + benzoyl peroxide 2.5% (Epiduo)",
+        "dose": "Apply thin layer once daily at bedtime",
+        "comments": "Combines retinoid and antimicrobial; may cause irritation",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Epiduo"
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Oral antibiotic",
+        "drug": "Doxycycline 100 mg",
+        "dose": "100 mg orally twice daily for 3–4 months",
+        "comments": "Combine with topical benzoyl peroxide to reduce resistance",
+        "citation": "【901791008482587†L185-L200】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Oral antibiotic (tetracycline)",
+        "drug": "Minocycline",
+        "dose": "100 mg orally once or twice daily (1 mg/kg/day) for up to 12 weeks",
+        "comments": "Alternative to doxycycline for moderate to severe inflammatory acne; limit duration to minimise adverse effects; monitor for liver and vestibular side effects",
+        "citation": "【858838203853609†L155-L170】【858838203853609†L176-L184】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Systemic retinoid",
+        "drug": "Isotretinoin capsules",
+        "dose": "0.5–1 mg/kg/day orally in divided doses for 4–6 months",
+        "comments": "Requires specialist initiation, pregnancy prevention program, monitoring of lipids and liver function",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "Cellulitis": [
+      {
+        "line": "1st",
+        "drugClass": "First-generation cephalosporin",
+        "drug": "Cephalexin",
+        "dose": "500 mg four times daily for 5–7 days",
+        "comments": "Covers streptococci and MSSA",
+        "citation": "【162814939082452†L108-L113】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Lincosamide",
+        "drug": "Clindamycin",
+        "dose": "300 mg three times daily for 5–7 days",
+        "comments": "Use when MRSA suspected or beta-lactam allergy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Cutaneous Warts (verruca)": [
+      {
+        "line": "1st Line",
+        "drugClass": "Keratolytic",
+        "drug": "Salicylic acid 5–27% solution or 17–40% patch",
+        "dose": "After soaking, apply to wart once or twice daily for up to 12 weeks until wart resolved",
+        "comments": "Soften skin before application; protect surrounding skin",
+        "citation": "【485474604841945†L745-L751】【485474604841945†L789-L817】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Cryotherapy",
+        "drug": "Liquid nitrogen cryotherapy",
+        "dose": "Freeze wart for 10–20 s; repeat every 2–3 weeks for up to 3–4 treatments",
+        "comments": "Performed in clinic; first‑line along with salicylic acid",
+        "citation": "【794091141030875†L28-L31】",
+        "specialist": "Yes",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Other modalities",
+        "drug": "Cantharidin, immunotherapy, surgical removal",
+        "dose": "Applied by clinician; frequency varies",
+        "comments": "Reserved for recalcitrant warts",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "Eczema": [
+      {
+        "line": "1st",
+        "drugClass": "Emollient",
+        "drug": "Moisturizer",
+        "dose": "Apply liberally multiple times daily",
+        "comments": "Cornerstone therapy; avoid irritants",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "1st",
+        "drugClass": "Emollient",
+        "drug": "Keri lotion, Aveeno (colloidal oatmeal)",
+        "dose": "Apply liberally to entire body at least twice daily, especially after bathing; reapply as needed to maintain hydration",
+        "comments": "Alternative commercial emollients for eczema management; choose unscented, hypoallergenic products",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Keri, Aveeno"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Topical corticosteroid",
+        "drug": "Hydrocortisone 1%",
+        "dose": "Apply thin layer twice daily",
+        "comments": "Use for acute flares; limit duration",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Eczema/Atopic Dermatitis": [
+      {
+        "line": "1st Line",
+        "drugClass": "Topical corticosteroid – Mild",
+        "drug": "Hydrocortisone 1% cream/ointment",
+        "dose": "Apply thin layer to affected area once or twice daily; use ≤ 7 days",
+        "comments": "Use lowest effective potency; avoid face/genitals long‑term",
+        "citation": "【445003410310477†L65-L90】【445003410310477†L129-L130】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Topical corticosteroid – Moderate",
+        "drug": "Betamethasone valerate 0.05% cream",
+        "dose": "Apply to affected area 1–2 times daily for up to 2 weeks",
+        "comments": "Stronger steroid for resistant flares; avoid prolonged use",
+        "citation": "【191048174454772†L70-L78】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Topical corticosteroid – Potent",
+        "drug": "Mometasone furoate 0.1% cream/ointment",
+        "dose": "Apply thin layer once daily; reassess if no improvement after 2 weeks",
+        "comments": "Use for short courses on trunk/limbs; avoid face/folds",
+        "citation": "【962577282859023†L450-L492】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Topical corticosteroid – Very potent",
+        "drug": "Clobetasol propionate 0.05% cream/ointment",
+        "dose": "Apply to affected areas once or twice daily for 1 week; maximum 4 weeks",
+        "comments": "Reserved for severe, lichenified eczema; specialist supervision",
+        "citation": "【864578466717145†L57-L63】",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "Fungal Infections – Candida": [
+      {
+        "line": "3rd",
+        "drugClass": "Azole antifungal",
+        "drug": "Fluconazole",
+        "dose": "150 mg once weekly for 2–3 weeks",
+        "comments": "For cutaneous candidiasis and tinea versicolor",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Fungal Infections – Tinea": [
+      {
+        "line": "1st",
+        "drugClass": "Topical allylamine",
+        "drug": "Terbinafine 1% cream",
+        "dose": "Apply once or twice daily for 1–4 weeks",
+        "comments": "Effective for dermatophyte infections",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Oral allylamine",
+        "drug": "Terbinafine",
+        "dose": "250 mg once daily for 6 weeks (nails)",
+        "comments": "For onychomycosis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Impetigo": [
+      {
+        "line": "1st",
+        "drugClass": "Topical antibiotic",
+        "drug": "Mupirocin 2% ointment",
+        "dose": "Apply to lesions three times daily for 5 days",
+        "comments": "For limited non-bullous impetigo",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "First-generation cephalosporin",
+        "drug": "Cephalexin",
+        "dose": "500 mg four times daily for 7 days",
+        "comments": "Treats extensive or bullous impetigo",
+        "citation": "【162814939082452†L108-L113】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Pityriasis Versicolor": [
+      {
+        "line": "1st Line",
+        "drugClass": "Topical antifungal",
+        "drug": "Ketoconazole 2% shampoo or cream",
+        "dose": "Shampoo: apply once daily for 5 days; Cream: apply once or twice daily for 2–3 weeks",
+        "comments": "Advise patient to wash off shampoo after 5 minutes",
+        "citation": "【19808800710974†L80-L85】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Topical selenium compound",
+        "drug": "Selenium sulfide 2.5% lotion",
+        "dose": "Apply lotion to affected area for 10 minutes daily for 7 days",
+        "comments": "Alternative topical treatment",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Systemic antifungal",
+        "drug": "Fluconazole 300–400 mg",
+        "dose": "400 mg orally single dose or 300 mg weekly for 2 weeks",
+        "comments": "For extensive or recurrent disease",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "Psoriasis": [
+      {
+        "line": "1st",
+        "drugClass": "Topical corticosteroid",
+        "drug": "Betamethasone valerate 0.05% ointment",
+        "dose": "Apply thin layer once or twice daily",
+        "comments": "First-line for mild psoriasis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Vitamin D analog",
+        "drug": "Calcipotriol",
+        "dose": "Apply thin layer twice daily",
+        "comments": "Often used with topical steroid",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Systemic therapy",
+        "drug": "Methotrexate",
+        "dose": "15 mg orally or subcutaneously once weekly",
+        "comments": "For moderate to severe psoriasis; requires folic acid",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Scalp Psoriasis": [
+      {
+        "line": "1st Line",
+        "drugClass": "Keratolytic/vitamin D analogue",
+        "drug": "Tar or salicylic acid shampoo; calcipotriol + betamethasone foam",
+        "dose": "Use medicated shampoo 2–3 times/week; apply vitamin D–steroid foam once daily",
+        "comments": "Softens scales and reduces inflammation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Topical corticosteroid – Potent",
+        "drug": "Clobetasol shampoo (Etrivex)",
+        "dose": "Apply ~7.5 mL to dry scalp once daily, leave 15 minutes, then rinse; max 4 weeks",
+        "comments": "Very potent steroid for scalp; avoid prolonged use",
+        "citation": "【864578466717145†L117-L129】",
+        "specialist": "No",
+        "brands": "Etrivex"
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Systemic/phototherapy",
+        "drug": "Methotrexate, cyclosporine or biologic therapy",
+        "dose": "Dose varies; requires specialist assessment",
+        "comments": "For extensive refractory disease",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "Tinea Corporis/Pedis/Cruris (Ringworm/Athlete’s foot)": [
+      {
+        "line": "1st Line",
+        "drugClass": "Topical imidazole",
+        "drug": "Clotrimazole 1% cream",
+        "dose": "Apply to affected area twice daily for 2–4 weeks",
+        "comments": "Continue treatment for 1 week after lesions clear",
+        "citation": "【182240434774345†L52-L97】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Topical allylamine",
+        "drug": "Terbinafine 1% cream/gel/spray",
+        "dose": "Apply once or twice daily for 1–2 weeks",
+        "comments": "Shorter course than imidazoles",
+        "citation": "【647650061887560†L60-L72】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Oral allylamine",
+        "drug": "Terbinafine 250 mg tablet",
+        "dose": "250 mg orally once daily for 2–6 weeks",
+        "comments": "For extensive infection or onychomycosis",
+        "citation": "【647650061887560†L146-L149】",
+        "specialist": "Yes",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Oral azole",
+        "drug": "Fluconazole 150 mg",
+        "dose": "150 mg orally once weekly for 2–4 weeks",
+        "comments": "Alternative systemic therapy",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "Urticaria": [
+      {
+        "line": "1st",
+        "drugClass": "Non-sedating antihistamine",
+        "drug": "Cetirizine",
+        "dose": "10 mg once daily",
+        "comments": "First-line therapy; may double dose if needed",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "H2 blocker",
+        "drug": "Ranitidine",
+        "dose": "150 mg twice daily",
+        "comments": "Add-on for refractory symptoms",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Systemic corticosteroid",
+        "drug": "Prednisone",
+        "dose": "20–40 mg daily for 3–5 days",
+        "comments": "Short-term control of severe episodes",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "ENT & Oral": {
+    "Epistaxis": [
+      {
+        "line": "1st",
+        "drugClass": "Local pressure",
+        "drug": "Direct compression",
+        "dose": "—",
+        "comments": "Pinch nostrils for 10–15 minutes while leaning forward",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Topical vasoconstrictor",
+        "drug": "Oxymetazoline",
+        "dose": "2 sprays in affected nostril every 12 hours",
+        "comments": "Helps constrict nasal vessels",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Chemical cautery",
+        "drug": "Silver nitrate sticks",
+        "dose": "Apply to bleeding point for 10 seconds",
+        "comments": "For anterior bleeds that persist",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Oral Ulcers/Dental Infections": [
+      {
+        "line": "1st",
+        "drugClass": "Topical analgesic",
+        "drug": "Benzocaine gel",
+        "dose": "Apply to ulcer up to 4 times daily",
+        "comments": "Symptomatic relief",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Topical corticosteroid",
+        "drug": "Triamcinolone dental paste",
+        "dose": "Apply thin film 2–3 times daily",
+        "comments": "For recurrent aphthous ulcers",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Systemic antibiotic",
+        "drug": "Amoxicillin",
+        "dose": "500 mg orally three times daily for 5–7 days",
+        "comments": "For odontogenic infections",
+        "citation": "【343068470688223†L255-L258】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Otitis Externa": [
+      {
+        "line": "1st",
+        "drugClass": "Topical fluoroquinolone",
+        "drug": "Ciprofloxacin/dexamethasone ear drops",
+        "dose": "4 drops into affected ear twice daily for 7 days",
+        "comments": "Keep ear dry; avoid trauma",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Acidifying solution",
+        "drug": "Acetic acid 2% drops",
+        "dose": "5 drops 3–4 times daily",
+        "comments": "For mild external otitis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Otitis Media": [
+      {
+        "line": "1st",
+        "drugClass": "Aminopenicillin",
+        "drug": "Amoxicillin",
+        "dose": "500 mg orally three times daily for 5–7 days",
+        "comments": "First choice for acute otitis media",
+        "citation": "【343068470688223†L255-L258】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Beta-lactam/beta-lactamase inhibitor",
+        "drug": "Amoxicillin/clavulanate",
+        "dose": "875/125 mg orally twice daily for 5–7 days",
+        "comments": "Use when high-dose amoxicillin fails or risk factors present",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Pharyngitis/Tonsillitis": [
+      {
+        "line": "1st",
+        "drugClass": "Natural penicillin",
+        "drug": "Penicillin V",
+        "dose": "500 mg orally twice daily or 250 mg four times daily for 10 days",
+        "comments": "Treat only when Centor or FeverPAIN score ≥3; first-line narrow-spectrum antibiotic for confirmed or highly suspected streptococcal pharyngitis",
+        "citation": "【895233936349431†L268-L276】【895233936349431†L281-L286】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Cephalosporin",
+        "drug": "Cephalexin",
+        "dose": "500 mg orally twice daily for 10 days",
+        "comments": "Second-line for recurrent infection or if broader spectrum needed; use for 10 days",
+        "citation": "【895233936349431†L281-L286】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Macrolide",
+        "drug": "Azithromycin",
+        "dose": "500 mg on day 1 then 250 mg days 2–5",
+        "comments": "Macrolide option for penicillin allergy; 5-day regimen; reserve for allergy or intolerances",
+        "citation": "【895233936349431†L281-L286】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Beta-lactam/beta-lactamase inhibitor",
+        "drug": "Amoxicillin/clavulanate (Augmentin)",
+        "dose": "500/125 mg orally three times daily for 5–7 days",
+        "comments": "Treat only when Centor or FeverPAIN score ≥3; first-line narrow-spectrum antibiotic for confirmed or highly suspected streptococcal pharyngitis",
+        "citation": "【895233936349431†L268-L276】【895233936349431†L281-L286】",
+        "specialist": "No",
+        "brands": "Augmentin"
+      }
+    ],
+    "Sinusitis": [
+      {
+        "line": "1st",
+        "drugClass": "Supportive care",
+        "drug": "Saline irrigation & decongestant",
+        "dose": "—",
+        "comments": "Most cases viral; symptomatic care",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Aminopenicillin",
+        "drug": "Amoxicillin",
+        "dose": "500 mg orally three times daily for 5–7 days",
+        "comments": "Indicated for bacterial sinusitis",
+        "citation": "【343068470688223†L255-L258】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Tetracycline",
+        "drug": "Doxycycline",
+        "dose": "100 mg orally twice daily for 5–7 days",
+        "comments": "Alternative for beta-lactam allergy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Beta-lactam/beta-lactamase inhibitor",
+        "drug": "Amoxicillin/clavulanate (Augmentin)",
+        "dose": "500/125 mg orally three times daily for 5 days (alternative 875/125 mg twice daily)",
+        "comments": "For severe or high‑risk bacterial sinusitis or failure of first-line therapy; use cautiously due to increased gastrointestinal adverse effects and risk of resistance",
+        "citation": "【322962252391565†L157-L163】",
+        "specialist": "No",
+        "brands": "Augmentin"
+      }
+    ],
+    "Vertigo/BPPV": [
+      {
+        "line": "1st",
+        "drugClass": "Nonpharmacologic",
+        "drug": "Epley manoeuvre",
+        "dose": "—",
+        "comments": "Canalith repositioning manoeuvre",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antihistamine",
+        "drug": "Meclizine",
+        "dose": "25 mg orally every 4–6 hours",
+        "comments": "Reduces vestibular symptoms",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Benzodiazepine",
+        "drug": "Diazepam",
+        "dose": "2–5 mg orally three times daily",
+        "comments": "Short course for severe vertigo",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Endocrinology & Metabolism": {
+    "B12/Folate Deficiency": [
+      {
+        "line": "1st",
+        "drugClass": "Cobalamin",
+        "drug": "Cyanocobalamin",
+        "dose": "1,000 mcg orally daily or IM monthly",
+        "comments": "Treats pernicious anemia and malabsorption",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Folate",
+        "drug": "Folic acid",
+        "dose": "1 mg orally daily for at least 4 months or until hematologic recovery; maintenance 0.4 mg daily in adults, 0.8 mg in pregnancy/lactation",
+        "comments": "Therapeutic dose for folate deficiency; ensure B12 deficiency ruled out before treating",
+        "citation": "【741526107507984†L94-L104】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Hypercalcemia": [
+      {
+        "line": "1st",
+        "drugClass": "Hydration and diuresis",
+        "drug": "Normal saline + furosemide",
+        "dose": "NS infusion (200–300 mL/h) plus furosemide 20–40 mg IV",
+        "comments": "Initial therapy to promote calciuresis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Hormonal therapy",
+        "drug": "Calcitonin",
+        "dose": "4 units/kg IM or SC every 12 hours",
+        "comments": "Rapid but short-lived reduction in calcium",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Bisphosphonate",
+        "drug": "Zoledronic acid",
+        "dose": "4 mg IV once",
+        "comments": "Longer-term control of hypercalcemia of malignancy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Hyperthyroidism": [
+      {
+        "line": "1st",
+        "drugClass": "Beta blocker",
+        "drug": "Propranolol",
+        "dose": "10–40 mg orally three times daily",
+        "comments": "Symptomatic control of tremor, palpitations",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Thionamide",
+        "drug": "Methimazole",
+        "dose": "10–30 mg orally daily, divided every 8 hours initially",
+        "comments": "Drug of choice for Graves disease",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Hypocalcemia": [
+      {
+        "line": "1st",
+        "drugClass": "Calcium supplement",
+        "drug": "Calcium carbonate",
+        "dose": "500 mg elemental calcium orally three times daily",
+        "comments": "Acute symptomatic cases require IV calcium",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Vitamin D analog",
+        "drug": "Calcitriol",
+        "dose": "0.25–0.5 mcg orally daily",
+        "comments": "Enhances calcium absorption",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Hypothyroidism": [
+      {
+        "line": "1st",
+        "drugClass": "Thyroid hormone replacement",
+        "drug": "Levothyroxine",
+        "dose": "1.6 mcg/kg/day orally",
+        "comments": "Titrate based on TSH every 6–8 weeks",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Iron Deficiency": [
+      {
+        "line": "1st",
+        "drugClass": "Oral iron",
+        "drug": "Ferrous sulfate",
+        "dose": "325 mg (65 mg elemental) 1–3 times daily",
+        "comments": "Take on empty stomach with vitamin C to enhance absorption",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "IV iron",
+        "drug": "Iron sucrose",
+        "dose": "200 mg IV every 1–2 weeks until total dose reached",
+        "comments": "Use when oral iron not tolerated or malabsorption present",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Obesity": [
+      {
+        "line": "1st",
+        "drugClass": "Lifestyle modification",
+        "drug": "Diet & exercise",
+        "dose": "—",
+        "comments": "Caloric restriction and increased physical activity",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Lipase inhibitor",
+        "drug": "Orlistat",
+        "dose": "120 mg orally three times daily with fat-containing meals",
+        "comments": "Decreases fat absorption; may cause oily stools",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "GLP‑1 receptor agonist",
+        "drug": "Liraglutide",
+        "dose": "3 mg subcutaneously once daily",
+        "comments": "Promotes weight loss and improves glycemic control",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Combination therapy",
+        "drug": "Bupropion/naltrexone",
+        "dose": "8/90 mg twice daily; titrate up",
+        "comments": "Reduces appetite; monitor BP and mood",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Osteoporosis": [
+      {
+        "line": "1st",
+        "drugClass": "Vitamin D and calcium",
+        "drug": "Vitamin D3 + calcium carbonate",
+        "dose": "Vitamin D 800–2,000 IU/day; Calcium 1,000–1,200 mg/day",
+        "comments": "Ensure adequate intake for bone health",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Bisphosphonate",
+        "drug": "Alendronate",
+        "dose": "70 mg orally once weekly",
+        "comments": "First-line pharmacologic therapy; take on empty stomach",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Monoclonal antibody",
+        "drug": "Denosumab",
+        "dose": "60 mg subcutaneously every 6 months",
+        "comments": "For high fracture risk or intolerance to bisphosphonates",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Parathyroid hormone analog",
+        "drug": "Teriparatide",
+        "dose": "20 mcg subcutaneously daily",
+        "comments": "Reserved for severe osteoporosis or multiple fractures",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "PCOS": [
+      {
+        "line": "1st",
+        "drugClass": "Combined oral contraceptive",
+        "drug": "Ethinyl estradiol/levonorgestrel",
+        "dose": "1 tablet daily",
+        "comments": "Regulates menses and lowers androgen levels",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Insulin sensitizer",
+        "drug": "Metformin",
+        "dose": "500 mg twice daily; titrate to 850–1,000 mg BID",
+        "comments": "Improves metabolic and ovulatory abnormalities",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Antiandrogen",
+        "drug": "Spironolactone",
+        "dose": "50–100 mg twice daily",
+        "comments": "Treats hirsutism; use with contraception",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Prediabetes": [
+      {
+        "line": "1st",
+        "drugClass": "Lifestyle modification",
+        "drug": "Diet & exercise",
+        "dose": "—",
+        "comments": "Weight loss and increased physical activity",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Biguanide",
+        "drug": "Metformin",
+        "dose": "850 mg twice daily",
+        "comments": "Consider in high-risk patients (BMI ≥35, age <60)",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Type 1 Diabetes": [
+      {
+        "line": "1st",
+        "drugClass": "Basal-bolus insulin therapy",
+        "drug": "Insulin glargine + rapid-acting insulin",
+        "dose": "Basal ~0.2 units/kg/day; bolus 0.05–0.1 units/kg per meal",
+        "comments": "Mainstay therapy; adjust per carbohydrate intake",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Adjunct therapy",
+        "drug": "Pramlintide",
+        "dose": "15 mcg subcutaneously before meals; titrate to 60 mcg",
+        "comments": "Use in adults to reduce postprandial glucose",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Type 2 Diabetes": [
+      {
+        "line": "1st",
+        "drugClass": "Biguanide",
+        "drug": "Metformin",
+        "dose": "Start 500 mg once or twice daily; titrate to 1,000 mg twice daily",
+        "comments": "First-line pharmacologic agent; avoid if eGFR <30 mL/min",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "SGLT2 inhibitor",
+        "drug": "Dapagliflozin",
+        "dose": "10 mg orally once daily",
+        "comments": "Provides cardiovascular and renal benefits",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "DPP-4 inhibitor",
+        "drug": "Sitagliptin",
+        "dose": "100 mg orally once daily",
+        "comments": "Weight-neutral option when metformin inadequate",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Basal insulin",
+        "drug": "Insulin glargine",
+        "dose": "10 units subcutaneously at bedtime; titrate to fasting glucose target",
+        "comments": "Add if oral agents insufficient",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Type 2 Diabetes – Combination Therapy": [
+      {
+        "line": "1st Line",
+        "drugClass": "Biguanide + DPP‑4 inhibitor",
+        "drug": "Metformin + sitagliptin (Janumet)",
+        "dose": "Metformin 500 mg + sitagliptin 50 mg twice daily or 100 mg once daily with meals",
+        "comments": "Use when glycemic control not achieved with metformin alone",
+        "citation": "【892594735636760†L51-L62】",
+        "specialist": "No",
+        "brands": "Janumet"
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Metformin + SGLT2 inhibitor",
+        "drug": "Metformin + empagliflozin (Synjardy)",
+        "dose": "Empagliflozin 10 mg once daily with metformin; increase to 25 mg as needed",
+        "comments": "Adds cardiovascular and renal benefits",
+        "citation": "【369258801263375†L93-L100】",
+        "specialist": "No",
+        "brands": "Synjardy"
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Metformin + GLP‑1 receptor agonist",
+        "drug": "Metformin + semaglutide (Ozempic)",
+        "dose": "Initiate semaglutide 0.25 mg weekly for 4 weeks, then increase to 0.5 mg weekly; may titrate to 1 mg; max 2 mg weekly",
+        "comments": "GLP‑1 agonist provides weight loss and cardiovascular benefits",
+        "citation": "【94436947465209†L81-L86】【94436947465209†L99-L105】【94436947465209†L113-L114】",
+        "specialist": "No",
+        "brands": "Ozempic"
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Metformin + Basal insulin",
+        "drug": "Metformin + insulin glargine (Lantus)",
+        "dose": "Initiate insulin glargine 10 units subcutaneously at bedtime; titrate by 2 units every 3 days to achieve fasting glucose target",
+        "comments": "Consider when oral agents/GLP‑1 therapy insufficient",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": "Lantus"
+      }
+    ],
+    "Vitamin D Deficiency": [
+      {
+        "line": "1st",
+        "drugClass": "Vitamin D supplement",
+        "drug": "Cholecalciferol",
+        "dose": "1,000–2,000 IU daily",
+        "comments": "Maintain adequate serum 25(OH)D levels",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "High-dose vitamin D",
+        "drug": "Ergocalciferol",
+        "dose": "50,000 IU once weekly for 6–8 weeks",
+        "comments": "For severe deficiency; monitor levels",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Gastroenterology": {
+    "Anal Fissure": [
+      {
+        "line": "1st Line",
+        "drugClass": "Conservative measures",
+        "drug": "High‑fiber diet, stool softeners, sitz baths",
+        "dose": "Increase fiber; docusate 100 mg BID; warm baths 2–3 times/day",
+        "comments": "Relieves constipation and facilitates healing",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Topical vasodilator",
+        "drug": "Nitroglycerin 0.2% ointment",
+        "dose": "Apply 1 inch of ointment to anal canal every 12 h",
+        "comments": "Relaxes internal sphincter to promote healing",
+        "citation": "【395750707611661†L461-L465】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Topical calcium channel blocker",
+        "drug": "Diltiazem 2% ointment",
+        "dose": "Apply small amount to anal canal 2–3 times daily",
+        "comments": "Used when nitroglycerin not tolerated or ineffective",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Surgical",
+        "drug": "Lateral internal sphincterotomy",
+        "dose": "Surgical procedure",
+        "comments": "For chronic fissures refractory to medical therapy",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "Constipation": [
+      {
+        "line": "1st",
+        "drugClass": "Bulk-forming agent",
+        "drug": "Psyllium",
+        "dose": "1 tablespoon (~3.4 g) in 8 oz water 1–3 times daily",
+        "comments": "Increase gradually to avoid bloating",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Osmotic laxative",
+        "drug": "Polyethylene glycol",
+        "dose": "17 g in 240 mL water daily",
+        "comments": "Safe long-term for chronic constipation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Stimulant laxative",
+        "drug": "Senna",
+        "dose": "17.2 mg (2 tablets) once daily at bedtime",
+        "comments": "For short-term use when other laxatives ineffective",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Stool softener",
+        "drug": "Docusate",
+        "dose": "100 mg orally twice daily",
+        "comments": "Reduces stool hardness; often combined with stimulant",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Diarrhea": [
+      {
+        "line": "1st",
+        "drugClass": "Oral rehydration solution",
+        "drug": "ORS",
+        "dose": "Reconstitute per instructions and sip frequently",
+        "comments": "Prevents dehydration; cornerstone therapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antidiarrheal",
+        "drug": "Loperamide",
+        "dose": "4 mg initially then 2 mg after each loose stool (max 16 mg/day)",
+        "comments": "Symptomatic relief of acute noninfectious diarrhea",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Bismuth subsalicylate",
+        "drug": "Pepto-Bismol",
+        "dose": "524 mg (30 mL or 2 tablets) every 30–60 minutes (max 8 doses/day)",
+        "comments": "Useful for traveler’s diarrhea and dyspepsia",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Fluoroquinolone",
+        "drug": "Ciprofloxacin",
+        "dose": "500 mg orally twice daily for 3 days",
+        "comments": "Empiric therapy for severe traveler’s diarrhea",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Fatty Liver/Hepatitis": [
+      {
+        "line": "1st",
+        "drugClass": "Lifestyle intervention",
+        "drug": "Weight loss & exercise",
+        "dose": "—",
+        "comments": "Cornerstone therapy for nonalcoholic fatty liver disease",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antiviral",
+        "drug": "Entecavir",
+        "dose": "0.5 mg orally once daily",
+        "comments": "First-line agent for chronic hepatitis B",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "GERD/Dyspepsia": [
+      {
+        "line": "1st",
+        "drugClass": "Proton pump inhibitor",
+        "drug": "Omeprazole",
+        "dose": "20 mg orally once daily for 4–8 weeks",
+        "comments": "First-line for frequent reflux symptoms",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "H2 receptor antagonist",
+        "drug": "Ranitidine",
+        "dose": "150 mg orally twice daily",
+        "comments": "Use when PPIs contraindicated or for breakthrough at night",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Gallstones": [
+      {
+        "line": "1st",
+        "drugClass": "Analgesic",
+        "drug": "Ibuprofen",
+        "dose": "400 mg every 6 hours as needed for pain",
+        "comments": "Pain control for biliary colic",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Bile acid",
+        "drug": "Ursodeoxycholic acid",
+        "dose": "8–10 mg/kg/day divided twice daily",
+        "comments": "Dissolves cholesterol gallstones in select patients",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Hemorrhoids (Piles)": [
+      {
+        "line": "1st Line",
+        "drugClass": "Conservative measures",
+        "drug": "Fiber supplements, stool softeners (e.g., psyllium, docusate)",
+        "dose": "Increase dietary fiber; take docusate 100 mg orally BID; warm sitz baths",
+        "comments": "Lifestyle modification to reduce straining",
+        "citation": "",
+        "specialist": "No",
+        "brands": "e.g., psyllium, docusate"
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Topical therapy",
+        "drug": "Hydrocortisone 1% rectal cream or suppository; topical lidocaine",
+        "dose": "Apply cream morning, night and after bowel movement for up to 7 days",
+        "comments": "Short course for symptomatic relief; avoid prolonged steroid use",
+        "citation": "【97154304185014†L60-L63】【97154304185014†L101-L103】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Office procedures",
+        "drug": "Rubber band ligation, sclerotherapy or infrared coagulation",
+        "dose": "Performed in clinic; typically single session with repeat as needed",
+        "comments": "For persistent symptomatic internal hemorrhoids",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Surgical",
+        "drug": "Hemorrhoidectomy or stapled hemorrhoidopexy",
+        "dose": "Operative procedure; one‑time treatment",
+        "comments": "Reserved for severe or prolapsed hemorrhoids",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "Hemorrhoids/Fissures": [
+      {
+        "line": "1st",
+        "drugClass": "Nonpharmacologic",
+        "drug": "Fiber & sitz baths",
+        "dose": "—",
+        "comments": "Improve stool consistency and reduce irritation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Topical corticosteroid",
+        "drug": "Hydrocortisone 1% cream",
+        "dose": "Apply to affected area twice daily",
+        "comments": "Relieves itching and inflammation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Topical vasodilator",
+        "drug": "Nitroglycerin 0.2% ointment",
+        "dose": "Apply to anal canal every 12 hours",
+        "comments": "For chronic anal fissures to reduce sphincter spasm",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "IBS": [
+      {
+        "line": "1st",
+        "drugClass": "Lifestyle modification",
+        "drug": "Dietary fiber & low FODMAP diet",
+        "dose": "—",
+        "comments": "Personalized diet and stress reduction",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antispasmodic",
+        "drug": "Dicyclomine",
+        "dose": "20 mg orally four times daily",
+        "comments": "Relieves crampy abdominal pain",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Antidiarrheal",
+        "drug": "Loperamide",
+        "dose": "2 mg after each loose stool (max 16 mg/day)",
+        "comments": "For diarrhea-predominant IBS",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Laxative",
+        "drug": "Polyethylene glycol",
+        "dose": "17 g dissolved in water daily",
+        "comments": "For constipation-predominant IBS",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Helicobacter pylori infection": [
+      {
+        "line": "1st",
+        "drugClass": "Quad therapy – PPI/Amoxicillin/Metronidazole/Clarithromycin",
+        "drug": "Omeprazole + Amoxicillin + Metronidazole + Clarithromycin",
+        "dose": "PPI standard dose BID + Amoxicillin 1 g BID + Clarithromycin 500 mg BID + Metronidazole 500 mg BID for 14 days",
+        "comments": "First-line clarithromycin-based quadruple regimen (PAMC/CLAMET); avoid if prior macrolide exposure; ensure adherence and confirm eradication",
+        "citation": "【944259111159389†L189-L200】",
+        "specialist": "No",
+        "brands": "PrevPac (lansoprazole/amoxicillin/clarithromycin)"
+      },
+      {
+        "line": "1st",
+        "drugClass": "Quad therapy – PPI/Bismuth/Metronidazole/Tetracycline",
+        "drug": "Omeprazole + Bismuth subsalicylate + Metronidazole + Tetracycline",
+        "dose": "PPI BID + Bismuth subsalicylate 525 mg QID + Metronidazole 500 mg TID–QID + Tetracycline 500 mg QID for 14 days",
+        "comments": "Alternative first-line bismuth quadruple therapy (PBMT); use when clarithromycin resistance suspected or previous macrolide exposure; ensure adherence",
+        "citation": "【944259111159389†L189-L200】",
+        "specialist": "No",
+        "brands": "Pylera (bismuth subcitrate/metronidazole/tetracycline) + PPI"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Triple therapy – PPI/Amoxicillin/Levofloxacin",
+        "drug": "Omeprazole + Amoxicillin + Levofloxacin",
+        "dose": "PPI BID + Amoxicillin 1 g BID + Levofloxacin 500 mg once daily for 14 days",
+        "comments": "Use as second-line salvage therapy after failure of first-line regimens; consider local resistance and counsel about tendon rupture risks",
+        "citation": "【944259111159389†L215-L229】",
+        "specialist": "No",
+        "brands": "Leva-Amoxicillin regimen"
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Triple therapy – PPI/Amoxicillin/Rifabutin",
+        "drug": "Omeprazole + Amoxicillin + Rifabutin",
+        "dose": "PPI BID + Amoxicillin 1 g BID + Rifabutin 150 mg BID for 10 days",
+        "comments": "Fourth-line therapy (rifabutin-based) reserved for multiple treatment failures; risk of myelotoxicity; consult gastroenterologist",
+        "citation": "【944259111159389†L233-L249】",
+        "specialist": "Yes",
+        "brands": "Rifabutin triple therapy"
+      }
+    ]
+  },
+  "Genitourinary & STI": {
+    "Anogenital Warts": [
+      {
+        "line": "1st Line",
+        "drugClass": "Topical immune response modifier",
+        "drug": "Imiquimod 5% cream",
+        "dose": "Apply thin film at bedtime 3 times per week; wash off after 6–10 h; continue until warts clear or up to 16 weeks",
+        "comments": "Patient‑applied therapy",
+        "citation": "【499455868939227†L156-L161】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Topical antimitotic",
+        "drug": "Podofilox 0.5% solution/gel",
+        "dose": "Apply twice daily for 3 days, then no therapy for 4 days; may repeat up to 4 cycles; total area ≤10 cm²/day",
+        "comments": "Patient‑applied; avoid in pregnancy",
+        "citation": "【499455868939227†L170-L176】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Botanical catechin extract",
+        "drug": "Sinecatechins 15% ointment",
+        "dose": "Apply thin layer 3 times daily until clearance or up to 16 weeks",
+        "comments": "Patient‑applied; avoid occlusive dressings and sexual contact",
+        "citation": "【499455868939227†L183-L189】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Provider‑administered therapy",
+        "drug": "Cryotherapy, trichloroacetic acid, surgical excision",
+        "dose": "Applied by clinician every 1–3 weeks until clearance",
+        "comments": "For extensive or refractory warts",
+        "citation": "【499455868939227†L196-L209】",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "Chlamydia trachomatis Infection": [
+      {
+        "line": "1st Line",
+        "drugClass": "Tetracycline antibiotic",
+        "drug": "Doxycycline 100 mg tablets",
+        "dose": "100 mg orally twice daily for 7 days",
+        "comments": "Avoid in pregnancy; treat partners concurrently",
+        "citation": "【638346712042444†L162-L168】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Macrolide antibiotic",
+        "drug": "Azithromycin 1 g",
+        "dose": "1 g orally as a single dose",
+        "comments": "Single‑dose alternative if adherence is a concern",
+        "citation": "【638346712042444†L162-L168】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Fluoroquinolone antibiotic",
+        "drug": "Levofloxacin 500 mg",
+        "dose": "500 mg orally once daily for 7 days",
+        "comments": "Alternative when first‑line options unsuitable",
+        "citation": "【638346712042444†L162-L168】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Genital Herpes (HSV)": [
+      {
+        "line": "1st Line",
+        "drugClass": "Nucleoside analogue",
+        "drug": "Acyclovir 400 mg",
+        "dose": "400 mg orally three times daily for 7–10 days (initial episode)",
+        "comments": "Start at first sign of lesions; hydration important",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Nucleoside analogue",
+        "drug": "Valacyclovir 1 g",
+        "dose": "1 g orally twice daily for 7–10 days (initial episode)",
+        "comments": "Preferred for improved adherence",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Nucleoside analogue",
+        "drug": "Famciclovir 250 mg",
+        "dose": "250 mg orally three times daily for 7–10 days (initial episode)",
+        "comments": "Alternative agent",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Gonorrhea (uncomplicated)": [
+      {
+        "line": "1st Line",
+        "drugClass": "Cephalosporin antibiotic",
+        "drug": "Ceftriaxone 500 mg IM",
+        "dose": "500 mg intramuscular single dose",
+        "comments": "Also treat empirically for chlamydia if not excluded",
+        "citation": "【749428903718688†L126-L131】【749428903718688†L268-L274】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Extended‑spectrum cephalosporin + macrolide",
+        "drug": "Ceftriaxone 500 mg IM plus azithromycin 1 g orally",
+        "dose": "Single 500 mg IM dose plus azithromycin 1 g orally",
+        "comments": "Use where chlamydia coinfection likely or resistance patterns dictate",
+        "citation": "【749428903718688†L126-L131】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Trichomoniasis": [
+      {
+        "line": "1st Line",
+        "drugClass": "Nitroimidazole antibiotic",
+        "drug": "Metronidazole 2 g",
+        "dose": "2 g orally as a single dose",
+        "comments": "Single dose therapy; treat sexual partners",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Nitroimidazole antibiotic",
+        "drug": "Metronidazole 500 mg",
+        "dose": "500 mg orally twice daily for 7 days",
+        "comments": "Alternative regimen; often used in women",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Geriatrics & Palliative": {
+    "Dementia": [
+      {
+        "line": "1st",
+        "drugClass": "Cholinesterase inhibitor",
+        "drug": "Donepezil",
+        "dose": "5 mg nightly; titrate to 10 mg after 4–6 weeks",
+        "comments": "Improves cognition in mild to moderate Alzheimer disease",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "NMDA receptor antagonist",
+        "drug": "Memantine",
+        "dose": "5 mg daily; increase to 10 mg twice daily",
+        "comments": "For moderate to severe dementia",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Behavioral symptom management",
+        "drug": "Risperidone",
+        "dose": "0.25–1 mg twice daily",
+        "comments": "Short-term use for agitation or psychosis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "End-of-Life Care": [
+      {
+        "line": "1st",
+        "drugClass": "Opioid analgesic",
+        "drug": "Morphine",
+        "dose": "2.5–5 mg orally or subcutaneously every 4 hours",
+        "comments": "For control of pain and dyspnea in palliative care",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Benzodiazepine",
+        "drug": "Lorazepam",
+        "dose": "0.5–1 mg sublingually or subcutaneously every 4–6 hours",
+        "comments": "Relieves anxiety and agitation in terminal illness",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Antipsychotic",
+        "drug": "Haloperidol",
+        "dose": "0.5–1 mg orally or subcutaneously every 4 hours",
+        "comments": "Manages delirium and nausea/vomiting",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Falls Prevention": [
+      {
+        "line": "1st",
+        "drugClass": "Vitamin D and calcium",
+        "drug": "Vitamin D3 + calcium",
+        "dose": "Vitamin D 800 IU and calcium 1,200 mg daily",
+        "comments": "Improve bone strength and reduce fall risk",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Physical therapy",
+        "drug": "Balance and gait training",
+        "dose": "—",
+        "comments": "Tailored exercises to improve stability",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Medication review",
+        "drug": "Deprescribing",
+        "dose": "—",
+        "comments": "Identify meds contributing to falls (e.g., sedatives)",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Frailty": [
+      {
+        "line": "1st",
+        "drugClass": "Nonpharmacologic",
+        "drug": "Strength and balance exercises",
+        "dose": "—",
+        "comments": "Resistance and balance training",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Nutritional support",
+        "drug": "Protein & calorie supplementation",
+        "dose": "—",
+        "comments": "Ensure adequate protein intake",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Vitamin D supplement",
+        "drug": "Vitamin D3",
+        "dose": "800–1,000 IU daily",
+        "comments": "Supports muscle function and bone health",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Gynecology": {
+    "Abnormal Uterine Bleeding": [
+      {
+        "line": "1st",
+        "drugClass": "NSAID",
+        "drug": "Naproxen",
+        "dose": "500 mg initially then 250 mg every 6–8 hours during menses",
+        "comments": "Reduces menstrual blood loss",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antifibrinolytic",
+        "drug": "Tranexamic acid",
+        "dose": "1 g three times daily for up to 5 days",
+        "comments": "Effectively reduces blood loss",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Hormonal therapy",
+        "drug": "Combined oral contraceptive",
+        "dose": "1 tablet daily for 3 weeks then placebo for 1 week",
+        "comments": "Regulates cycles and reduces bleeding",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Levonorgestrel IUD",
+        "drug": "Levonorgestrel IUD",
+        "dose": "Inserted intrauterine; releases levonorgestrel locally",
+        "comments": "Long-term management of heavy menses",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Contraception Counselling": [
+      {
+        "line": "1st",
+        "drugClass": "Combined oral contraceptive",
+        "drug": "Ethinyl estradiol/levonorgestrel",
+        "dose": "1 tablet daily continuously",
+        "comments": "First-line hormonal contraception",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Progestin-only pill",
+        "drug": "Norethindrone",
+        "dose": "0.35 mg daily at same time each day",
+        "comments": "Useful when estrogen contraindicated",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Intrauterine device",
+        "drug": "Levonorgestrel IUD",
+        "dose": "52 mg device inserted intrauterine; effective up to 5 years",
+        "comments": "Long-acting reversible contraception",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Implant",
+        "drug": "Etonogestrel implant",
+        "dose": "68 mg subdermal implant effective for 3 years",
+        "comments": "Long-acting contraception; may cause irregular bleeding",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Dysmenorrhea": [
+      {
+        "line": "1st",
+        "drugClass": "NSAID",
+        "drug": "Ibuprofen",
+        "dose": "400 mg every 6 hours at onset of menses",
+        "comments": "Reduces prostaglandin-mediated uterine contractions",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Hormonal contraceptive",
+        "drug": "Combined oral contraceptive",
+        "dose": "1 tablet daily",
+        "comments": "Suppresses ovulation and reduces menstrual pain",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Progestin-only contraceptive",
+        "drug": "Norethindrone",
+        "dose": "0.35 mg daily",
+        "comments": "Alternative for women who cannot take estrogen",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "GnRH agonist",
+        "drug": "Leuprolide acetate",
+        "dose": "3.75 mg IM monthly",
+        "comments": "Induces hypoestrogenism; for refractory pain",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Emergency Contraception": [
+      {
+        "line": "1st",
+        "drugClass": "Progestin emergency pill",
+        "drug": "Levonorgestrel",
+        "dose": "1.5 mg single dose within 72 hours",
+        "comments": "Most effective if taken as soon as possible",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Selective progesterone receptor modulator",
+        "drug": "Ulipristal acetate",
+        "dose": "30 mg single dose within 120 hours",
+        "comments": "More effective later in the 5-day window; prescription only",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Copper IUD",
+        "drug": "Copper IUD",
+        "dose": "Inserted within 5 days of unprotected intercourse",
+        "comments": "Provides ongoing contraception for up to 10 years",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Menopause Symptoms": [
+      {
+        "line": "1st",
+        "drugClass": "Hormone replacement therapy",
+        "drug": "Conjugated estrogens/medroxyprogesterone",
+        "dose": "0.625 mg/2.5 mg once daily",
+        "comments": "Alleviates vasomotor symptoms; use lowest effective dose",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "SNRI",
+        "drug": "Venlafaxine",
+        "dose": "37.5–75 mg once daily",
+        "comments": "Nonhormonal option for hot flashes",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Anticonvulsant",
+        "drug": "Gabapentin",
+        "dose": "300 mg at bedtime; may increase to 900 mg/day",
+        "comments": "Improves vasomotor symptoms in some women",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Pelvic Inflammatory Disease": [
+      {
+        "line": "1st",
+        "drugClass": "Cephalosporin",
+        "drug": "Ceftriaxone",
+        "dose": "500 mg IM once",
+        "comments": "Initial treatment for PID",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "1st",
+        "drugClass": "Nitroimidazole",
+        "drug": "Metronidazole",
+        "dose": "500 mg twice daily for 14 days",
+        "comments": "Adds anaerobic coverage",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "1st",
+        "drugClass": "Tetracycline",
+        "drug": "Doxycycline",
+        "dose": "100 mg twice daily for 14 days",
+        "comments": "Treats chlamydial infection",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "STI – Chlamydia": [
+      {
+        "line": "1st",
+        "drugClass": "Tetracycline",
+        "drug": "Doxycycline",
+        "dose": "100 mg twice daily for 7 days",
+        "comments": "First-line therapy for Chlamydia trachomatis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Macrolide",
+        "drug": "Azithromycin",
+        "dose": "1 g single dose",
+        "comments": "Alternative regimen for chlamydia",
+        "citation": "【684245456665284†L144-L146】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "STI – Gonorrhea": [
+      {
+        "line": "1st",
+        "drugClass": "Cephalosporin",
+        "drug": "Ceftriaxone",
+        "dose": "500 mg IM once",
+        "comments": "Combine with azithromycin for dual coverage",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Macrolide",
+        "drug": "Azithromycin",
+        "dose": "1 g single dose",
+        "comments": "Given with ceftriaxone to cover potential chlamydial co-infection",
+        "citation": "【684245456665284†L144-L146】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Vaginitis (Bacterial)": [
+      {
+        "line": "1st",
+        "drugClass": "Nitroimidazole",
+        "drug": "Metronidazole",
+        "dose": "500 mg twice daily for 7 days",
+        "comments": "First-line treatment for bacterial vaginosis: metronidazole 500 mg PO BID for 7 days (or 2 g single dose); treat symptomatic patients; partner treatment not usually required; avoid alcohol",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Vaginitis (Candidiasis)": [
+      {
+        "line": "1st",
+        "drugClass": "Antifungal",
+        "drug": "Fluconazole",
+        "dose": "150 mg single oral dose",
+        "comments": "First-line treatment for vulvovaginal candidiasis: oral fluconazole 150 mg single dose; consider topical azoles for pregnant or recurrent cases",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Vaginitis (Trichomoniasis)": [
+      {
+        "line": "1st",
+        "drugClass": "Nitroimidazole",
+        "drug": "Metronidazole",
+        "dose": "2 g single dose",
+        "comments": "First-line therapy: metronidazole 2 g single dose or 500 mg BID for 7 days; treat sexual partners concurrently; avoid alcohol",
+        "citation": "【330427209997792†L175-L195】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Hematology": {
+    "B12 Deficiency": [
+      {
+        "line": "1st",
+        "drugClass": "Vitamin B12",
+        "drug": "Cyanocobalamin",
+        "dose": "1,000 mcg IM monthly or 1,000–2,000 mcg orally daily",
+        "comments": "Replace until levels normalized and symptoms resolve",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Folate Deficiency": [
+      {
+        "line": "1st",
+        "drugClass": "Folic acid",
+        "drug": "Folic acid",
+        "dose": "1 mg orally daily for at least 4 months; maintenance 0.4 mg daily in adults and 0.8 mg daily in pregnancy/lactation",
+        "comments": "Therapeutic dose for folate deficiency; ensure vitamin B12 deficiency is excluded before treatment",
+        "citation": "【741526107507984†L94-L104】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Iron Deficiency Anemia": [
+      {
+        "line": "1st",
+        "drugClass": "Oral iron",
+        "drug": "Ferrous sulfate",
+        "dose": "325 mg 1–3 times daily (65 mg elemental iron per tablet)",
+        "comments": "Take with vitamin C to enhance absorption",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "IV iron",
+        "drug": "Iron sucrose",
+        "dose": "200 mg IV every 1–2 weeks until total repletion",
+        "comments": "Use if severe anemia or malabsorption",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Leukopenia (Neutropenia)": [
+      {
+        "line": "1st",
+        "drugClass": "Colony-stimulating factor",
+        "drug": "Filgrastim",
+        "dose": "5 mcg/kg/day subcutaneously until neutrophil count normalizes",
+        "comments": "For chemotherapy-induced neutropenia",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antibiotic prophylaxis",
+        "drug": "Ciprofloxacin",
+        "dose": "500 mg daily",
+        "comments": "For prolonged neutropenia with infection risk",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Polycythemia Vera": [
+      {
+        "line": "1st",
+        "drugClass": "Phlebotomy",
+        "drug": "Remove 450–500 mL blood",
+        "dose": "Repeat to keep hematocrit <45%",
+        "comments": "Initial and maintenance therapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Cytoreductive therapy",
+        "drug": "Hydroxyurea",
+        "dose": "15 mg/kg daily",
+        "comments": "For high-risk patients to control blood counts",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "JAK inhibitor",
+        "drug": "Ruxolitinib",
+        "dose": "10 mg twice daily",
+        "comments": "For hydroxyurea-resistant or intolerant patients",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Thrombocytopenia (ITP)": [
+      {
+        "line": "1st",
+        "drugClass": "Corticosteroid",
+        "drug": "Prednisone",
+        "dose": "1 mg/kg daily",
+        "comments": "First-line for immune thrombocytopenia",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "IV immunoglobulin",
+        "drug": "IVIG",
+        "dose": "1 g/kg IV daily for 1–2 days",
+        "comments": "Use when rapid platelet rise required",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Thrombopoietin receptor agonist",
+        "drug": "Eltrombopag",
+        "dose": "50 mg once daily",
+        "comments": "For chronic refractory ITP",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Infectious Disease": {
+    "Latent Tuberculosis": [
+      {
+        "line": "1st",
+        "drugClass": "Antimycobacterial",
+        "drug": "Isoniazid",
+        "dose": "300 mg daily for 9 months",
+        "comments": "Requires pyridoxine supplementation (25–50 mg/day)",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antimycobacterial",
+        "drug": "Rifampin",
+        "dose": "600 mg daily for 4 months",
+        "comments": "Alternative to isoniazid monotherapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Lyme Disease (early localized)": [
+      {
+        "line": "1st",
+        "drugClass": "Tetracycline",
+        "drug": "Doxycycline",
+        "dose": "100 mg twice daily for 10–14 days",
+        "comments": "First-line for erythema migrans",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Aminopenicillin",
+        "drug": "Amoxicillin",
+        "dose": "500 mg three times daily for 14 days",
+        "comments": "Alternative in pregnancy or children under 8",
+        "citation": "【343068470688223†L255-L258】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Cephalosporin",
+        "drug": "Cefuroxime axetil",
+        "dose": "500 mg twice daily for 14 days",
+        "comments": "Second-line alternative",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Meningitis Triage": [
+      {
+        "line": "1st",
+        "drugClass": "Third-generation cephalosporin",
+        "drug": "Ceftriaxone",
+        "dose": "2 g IV every 12 hours",
+        "comments": "Initial empiric therapy for bacterial meningitis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Glycopeptide",
+        "drug": "Vancomycin",
+        "dose": "15–20 mg/kg IV every 8–12 hours",
+        "comments": "Add to cover resistant S. pneumoniae",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Antiviral",
+        "drug": "Acyclovir",
+        "dose": "10 mg/kg IV every 8 hours",
+        "comments": "Use if HSV encephalitis suspected",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Corticosteroid",
+        "drug": "Dexamethasone",
+        "dose": "0.15 mg/kg IV every 6 hours for 4 days",
+        "comments": "Administer before/with first antibiotic for pneumococcal meningitis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Mononucleosis (EBV)": [
+      {
+        "line": "1st",
+        "drugClass": "Supportive care",
+        "drug": "Rest and hydration",
+        "dose": "—",
+        "comments": "No specific antiviral therapy; avoid contact sports for 3 weeks",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Analgesic",
+        "drug": "Acetaminophen",
+        "dose": "325–1,000 mg every 4–6 hours",
+        "comments": "Relieves sore throat and fever",
+        "citation": "【543699202495427†L110-L115】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Pyrexia of Unknown Origin": [
+      {
+        "line": "1st",
+        "drugClass": "Diagnostic evaluation",
+        "drug": "Investigations",
+        "dose": "—",
+        "comments": "Identify underlying cause through history, exam, and tests",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Empiric broad-spectrum antibiotic",
+        "drug": "Ceftriaxone",
+        "dose": "2 g IV daily",
+        "comments": "Consider once infection suspected and cultures obtained",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Viral Syndrome": [
+      {
+        "line": "1st",
+        "drugClass": "Analgesic/antipyretic",
+        "drug": "Acetaminophen",
+        "dose": "325–1,000 mg every 4–6 hours (max 4 g/day)",
+        "comments": "Symptom relief for fever and body aches",
+        "citation": "【543699202495427†L110-L115】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Decongestant",
+        "drug": "Pseudoephedrine",
+        "dose": "60 mg every 4–6 hours",
+        "comments": "Relieves nasal congestion",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Neuraminidase inhibitor",
+        "drug": "Oseltamivir",
+        "dose": "75 mg twice daily for 5 days",
+        "comments": "Indicated for influenza within 48 h of symptom onset",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Musculoskeletal": {
+    "Gout (Acute)": [
+      {
+        "line": "1st",
+        "drugClass": "NSAID",
+        "drug": "Indomethacin",
+        "dose": "50 mg three times daily until pain relieved, then taper",
+        "comments": "Start within 24 hours of attack",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Colchicine",
+        "drug": "1.2 mg at first sign, then 0.6 mg one hour later",
+        "dose": "Max 1.8 mg in one hour; adjust for renal/hepatic impairment",
+        "comments": "",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Gout (Chronic)": [
+      {
+        "line": "3rd",
+        "drugClass": "Xanthine oxidase inhibitor",
+        "drug": "Allopurinol",
+        "dose": "Start 100 mg daily; increase by 100 mg weekly to maintenance 300 mg/day (max 800 mg/day)",
+        "comments": "Maintain serum uric acid <6 mg/dL",
+        "citation": "【612873151609360†L93-L105】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Xanthine oxidase inhibitor",
+        "drug": "Febuxostat",
+        "dose": "40 mg daily; increase to 80 mg if uric acid not at goal",
+        "comments": "Use if intolerant to allopurinol",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Low Back Pain": [
+      {
+        "line": "1st",
+        "drugClass": "NSAID",
+        "drug": "Ibuprofen",
+        "dose": "400 mg every 6 hours as needed",
+        "comments": "First-line analgesic; avoid in renal or GI disease",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Analgesic",
+        "drug": "Acetaminophen",
+        "dose": "500–1,000 mg every 4–6 hours (max 4 g/day)",
+        "comments": "Alternative for those who cannot take NSAIDs",
+        "citation": "【543699202495427†L110-L115】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Muscle relaxant",
+        "drug": "Cyclobenzaprine",
+        "dose": "5–10 mg three times daily",
+        "comments": "Short-term use for muscle spasm",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Opioid analgesic",
+        "drug": "Hydrocodone/acetaminophen",
+        "dose": "5/325 mg every 4–6 hours as needed",
+        "comments": "Reserve for severe pain; limit duration",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Osteoarthritis": [
+      {
+        "line": "1st",
+        "drugClass": "Analgesic",
+        "drug": "Acetaminophen",
+        "dose": "1,000 mg three to four times daily (max 3 g/day)",
+        "comments": "Initial therapy for mild osteoarthritis",
+        "citation": "【543699202495427†L110-L115】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "NSAID",
+        "drug": "Naproxen",
+        "dose": "250–500 mg twice daily",
+        "comments": "For moderate pain; use lowest effective dose",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Topical NSAID",
+        "drug": "Diclofenac gel 1%",
+        "dose": "Apply four times daily to affected joint",
+        "comments": "Useful for knees/hands with less systemic exposure",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Intra-articular corticosteroid",
+        "drug": "Triamcinolone acetonide",
+        "dose": "20–40 mg injected into joint every 3 months",
+        "comments": "For persistent pain unresponsive to oral therapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Sprains/Strains": [
+      {
+        "line": "1st",
+        "drugClass": "Nonpharmacologic",
+        "drug": "RICE",
+        "dose": "—",
+        "comments": "Rest, ice, compression, elevation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "NSAID",
+        "drug": "Ibuprofen",
+        "dose": "400 mg every 6 hours as needed",
+        "comments": "Reduces pain and inflammation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Topical analgesic",
+        "drug": "Diclofenac gel 1%",
+        "dose": "Apply to affected area four times daily",
+        "comments": "Offers local pain relief",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Tendinitis/Bursitis": [
+      {
+        "line": "1st",
+        "drugClass": "NSAID",
+        "drug": "Naproxen",
+        "dose": "500 mg twice daily",
+        "comments": "Reduce inflammation and pain",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Corticosteroid injection",
+        "drug": "Triamcinolone",
+        "dose": "10–40 mg injected into affected area",
+        "comments": "Rapid symptom relief; limit frequency",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Physiotherapy",
+        "drug": "Strengthening and stretching exercises",
+        "dose": "—",
+        "comments": "Promotes healing and prevents recurrence",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Neurology": {
+    "Benign Paroxysmal Positional Vertigo (BPPV)": [
+      {
+        "line": "1st Line",
+        "drugClass": "Maneuver – Epley (Canalith repositioning)",
+        "drug": "Modified Epley manoeuvre",
+        "dose": "Sequential head positions with 30 s holds repeated daily until asymptomatic",
+        "comments": "Performed by clinician or at home for posterior canal BPPV",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Maneuver – Brandt‑Daroff exercises",
+        "drug": "Brandt‑Daroff",
+        "dose": "From seated, turn head 45° and lie on side, hold 30 s after vertigo stops; sit up; repeat opposite side; 5 reps/side, twice daily",
+        "comments": "Habituation exercise for persistent BPPV",
+        "citation": "【873644609790810†L64-L74】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Maneuver – Semont (Liberatory) manoeuvre",
+        "drug": "Semont manoeuvre",
+        "dose": "Sit with head turned 45° away from affected side, quickly lie on affected side and hold until vertigo passes, then rapidly move to opposite side and hold; done once daily",
+        "comments": "Performed by clinician/physiotherapist",
+        "citation": "【741596023727266†L292-L312】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Maneuver – Half‑somersault (Foster) manoeuvre",
+        "drug": "Half‑somersault manoeuvre",
+        "dose": "Kneel and look up, place head on floor like somersault, turn head 45° to affected side; raise head to back‑level, then upright; repeat 4–5 times with 15 min rest",
+        "comments": "Home exercise for posterior canal BPPV",
+        "citation": "【324535199271878†L221-L241】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Cognitive Decline/Dementia": [
+      {
+        "line": "1st",
+        "drugClass": "Cholinesterase inhibitor",
+        "drug": "Donepezil",
+        "dose": "5 mg at bedtime; increase to 10 mg after 4–6 weeks",
+        "comments": "For mild to moderate Alzheimer disease",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "NMDA receptor antagonist",
+        "drug": "Memantine",
+        "dose": "5 mg daily; titrate to 10 mg twice daily",
+        "comments": "Add in moderate to severe dementia",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Antipsychotic (behavioural)",
+        "drug": "Risperidone",
+        "dose": "0.25–1 mg twice daily",
+        "comments": "Use lowest dose for agitation and psychosis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Headache/Migraine": [
+      {
+        "line": "1st",
+        "drugClass": "NSAID",
+        "drug": "Ibuprofen",
+        "dose": "400–600 mg at onset; repeat every 6 hours PRN",
+        "comments": "Acute therapy for mild migraines",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Triptan",
+        "drug": "Sumatriptan",
+        "dose": "50 mg at onset; may repeat after 2 hours (max 200 mg/24 h)",
+        "comments": "Selective 5‑HT1 receptor agonist for moderate to severe migraines",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Preventive – beta blocker",
+        "drug": "Propranolol",
+        "dose": "40 mg twice daily; titrate to 160–240 mg/day",
+        "comments": "First-line prophylactic agent; avoid in asthma",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Anticonvulsant",
+        "drug": "Topiramate",
+        "dose": "25 mg nightly; titrate to 50–100 mg twice daily",
+        "comments": "Prophylaxis for frequent migraines",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Neuropathy (Peripheral)": [
+      {
+        "line": "1st",
+        "drugClass": "Anticonvulsant",
+        "drug": "Gabapentin",
+        "dose": "300 mg at bedtime; titrate to 300 mg three times daily",
+        "comments": "For diabetic and postherpetic neuropathic pain",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "SNRI",
+        "drug": "Duloxetine",
+        "dose": "60 mg daily",
+        "comments": "Alternative first-line for painful neuropathy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Tricyclic antidepressant",
+        "drug": "Amitriptyline",
+        "dose": "10–25 mg at bedtime",
+        "comments": "Adjunct or alternative therapy for neuropathic pain",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Parkinsonism": [
+      {
+        "line": "1st",
+        "drugClass": "Dopamine precursor",
+        "drug": "Levodopa/carbidopa",
+        "dose": "25/100 mg three times daily; titrate",
+        "comments": "Most effective symptomatic therapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Dopamine agonist",
+        "drug": "Pramipexole",
+        "dose": "0.125 mg three times daily; titrate to 1.5 mg TID",
+        "comments": "Used in early disease or as adjunct",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "MAO‑B inhibitor",
+        "drug": "Selegiline",
+        "dose": "5 mg twice daily",
+        "comments": "Mild symptomatic benefit; may delay need for levodopa",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Stroke/TIA Secondary Prevention": [
+      {
+        "line": "1st",
+        "drugClass": "Antiplatelet",
+        "drug": "Aspirin",
+        "dose": "81–325 mg once daily",
+        "comments": "Start immediately unless contraindicated",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antiplatelet",
+        "drug": "Clopidogrel",
+        "dose": "75 mg once daily",
+        "comments": "Alternative to aspirin or dual therapy for 21–90 days",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Statin",
+        "drug": "Atorvastatin",
+        "dose": "40–80 mg once daily",
+        "comments": "High-intensity therapy after ischemic stroke",
+        "citation": "【352165482964793†L96-L100】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Obstetrics": {
+    "Hypertensive Disorders of Pregnancy": [
+      {
+        "line": "1st",
+        "drugClass": "Antiplatelet",
+        "drug": "Low-dose aspirin",
+        "dose": "81 mg daily beginning at 12–16 weeks",
+        "comments": "Reduces risk of preeclampsia in high-risk women",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Beta blocker",
+        "drug": "Labetalol",
+        "dose": "100 mg twice daily; titrate to 200–400 mg BID",
+        "comments": "First-line agent for chronic hypertension in pregnancy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Calcium channel blocker",
+        "drug": "Nifedipine",
+        "dose": "30 mg extended-release daily; titrate to 60–90 mg/day",
+        "comments": "Safe and effective in pregnancy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Central alpha-agonist",
+        "drug": "Methyldopa",
+        "dose": "250 mg two to three times daily",
+        "comments": "Historic first-line; now less commonly used",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Nausea/Vomiting in Pregnancy": [
+      {
+        "line": "1st",
+        "drugClass": "Vitamin B6 & antihistamine",
+        "drug": "Doxylamine/pyridoxine (Diclectin)",
+        "dose": "10 mg/10 mg – 2 tablets at bedtime; up to 4/day",
+        "comments": "First-line pharmacologic therapy for morning sickness",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Diclectin"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Serotonin antagonist",
+        "drug": "Ondansetron",
+        "dose": "4–8 mg every 8 hours as needed",
+        "comments": "Second-line for hyperemesis gravidarum; consider risk–benefit",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Dopamine antagonist",
+        "drug": "Metoclopramide",
+        "dose": "5–10 mg three times daily",
+        "comments": "Alternative antiemetic",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Postpartum Care": [
+      {
+        "line": "1st",
+        "drugClass": "NSAID",
+        "drug": "Ibuprofen",
+        "dose": "400 mg every 6 hours as needed",
+        "comments": "Preferred analgesic for postpartum uterine cramping",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Iron supplement",
+        "drug": "Ferrous sulfate",
+        "dose": "325 mg once daily for 4–6 weeks",
+        "comments": "Replenishes iron lost during delivery",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Pediatrics": {
+    "ADHD": [
+      {
+        "line": "1st",
+        "drugClass": "Stimulant",
+        "drug": "Methylphenidate",
+        "dose": "Start 5 mg twice daily; increase by 5–10 mg weekly to max 60 mg/day",
+        "comments": "Improves attention and reduces hyperactivity",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Non-stimulant",
+        "drug": "Atomoxetine",
+        "dose": "0.5 mg/kg/day; titrate to 1.2 mg/kg/day",
+        "comments": "Alternative when stimulants contraindicated or not tolerated",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Alpha-2 agonist",
+        "drug": "Clonidine",
+        "dose": "0.05 mg at bedtime; titrate to 0.3 mg/day",
+        "comments": "Adjunct therapy for hyperactivity and impulsivity",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Acne": [
+      {
+        "line": "1st",
+        "drugClass": "Topical antimicrobial",
+        "drug": "Benzoyl peroxide 5% gel",
+        "dose": "Apply once daily, increase to twice daily as tolerated",
+        "comments": "Reduces P. acnes and inflammation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Topical retinoid",
+        "drug": "Adapalene 0.1% gel",
+        "dose": "Apply at bedtime once daily",
+        "comments": "Prevents comedone formation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Topical antibiotic",
+        "drug": "Clindamycin 1%",
+        "dose": "Apply thin layer twice daily",
+        "comments": "Use with benzoyl peroxide to reduce resistance",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Systemic antibiotic",
+        "drug": "Doxycycline",
+        "dose": "100 mg once daily",
+        "comments": "For moderate to severe inflammatory acne (≥8 yrs)",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Asthma/Wheeze": [
+      {
+        "line": "1st",
+        "drugClass": "SABA",
+        "drug": "Salbutamol",
+        "dose": "100 mcg (1 puff) per 10 kg up to 4 puffs every 4 hours PRN",
+        "comments": "Reliever therapy for acute symptoms",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Inhaled corticosteroid",
+        "drug": "Fluticasone",
+        "dose": "50 mcg twice daily; adjust to control",
+        "comments": "Controller therapy to reduce inflammation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Leukotriene receptor antagonist",
+        "drug": "Montelukast",
+        "dose": "4 mg chewable daily (age 2–5); 5 mg (age 6–14)",
+        "comments": "Add-on for persistent asthma",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Bronchiolitis": [
+      {
+        "line": "1st",
+        "drugClass": "Supportive care",
+        "drug": "Nasal saline & suctioning",
+        "dose": "—",
+        "comments": "Maintain hydration and oxygenation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Bronchodilator (trial)",
+        "drug": "Salbutamol",
+        "dose": "2 puffs via MDI with spacer every 4 hours",
+        "comments": "May provide transient relief in select patients",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Eczema": [
+      {
+        "line": "1st",
+        "drugClass": "Emollient",
+        "drug": "Moisturizer",
+        "dose": "Apply liberally multiple times daily",
+        "comments": "Maintains skin barrier; first-line therapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "1st",
+        "drugClass": "Emollient",
+        "drug": "Keri lotion, Aveeno (colloidal oatmeal)",
+        "dose": "Apply to entire body at least twice daily and after bathing; reapply frequently",
+        "comments": "Alternative emollients appropriate for children; avoid scented products",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Keri, Aveeno"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Topical corticosteroid",
+        "drug": "Hydrocortisone 1%",
+        "dose": "Apply thin layer twice daily for up to 7 days",
+        "comments": "Use low-potency steroid for face and folds",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Topical calcineurin inhibitor",
+        "drug": "Tacrolimus 0.03%",
+        "dose": "Apply thin layer twice daily",
+        "comments": "Steroid-sparing agent for sensitive areas",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Enuresis": [
+      {
+        "line": "1st",
+        "drugClass": "Behavioural modification",
+        "drug": "Enuresis alarm",
+        "dose": "—",
+        "comments": "First-line for nocturnal enuresis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antidiuretic hormone analog",
+        "drug": "Desmopressin",
+        "dose": "0.2 mg at bedtime; increase to 0.6 mg",
+        "comments": "Effective but relapse common after discontinuation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Tricyclic antidepressant",
+        "drug": "Imipramine",
+        "dose": "10–25 mg at bedtime",
+        "comments": "Use only when other treatments fail; monitor for cardiotoxicity",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Fever": [
+      {
+        "line": "1st",
+        "drugClass": "Analgesic/antipyretic",
+        "drug": "Acetaminophen",
+        "dose": "15 mg/kg/dose every 4–6 hours (max 5 doses/day)",
+        "comments": "First-line for fever and pain in children",
+        "citation": "【543699202495427†L110-L115】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "NSAID",
+        "drug": "Ibuprofen",
+        "dose": "10 mg/kg/dose every 6–8 hours (max 40 mg/kg/day)",
+        "comments": "Use in children older than 6 months",
+        "citation": "【543699202495427†L110-L115】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Psychiatry & Addictions": {
+    "Anxiety Disorders": [
+      {
+        "line": "1st",
+        "drugClass": "SSRI",
+        "drug": "Citalopram",
+        "dose": "20 mg daily",
+        "comments": "First-line for generalized anxiety disorder",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "SNRI",
+        "drug": "Duloxetine",
+        "dose": "30–60 mg daily",
+        "comments": "Also effective for comorbid pain syndromes",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Benzodiazepine",
+        "drug": "Diazepam",
+        "dose": "2–5 mg two to four times daily",
+        "comments": "Short-term use for acute anxiety; risk of dependence",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Anxiolytic",
+        "drug": "Buspirone",
+        "dose": "10 mg twice daily; titrate to 60 mg/day",
+        "comments": "Non-sedating alternative; takes weeks to work",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Bipolar Disorder (suspected)": [
+      {
+        "line": "1st",
+        "drugClass": "Mood stabilizer",
+        "drug": "Lithium",
+        "dose": "300 mg two to three times daily; adjust to serum levels 0.6–1.2 mEq/L",
+        "comments": "First-line for bipolar I disorder",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Anticonvulsant",
+        "drug": "Valproic acid",
+        "dose": "250 mg three times daily; titrate to therapeutic levels",
+        "comments": "Alternative to lithium; monitor liver function",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Atypical antipsychotic",
+        "drug": "Olanzapine",
+        "dose": "5–10 mg daily",
+        "comments": "Effective for acute manic episodes",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Anticonvulsant",
+        "drug": "Lamotrigine",
+        "dose": "25 mg daily; titrate to 100–200 mg/day",
+        "comments": "Preferred for bipolar depression; slow titration to reduce rash",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Depression": [
+      {
+        "line": "1st",
+        "drugClass": "SSRI",
+        "drug": "Sertraline",
+        "dose": "50 mg once daily; may increase to 200 mg/day",
+        "comments": "First-line for major depressive disorder",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "SNRI",
+        "drug": "Venlafaxine",
+        "dose": "75 mg once daily; titrate to 225 mg/day",
+        "comments": "Alternative first-line; monitor BP",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Atypical antidepressant",
+        "drug": "Bupropion",
+        "dose": "150 mg once daily in morning; may increase to 300 mg/day",
+        "comments": "Stimulating option; avoid in seizure disorder",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Tricyclic antidepressant",
+        "drug": "Amitriptyline",
+        "dose": "25–50 mg at bedtime; titrate to 150–300 mg/day",
+        "comments": "For treatment-resistant depression; anticholinergic side effects",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Insomnia": [
+      {
+        "line": "1st",
+        "drugClass": "Sleep hygiene",
+        "drug": "Nonpharmacologic measures",
+        "dose": "—",
+        "comments": "Establish regular sleep schedule; avoid caffeine and screens",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Melatonin receptor agonist",
+        "drug": "Melatonin",
+        "dose": "3 mg 30–60 minutes before bedtime",
+        "comments": "Useful for jet lag and delayed sleep phase",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Nonbenzodiazepine hypnotic",
+        "drug": "Zopiclone",
+        "dose": "7.5 mg at bedtime",
+        "comments": "Limit to short-term use; risk of dependence",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Sedating antidepressant",
+        "drug": "Trazodone",
+        "dose": "50–100 mg at bedtime",
+        "comments": "For patients with comorbid depression and insomnia",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "PTSD": [
+      {
+        "line": "1st",
+        "drugClass": "SSRI",
+        "drug": "Sertraline",
+        "dose": "25 mg daily; titrate to 100–200 mg/day",
+        "comments": "First-line pharmacologic treatment; combine with therapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Alpha-1 blocker",
+        "drug": "Prazosin",
+        "dose": "1 mg at bedtime; titrate to 5–15 mg",
+        "comments": "For PTSD-related nightmares and sleep disturbance",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Atypical antipsychotic",
+        "drug": "Quetiapine",
+        "dose": "25 mg at bedtime; titrate to 150–300 mg",
+        "comments": "Adjunct for severe symptoms or psychotic features",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Panic Disorder": [
+      {
+        "line": "1st",
+        "drugClass": "SSRI",
+        "drug": "Paroxetine",
+        "dose": "10 mg daily; titrate to 40–60 mg/day",
+        "comments": "First-line pharmacologic therapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Cognitive behavioral therapy",
+        "drug": "CBT",
+        "dose": "—",
+        "comments": "Essential nonpharmacologic treatment",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Benzodiazepine",
+        "drug": "Clonazepam",
+        "dose": "0.25 mg twice daily; titrate to 1–2 mg/day",
+        "comments": "Adjunct for acute symptom relief",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Substance Use Disorder – Alcohol": [
+      {
+        "line": "1st",
+        "drugClass": "Opioid antagonist",
+        "drug": "Naltrexone",
+        "dose": "50 mg daily",
+        "comments": "Reduces cravings and heavy drinking days",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "NMDA receptor modulator",
+        "drug": "Acamprosate",
+        "dose": "666 mg three times daily",
+        "comments": "Maintains abstinence after detoxification",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Aldehyde dehydrogenase inhibitor",
+        "drug": "Disulfiram",
+        "dose": "250 mg daily",
+        "comments": "Aversive therapy; patient must be highly motivated",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Substance Use Disorder – Opioids": [
+      {
+        "line": "1st",
+        "drugClass": "Partial opioid agonist",
+        "drug": "Buprenorphine/naloxone",
+        "dose": "2 mg/0.5 mg sublingually; titrate to 8–16 mg/2–4 mg daily",
+        "comments": "First-line for opioid use disorder; office-based therapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Full opioid agonist",
+        "drug": "Methadone",
+        "dose": "20–30 mg daily; titrate to 80–120 mg/day",
+        "comments": "Use in specialized addiction clinics",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Opioid antagonist",
+        "drug": "Naltrexone",
+        "dose": "50 mg daily",
+        "comments": "For highly motivated patients after detoxification",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Suicidality": [
+      {
+        "line": "1st",
+        "drugClass": "Crisis intervention",
+        "drug": "Immediate psychiatric evaluation & safety plan",
+        "dose": "—",
+        "comments": "Urgent referral; ensure patient safety",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Pharmacotherapy",
+        "drug": "Antidepressant (e.g., sertraline)",
+        "dose": "50 mg daily; adjust per diagnosis",
+        "comments": "Start after risk assessment; monitor closely",
+        "citation": "",
+        "specialist": "No",
+        "brands": "e.g., sertraline"
+      }
+    ]
+  },
+  "Renal": {
+    "Chronic Kidney Disease": [
+      {
+        "line": "1st",
+        "drugClass": "ACE inhibitor",
+        "drug": "Ramipril",
+        "dose": "2.5 mg once daily; titrate as tolerated",
+        "comments": "Slows progression of proteinuric CKD",
+        "citation": "【308310583336387†L88-L93】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "ARB",
+        "drug": "Losartan",
+        "dose": "50 mg once daily; titrate to 100 mg/day",
+        "comments": "Alternative if ACE inhibitor intolerant",
+        "citation": "【405652466278764†L91-L117】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "SGLT2 inhibitor",
+        "drug": "Dapagliflozin",
+        "dose": "10 mg once daily",
+        "comments": "Offers kidney and cardiovascular protection in CKD",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Diuretic",
+        "drug": "Furosemide",
+        "dose": "20–80 mg orally daily",
+        "comments": "For volume control in advanced CKD",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Hyperkalemia": [
+      {
+        "line": "1st",
+        "drugClass": "Potassium binder",
+        "drug": "Sodium polystyrene sulfonate",
+        "dose": "15 g orally 1–4 times daily",
+        "comments": "Promotes potassium excretion; used in non-emergent cases",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Loop diuretic",
+        "drug": "Furosemide",
+        "dose": "20–40 mg IV or orally once; titrate",
+        "comments": "Increases renal K+ excretion; requires adequate volume status",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Insulin and dextrose",
+        "drug": "Regular insulin + dextrose",
+        "dose": "10 units IV insulin with 25 g dextrose IV",
+        "comments": "Shifts potassium intracellularly temporarily",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Hypokalemia": [
+      {
+        "line": "1st",
+        "drugClass": "Oral potassium",
+        "drug": "Potassium chloride",
+        "dose": "20 mEq orally 2–4 times daily",
+        "comments": "Correct underlying cause; recheck levels",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "IV potassium",
+        "drug": "Potassium chloride IV",
+        "dose": "10–20 mEq/h in saline (never dextrose)",
+        "comments": "For severe or symptomatic hypokalemia",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Hyponatremia": [
+      {
+        "line": "1st",
+        "drugClass": "Free water restriction",
+        "drug": "Fluid intake restriction (<1 L/day)",
+        "dose": "—",
+        "comments": "For chronic euvolemic hyponatremia (e.g., SIADH)",
+        "citation": "",
+        "specialist": "No",
+        "brands": "<1 L/day"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Salt tablet",
+        "drug": "Sodium chloride tablets",
+        "dose": "1 g orally three times daily",
+        "comments": "Adjunct to fluid restriction",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Hypertonic saline",
+        "drug": "3% saline",
+        "dose": "0.5–2 mL/kg/h IV; monitor serum sodium closely",
+        "comments": "For severe symptomatic hyponatremia",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Nephrolithiasis": [
+      {
+        "line": "1st",
+        "drugClass": "Analgesic",
+        "drug": "Ibuprofen",
+        "dose": "400 mg every 6 hours as needed",
+        "comments": "NSAID provides pain relief and reduces ureteric spasm",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Alpha blocker",
+        "drug": "Tamsulosin",
+        "dose": "0.4 mg once daily",
+        "comments": "Facilitates passage of distal ureteric stones",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Citrate therapy",
+        "drug": "Potassium citrate",
+        "dose": "10–20 mEq orally two to three times daily",
+        "comments": "Prevents recurrent calcium stone formation",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Respiratory": {
+    "Acute Bronchitis": [
+      {
+        "line": "1st",
+        "drugClass": "Supportive care",
+        "drug": "Acetaminophen",
+        "dose": "325–1,000 mg every 4–6 hours; max 4 g/day",
+        "comments": "For fever and myalgias",
+        "citation": "【543699202495427†L110-L115】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Antitussive",
+        "drug": "Dextromethorphan",
+        "dose": "10–20 mg every 4 hours",
+        "comments": "Short-term relief of troublesome cough",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Beta-agonist bronchodilator",
+        "drug": "Salbutamol (albuterol)",
+        "dose": "2 puffs (100 mcg each) via MDI every 4–6 hours PRN",
+        "comments": "Use only if wheeze or bronchospasm",
+        "citation": "",
+        "specialist": "No",
+        "brands": "albuterol"
+      },
+      {
+        "line": "4th",
+        "drugClass": "Macrolide antibiotic",
+        "drug": "Azithromycin",
+        "dose": "500 mg orally on day 1 then 250 mg daily on days 2–5",
+        "comments": "Reserved for pertussis or atypical infection",
+        "citation": "【684245456665284†L144-L146】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Asthma": [
+      {
+        "line": "1st",
+        "drugClass": "SABA",
+        "drug": "Salbutamol",
+        "dose": "2 puffs (100 mcg each) inhaled as needed, up to every 4 hours",
+        "comments": "Rescue medication for acute symptoms",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Inhaled corticosteroid",
+        "drug": "Fluticasone propionate",
+        "dose": "100–250 mcg inhaled twice daily",
+        "comments": "Controller therapy; adjust dose to control symptoms",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Combination inhaled corticosteroid/LABA",
+        "drug": "Fluticasone/salmeterol (Advair)",
+        "dose": "1 inhalation (100/50, 250/50 or 500/50) twice daily",
+        "comments": "Add-on when inhaled corticosteroid alone insufficient",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Advair"
+      },
+      {
+        "line": "4th",
+        "drugClass": "Leukotriene receptor antagonist",
+        "drug": "Montelukast",
+        "dose": "10 mg orally once daily in adults",
+        "comments": "Alternative or add-on for mild persistent asthma",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "5th",
+        "drugClass": "Biologic therapy",
+        "drug": "Anti-IgE (omalizumab), Anti-IL5 (mepolizumab, reslizumab), Anti-IL4R (dupilumab)",
+        "dose": "Specialist initiation and dosing per agent; subcutaneous injection every 2–8 weeks",
+        "comments": "For severe eosinophilic or allergic asthma unresponsive to maximal inhaler therapy; specialist use only",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": "omalizumab, mepolizumab, reslizumab, dupilumab"
+      },
+      {
+        "line": "5th",
+        "drugClass": "Systemic corticosteroid",
+        "drug": "Prednisone or Prednisolone",
+        "dose": "Short course of 0.5–1 mg/kg/day orally (max 50 mg/day) for 3–5 days for exacerbations",
+        "comments": "Use for acute exacerbations when rescue inhalers and controllers insufficient; taper not usually needed for short courses",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "COPD": [
+      {
+        "line": "1st",
+        "drugClass": "Short-acting bronchodilator",
+        "drug": "Salbutamol",
+        "dose": "2 puffs every 4–6 hours as needed",
+        "comments": "Relief of intermittent breathlessness",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "LAMA",
+        "drug": "Tiotropium",
+        "dose": "18 mcg inhaled once daily",
+        "comments": "Improves lung function and reduces exacerbations",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "LABA",
+        "drug": "Salmeterol",
+        "dose": "50 mcg inhaled twice daily",
+        "comments": "Often combined with inhaled corticosteroid",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "PDE-4 inhibitor",
+        "drug": "Roflumilast",
+        "dose": "500 mcg orally once daily",
+        "comments": "For severe COPD with chronic bronchitis and frequent exacerbations",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "5th",
+        "drugClass": "Triple therapy (LABA/LAMA/ICS)",
+        "drug": "Fluticasone furoate/umeclidinium/vilanterol (Trelegy Ellipta)",
+        "dose": "One inhalation (100/62.5/25 mcg) once daily",
+        "comments": "For patients with severe COPD and frequent exacerbations despite dual therapy",
+        "citation": "",
+        "specialist": "No",
+        "brands": "Trelegy Ellipta"
+      }
+    ],
+    "Community-Acquired Pneumonia": [
+      {
+        "line": "1st",
+        "drugClass": "Aminopenicillin",
+        "drug": "Amoxicillin",
+        "dose": "500 mg orally every 8 hours or 1 g twice daily for 5–7 days",
+        "comments": "First-line for outpatient CAP in healthy adults",
+        "citation": "【343068470688223†L255-L258】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Tetracycline",
+        "drug": "Doxycycline",
+        "dose": "100 mg orally twice daily for 5–7 days",
+        "comments": "Alternative therapy if penicillin allergy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Macrolide",
+        "drug": "Azithromycin",
+        "dose": "500 mg on day 1 then 250 mg days 2–5",
+        "comments": "Alternative or combination therapy",
+        "citation": "【684245456665284†L144-L146】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Respiratory fluoroquinolone",
+        "drug": "Levofloxacin",
+        "dose": "750 mg orally once daily for 5 days",
+        "comments": "Reserve for comorbidities or recent antibiotic use",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "5th",
+        "drugClass": "Beta-lactam/beta-lactamase inhibitor",
+        "drug": "Amoxicillin/clavulanate (Augmentin)",
+        "dose": "500/125 mg orally three times daily for 5–7 days (or 875/125 mg twice daily)",
+        "comments": "For moderate-severity CAP (CRB‑65 score 1–2) or after first-line failure; treat 5–7 days; evaluate need for hospital referral; caution gastrointestinal adverse effects and C. difficile infection",
+        "citation": "【97007718078060†L633-L681】【149288229325945†L314-L327】",
+        "specialist": "No",
+        "brands": "Augmentin"
+      }
+    ],
+    "Croup (Pediatrics)": [
+      {
+        "line": "1st",
+        "drugClass": "Systemic corticosteroid",
+        "drug": "Dexamethasone",
+        "dose": "0.6 mg/kg (max 10 mg) orally/IM/IV once",
+        "comments": "Improves symptoms and reduces ED visits",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Vasoconstrictor",
+        "drug": "Nebulized epinephrine",
+        "dose": "0.5 mL of 2.25% solution diluted with saline; may repeat",
+        "comments": "For moderate to severe croup to relieve airway obstruction",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Obstructive Sleep Apnea": [
+      {
+        "line": "1st Line",
+        "drugClass": "Device – CPAP",
+        "drug": "CPAP machine (fixed or auto)",
+        "dose": "Use nightly; pressure titrated during sleep study, typical 4–20 cm H2O",
+        "comments": "First‑line therapy for moderate to severe OSA",
+        "citation": "【986733232962463†L569-L575】【986733232962463†L541-L544】",
+        "specialist": "No",
+        "brands": "fixed or auto"
+      },
+      {
+        "line": "2nd Line",
+        "drugClass": "Device – Mandibular advancement device",
+        "drug": "Mandibular advancement/retainer device",
+        "dose": "Custom oral device worn nightly to advance the mandible and open airway",
+        "comments": "Alternative for mild OSA or CPAP‑intolerant patients; fitted by dentist",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd Line",
+        "drugClass": "Device – BiPAP",
+        "drug": "BiPAP machine",
+        "dose": "Use nightly; delivers two pressures (IPAP/EPAP) with typical range 4–30 cm H2O",
+        "comments": "For patients who cannot tolerate CPAP or have central sleep apnea",
+        "citation": "【986733232962463†L478-L480】【986733232962463†L563-L565】",
+        "specialist": "Yes",
+        "brands": ""
+      },
+      {
+        "line": "4th Line",
+        "drugClass": "Surgery/Neuromodulation",
+        "drug": "Upper airway surgery or hypoglossal nerve stimulation",
+        "dose": "Procedural; one‑time; varies per patient",
+        "comments": "Surgical interventions (UPPP, maxillomandibular advancement) or implanted neurostimulators for severe CPAP‑refractory OSA",
+        "citation": "",
+        "specialist": "Yes",
+        "brands": ""
+      }
+    ],
+    "URTI/Influenza-like": [
+      {
+        "line": "1st",
+        "drugClass": "Analgesic/antipyretic",
+        "drug": "Acetaminophen (Tylenol)",
+        "dose": "325–1,000 mg orally every 4–6 hours (max 4 g/day)",
+        "comments": "Symptomatic relief of fever and pain",
+        "citation": "【543699202495427†L110-L115】",
+        "specialist": "No",
+        "brands": "Tylenol"
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Decongestant",
+        "drug": "Pseudoephedrine",
+        "dose": "60 mg orally every 4–6 hours",
+        "comments": "Relieves nasal congestion; avoid in hypertension",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Antitussive",
+        "drug": "Dextromethorphan",
+        "dose": "10–20 mg every 4 hours",
+        "comments": "Suppresses cough reflex",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Rheumatology": {
+    "Fibromyalgia": [
+      {
+        "line": "1st",
+        "drugClass": "Tricyclic antidepressant",
+        "drug": "Amitriptyline",
+        "dose": "10–25 mg at bedtime",
+        "comments": "Improves sleep and pain",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "SNRI",
+        "drug": "Duloxetine",
+        "dose": "30–60 mg daily",
+        "comments": "Helps with pain and mood symptoms",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Anticonvulsant",
+        "drug": "Pregabalin",
+        "dose": "75 mg twice daily",
+        "comments": "Reduces neuropathic pain",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Polymyalgia Rheumatica/GCA": [
+      {
+        "line": "1st",
+        "drugClass": "Corticosteroid",
+        "drug": "Prednisone",
+        "dose": "PMR: 15 mg/day; GCA: 40–60 mg/day",
+        "comments": "Rapid symptom relief; taper slowly",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "DMARD",
+        "drug": "Methotrexate",
+        "dose": "10–15 mg weekly",
+        "comments": "Steroid-sparing agent",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Biologic",
+        "drug": "Tocilizumab",
+        "dose": "162 mg subcutaneously weekly",
+        "comments": "Interleukin-6 receptor antagonist for GCA",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Raynaud Phenomenon": [
+      {
+        "line": "1st",
+        "drugClass": "CCB",
+        "drug": "Nifedipine ER",
+        "dose": "30–60 mg once daily",
+        "comments": "First-line to prevent vasospasm",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "PDE5 inhibitor",
+        "drug": "Sildenafil",
+        "dose": "20 mg three times daily",
+        "comments": "Alternative in refractory cases",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Rheumatoid Arthritis (suspected)": [
+      {
+        "line": "1st",
+        "drugClass": "NSAID",
+        "drug": "Ibuprofen",
+        "dose": "400–600 mg every 6–8 hours",
+        "comments": "Symptom relief; does not alter disease progression",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Corticosteroid",
+        "drug": "Prednisone",
+        "dose": "5–10 mg daily",
+        "comments": "Short-term control until DMARDs take effect",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "DMARD",
+        "drug": "Methotrexate",
+        "dose": "15 mg orally or subcutaneously weekly",
+        "comments": "Anchor drug; folic acid supplementation required",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Biologic",
+        "drug": "Etanercept",
+        "dose": "50 mg subcutaneously weekly",
+        "comments": "TNF inhibitor for moderate-to-severe disease",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  },
+  "Urology & Men’s Health": {
+    "Erectile Dysfunction": [
+      {
+        "line": "1st",
+        "drugClass": "PDE5 inhibitor",
+        "drug": "Sildenafil",
+        "dose": "50 mg one hour before intercourse (25–100 mg range)",
+        "comments": "Avoid with nitrates; adjust dose for hepatic/renal impairment",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "PDE5 inhibitor",
+        "drug": "Tadalafil",
+        "dose": "10 mg prior to intercourse or 5 mg once daily",
+        "comments": "Longer half-life; may be used daily",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Mechanical therapy",
+        "drug": "Vacuum erection device",
+        "dose": "—",
+        "comments": "Non-pharmacologic option when drugs contraindicated",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Penile injection",
+        "drug": "Alprostadil",
+        "dose": "2.5–20 mcg intracavernosal 5–10 minutes before intercourse",
+        "comments": "For severe cases; counsel on administration",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "LUTS/BPH": [
+      {
+        "line": "1st",
+        "drugClass": "Alpha-1 blocker",
+        "drug": "Tamsulosin",
+        "dose": "0.4 mg once daily",
+        "comments": "Improves urinary flow; may cause dizziness",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "5-alpha reductase inhibitor",
+        "drug": "Finasteride",
+        "dose": "5 mg once daily",
+        "comments": "Reduces prostate volume; takes months to see effect",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Combination therapy",
+        "drug": "Tamsulosin/finasteride",
+        "dose": "0.4/5 mg once daily",
+        "comments": "For moderate to severe symptoms with enlarged prostate",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "PDE5 inhibitor",
+        "drug": "Tadalafil",
+        "dose": "5 mg once daily",
+        "comments": "Useful in men with concomitant ED",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Prostatitis (acute bacterial)": [
+      {
+        "line": "1st",
+        "drugClass": "Fluoroquinolone",
+        "drug": "Ciprofloxacin",
+        "dose": "500 mg twice daily for 4–6 weeks",
+        "comments": "Good prostatic penetration",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Sulfonamide combination",
+        "drug": "Trimethoprim–sulfamethoxazole DS",
+        "dose": "1 tablet twice daily for 4–6 weeks",
+        "comments": "Alternative therapy; monitor for adverse effects",
+        "citation": "【889567397063513†L994-L997】",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Pyelonephritis": [
+      {
+        "line": "1st",
+        "drugClass": "Fluoroquinolone",
+        "drug": "Ciprofloxacin",
+        "dose": "500 mg twice daily for 7–14 days",
+        "comments": "First-line for outpatient pyelonephritis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Sulfonamide combination",
+        "drug": "Trimethoprim–sulfamethoxazole DS",
+        "dose": "1 tablet twice daily for 14 days",
+        "comments": "Alternative regimen; adjust for kidney function",
+        "citation": "【889567397063513†L994-L997】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Cephalosporin",
+        "drug": "Ceftriaxone",
+        "dose": "1 g IV/IM once then transition to oral agent",
+        "comments": "Initial dose for severe infection or pregnancy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Testicular Pain (Epididymitis)": [
+      {
+        "line": "1st",
+        "drugClass": "Cephalosporin",
+        "drug": "Ceftriaxone",
+        "dose": "500 mg IM once",
+        "comments": "Covers N. gonorrhoeae; used with doxycycline",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "1st",
+        "drugClass": "Tetracycline",
+        "drug": "Doxycycline",
+        "dose": "100 mg twice daily for 7 days",
+        "comments": "Covers Chlamydia trachomatis",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ],
+    "Urinary Tract Infection (simple)": [
+      {
+        "line": "1st",
+        "drugClass": "Nitrofuran",
+        "drug": "Nitrofurantoin macrocrystals",
+        "dose": "100 mg twice daily for 5 days",
+        "comments": "First-line for uncomplicated cystitis",
+        "citation": "【368506309350111†L95-L102】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "2nd",
+        "drugClass": "Sulfonamide combination",
+        "drug": "Trimethoprim–sulfamethoxazole DS",
+        "dose": "1 tablet every 12 hours for 3 days",
+        "comments": "Alternative first-line agent; avoid if resistance >20%",
+        "citation": "【889567397063513†L994-L997】",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "3rd",
+        "drugClass": "Phosphonic acid derivative",
+        "drug": "Fosfomycin tromethamine",
+        "dose": "3 g orally as a single dose",
+        "comments": "Convenient one-dose therapy; safe in pregnancy",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      },
+      {
+        "line": "4th",
+        "drugClass": "Fluoroquinolone",
+        "drug": "Ciprofloxacin",
+        "dose": "500 mg orally twice daily for 3 days",
+        "comments": "Reserve for complicated infections due to resistance concerns",
+        "citation": "",
+        "specialist": "No",
+        "brands": ""
+      }
+    ]
+  }
+}

@@ -29,6 +29,33 @@
   function escape(v) { return app.escapeHtml(v); }
   function text(m) { return app.textFor(m, app.state.language); }
 
+  // ─── RECENTLY USED CONDITIONS ─────────────────────────────────────
+  const RECENT_KEY = 'tol_recent_conditions';
+  const MAX_RECENT = 6;
+
+  function getRecentConditions() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch { return []; }
+  }
+
+  function addRecentCondition(condValue) {
+    if (!condValue) return;
+    let recents = getRecentConditions().filter(c => c !== condValue);
+    recents.unshift(condValue);
+    if (recents.length > MAX_RECENT) recents = recents.slice(0, MAX_RECENT);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(recents)); } catch {}
+  }
+
+  // ─── TOAST NOTIFICATIONS ──────────────────────────────────────────
+  let _toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('visible');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('visible'), 2000);
+  }
+
   function isReady() {
     const s = app.state;
     if (s.workflowMode === 'lookup') return false;
@@ -176,8 +203,22 @@
     let h = '';
 
     // Search bar — searches across domains, subtypes, conditions
-    h += `<div class="section-label">Search or browse</div>`;
+    h += `<div class="section-label">Search or browse <span class="kbd-hint"><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">K</kbd></span></div>`;
     h += `<input type="search" class="search-box" placeholder="Search any condition, area, or keyword..." data-search-field="guidedSearch" value="${escape(searchVal)}" />`;
+
+    // Recently used conditions
+    if (!isSearching && !s.condition) {
+      const recents = getRecentConditions();
+      if (recents.length) {
+        h += `<div class="section-label" style="margin-top:6px">Recent</div>`;
+        h += `<div class="recent-conditions">`;
+        recents.forEach(cv => {
+          const meta = app.getConditionMeta(cv);
+          if (meta) h += `<button type="button" class="recent-chip" data-set-field="condition" data-value="${cv}">${escape(text(meta))}</button>`;
+        });
+        h += `</div>`;
+      }
+    }
 
     if (isSearching) {
       // Flat search results across everything
@@ -524,6 +565,17 @@
     const selected = selectBestOption(options, ctx);
 
     let h = '';
+
+    // Condition summary card
+    if (ctx.workflowMode === 'guided' && ctx.condition) {
+      const condMeta = app.getConditionMeta(ctx.condition);
+      if (condMeta) {
+        const condLabel = text(condMeta);
+        const condSummary = text(condMeta.summary);
+        const domainLabel = text(app.getDomainMeta(condMeta.domain));
+        h += `<div class="condition-summary-card"><strong>${escape(condLabel)}</strong><p>${escape(domainLabel)} &bull; ${escape(condSummary)}</p></div>`;
+      }
+    }
 
     // Patient signals strip
     const bits = [
@@ -1006,6 +1058,7 @@
     } else if (field === 'condition') {
       app.applyConditionToState(value);
       app._searchGuided = '';
+      addRecentCondition(value);
     } else if (field === 'templateId') {
       app.state.templateId = value;
       app.applyTemplateToState(app.getTemplateById(value), { syncMarket: false });
@@ -1124,6 +1177,8 @@
         btn.textContent = kind === 'emr' ? 'Copied JSON!' : 'Copied';
         setTimeout(() => { btn.textContent = orig; }, 1000);
       }
+      const labels = { rx: 'Rx copied', chart: 'Chart note copied', pharmacy: 'Pharmacy note copied', all: 'All sections copied', emr: 'EMR JSON copied' };
+      showToast(labels[kind] || 'Copied');
     } catch { /* fallback: user can select text */ }
   }
 
@@ -1365,11 +1420,57 @@
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && app._demoRunning) {
-        app._demoRunning = false;
-        document.getElementById('demoSpotlight').hidden = true;
-        document.getElementById('demoCursor').hidden = true;
-        document.getElementById('demoLabel').hidden = true;
+      // Escape — close demo, refine modal, or tour
+      if (e.key === 'Escape') {
+        if (app._demoRunning) {
+          app._demoRunning = false;
+          document.getElementById('demoSpotlight').hidden = true;
+          document.getElementById('demoCursor').hidden = true;
+          document.getElementById('demoLabel').hidden = true;
+          return;
+        }
+        if (app._refineOpen) {
+          app._refineOpen = false;
+          renderRefineModal();
+          render();
+          return;
+        }
+        if (app.tourState.open) {
+          closeTour();
+          return;
+        }
+      }
+
+      // Ctrl+K — focus condition search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchBox = document.querySelector('[data-search-field="guidedSearch"]') ||
+                          document.querySelector('[data-search-field="lookupSearch"]') ||
+                          document.querySelector('[data-search-field="templateId"]');
+        if (searchBox) searchBox.focus();
+        return;
+      }
+
+      // Ctrl+Shift+C — copy all (when output is live)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+        if (app.processedSnapshot) {
+          e.preventDefault();
+          copyBlock('all');
+          return;
+        }
+      }
+
+      // Ctrl+P — print (set date first)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        const printDate = document.getElementById('printDate');
+        if (printDate) printDate.textContent = new Date().toLocaleDateString('en-CA');
+      }
+
+      // Ctrl+N — new case
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        dom.newCaseBtn.click();
+        return;
       }
     });
 
