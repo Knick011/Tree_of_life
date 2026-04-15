@@ -71,9 +71,10 @@
       h += `</div>`;
     }
 
+    const ageDisabled = s.patientPresetId === 'child' && app._childBucket;
     h += `<div class="section-label">Demographics</div>`;
     h += `<div class="field-row">`;
-    h += `<div class="field"><span>Age</span><input type="number" class="input-sm" min="0" max="120" step="any" value="${s.age}" data-number-field="age" /></div>`;
+    h += `<div class="field"><span>Age${ageDisabled ? ' (set by range)' : ''}</span><input type="number" class="input-sm" min="0" max="120" step="any" value="${s.age}" data-number-field="age" ${ageDisabled ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} /></div>`;
     h += `<div class="field"><span>Weight (kg)</span><input type="number" class="input-sm" min="1" max="300" value="${s.weight}" data-number-field="weight" /></div>`;
     h += `</div>`;
 
@@ -551,7 +552,7 @@
       h += `<div class="primary-card ${RANK_COLORS[0]}">`;
       h += `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px">`;
       h += `<div><strong style="font-size:14px">${escape(selected.label)}</strong><div style="color:var(--muted);font-size:12px">${escape(selected.dosePreview)}</div></div>`;
-      h += `<div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${selected.status}">${escape(selected.status)}</span></div>`;
+      h += `<div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${selected.status}">${selected.score} · ${escape(selected.status)}</span></div>`;
       h += `</div>`;
       h += `<div style="display:flex;gap:4px;margin-bottom:2px"><span class="tag-sm">${escape(selected.price)}</span><span class="tag-sm">${escape(selected.regionData.formulary)}</span></div>`;
       h += `</div>`;
@@ -561,7 +562,7 @@
         h += `<div class="section-label" style="margin-top:4px">Alternatives</div>`;
         ranked.slice(1).forEach((o, i) => {
           const rankColor = RANK_COLORS[Math.min(i + 1, 2)];
-          h += `<div class="alt-row ${rankColor}" data-option="${o.id}"><div><strong>${escape(o.label)}</strong><span>${escape(o.dosePreview)}</span></div><div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${o.status}">${escape(o.status)}</span></div></div>`;
+          h += `<div class="alt-row ${rankColor}" data-option="${o.id}"><div><strong>${escape(o.label)}</strong><span>${escape(o.dosePreview)}</span></div><div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${o.status}">${o.score} · ${escape(o.status)}</span></div></div>`;
         });
       }
 
@@ -573,12 +574,35 @@
       if (ctx.age < 13) {
         const med = app.getOptionMeta(selected.id);
         const doseText = text(med.dose);
+        const sigText = text(med.order.sig);
+        // Extract mg/kg if present in dose or sig text
+        const mgKgMatch = (doseText + ' ' + sigText).match(/(\d+(?:\.\d+)?)\s*mg\s*\/\s*kg/i);
+        const mgMatch = (doseText + ' ' + sigText).match(/(\d+(?:\.\d+)?)\s*mg/i);
+        const ageLabel = ctx.age < 1 ? Math.round(ctx.age * 12) + ' months' : ctx.age + ' years';
+
         h += `<div class="peds-calc">`;
         h += `<div class="peds-calc-head">Dose calculation (pediatric)</div>`;
         h += `<div class="peds-calc-body">`;
-        h += `<div>Patient: ${escape(ctx.age < 1 ? Math.round(ctx.age * 12) + ' months' : ctx.age + ' years')}, ${ctx.weight} kg</div>`;
-        h += `<div>Standard dosing: ${escape(doseText)}</div>`;
-        h += `<div>Basis: weight-based (${ctx.weight} kg) — verify against formulary for pediatric-specific adjustments</div>`;
+        h += `<div><strong>Patient:</strong> ${escape(ageLabel)}, ${ctx.weight} kg</div>`;
+
+        if (mgKgMatch) {
+          const perKg = parseFloat(mgKgMatch[1]);
+          const totalDose = Math.round(perKg * ctx.weight * 10) / 10;
+          h += `<div><strong>Formula:</strong> ${perKg} mg/kg &times; ${ctx.weight} kg = <strong>${totalDose} mg</strong></div>`;
+          h += `<div><strong>Per dose:</strong> ${totalDose} mg</div>`;
+        } else if (mgMatch) {
+          const adultDose = parseFloat(mgMatch[1]);
+          // Use Clark's formula for pediatric adjustment: child dose = (weight / 70) * adult dose
+          const pedsDose = Math.round((ctx.weight / 70) * adultDose * 10) / 10;
+          h += `<div><strong>Adult dose:</strong> ${adultDose} mg</div>`;
+          h += `<div><strong>Clark's formula:</strong> (${ctx.weight} kg &divide; 70 kg) &times; ${adultDose} mg = <strong>${pedsDose} mg</strong></div>`;
+          h += `<div style="color:var(--muted);font-size:11px;margin-top:2px">Clark's rule approximation — verify against pediatric formulary</div>`;
+        } else {
+          h += `<div><strong>Standard dosing:</strong> ${escape(doseText)}</div>`;
+          h += `<div style="color:var(--muted);font-size:11px;margin-top:2px">No mg/kg data — verify pediatric dose with formulary</div>`;
+        }
+
+        h += `<div><strong>Regimen:</strong> ${escape(doseText)}</div>`;
         h += `</div></div>`;
       }
 
@@ -777,7 +801,7 @@
           const rc = RANK_COLORS_R[Math.min(i, 2)];
           h += `<div class="refine-result-row ${rc} ${isBest ? 'refine-result-best' : ''}" data-refine-pick="${o.id}">`;
           h += `<div><strong>${escape(o.label)}</strong><span style="display:block;color:var(--muted);font-size:11px">${escape(o.dosePreview)}</span>`;
-          h += `<div style="display:flex;gap:4px;margin-top:3px"><span class="tag-sm">${escape(o.price)}</span><span class="score-badge score-${o.status}">${escape(o.status)}</span></div>`;
+          h += `<div style="display:flex;gap:4px;margin-top:3px"><span class="tag-sm">${escape(o.price)}</span><span class="score-badge score-${o.status}">${o._refinedScore} · ${escape(o.status)}</span></div>`;
           h += `</div>`;
           if (isBest) h += `<span class="tag-sm tag-teal" style="flex-shrink:0">Best fit</span>`;
           h += `</div>`;
