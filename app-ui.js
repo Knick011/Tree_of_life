@@ -998,6 +998,323 @@
     app._demoRunning = false;
   }
 
+  // ─── HELP SYSTEM ──────────────────────────────────────────────────
+
+  const HELP_FEATURES = [
+    {
+      id: 'patient-presets',
+      title: 'Patient Presets',
+      desc: 'One-click patient profiles to set age, weight, and sex instantly.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+      setup: () => {},
+      steps: [
+        { sel: '.preset-row', text: 'Click any preset to fill patient demographics', noClick: true, wait: 2000 },
+        { sel: '[data-patient-preset="adult-f"]', text: 'Adult F — sets age 34, weight 68 kg, female', wait: 1500 },
+        { sel: '[data-patient-preset="child"]', text: 'Child — opens age range picker for pediatric dosing', wait: 1500 },
+        { sel: '[data-patient-preset="older"]', text: 'Older — sets age 74, triggers geriatric checks', wait: 1500 },
+      ],
+    },
+    {
+      id: 'guided-prescribing',
+      title: 'Guided Prescribing',
+      desc: 'Narrow from clinical area to specific condition in 3 steps.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+      setup: () => {
+        applyPatientPreset('adult-f');
+      },
+      steps: [
+        { sel: '[data-set-field="workflowMode"][data-value="guided"]', text: 'Guided mode — drill down step by step', wait: 1200 },
+        { sel: '[data-set-field="domain"][data-value="infection"]', text: '1. Pick a clinical area (e.g. Infection)', wait: 1500 },
+        { sel: '[data-set-field="subtype"][data-value="urinary"]', text: '2. Narrow to a subtype (e.g. Urinary)', wait: 1500 },
+        { sel: '[data-set-field="condition"][data-value="cystitis"]', text: '3. Select the specific condition', wait: 1500 },
+        { sel: '.primary-card', text: 'The best medication is ranked and shown', noClick: true, wait: 2000 },
+      ],
+    },
+    {
+      id: 'condition-search',
+      title: 'Condition Search',
+      desc: 'Type any keyword to jump directly to a condition without browsing.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+      setup: () => {
+        applyPatientPreset('adult-f');
+        app.state.workflowMode = 'guided';
+        app.state.domain = '';
+        app.state.subtype = '';
+        app.state.condition = '';
+        render();
+      },
+      steps: [
+        { sel: '[data-search-field="guidedSearch"]', text: 'Type a keyword like "hypertension" or "gout"', noClick: true, wait: 2000 },
+        { sel: '[data-search-field="guidedSearch"]', text: 'Results appear instantly — click to select', typeText: 'gout', wait: 2500 },
+      ],
+    },
+    {
+      id: 'children-dosing',
+      title: 'Pediatric Dosing',
+      desc: 'Select a child age range and see dose calculations with real math.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 015 5v3H7V7a5 5 0 015-5z"/><rect x="3" y="10" width="18" height="12" rx="2"/></svg>',
+      setup: () => {},
+      steps: [
+        { sel: '[data-patient-preset="child"]', text: 'Select Child preset', wait: 1200 },
+        { sel: '[data-child-bucket="toddler"]', text: 'Pick an age range — sets age and weight', wait: 1500 },
+        { sel: '[data-set-field="domain"][data-value="infection"]', text: 'Choose a clinical area', wait: 1200 },
+        { sel: '[data-set-field="subtype"][data-value="urinary"]', text: 'Narrow to subtype', wait: 1200 },
+        { sel: '[data-set-field="condition"][data-value="cystitis"]', text: 'Select condition', wait: 1200 },
+        { sel: '.peds-calc', text: 'Dose calculation shown with Clark\'s formula', noClick: true, wait: 3000 },
+      ],
+    },
+    {
+      id: 'refine',
+      title: 'Refine Prescription',
+      desc: 'Tell the system what the patient said to re-rank medications.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18M3 12h12M3 20h6"/></svg>',
+      setup: () => {
+        applyPatientPreset('adult-f');
+        app.state.domain = 'infection';
+        app.state.subtype = 'urinary';
+        app.applyConditionToState('cystitis');
+        render();
+      },
+      steps: [
+        { sel: '#refineBtn', text: 'Click the filter button to open Refine', wait: 1500 },
+        { sel: '.refine-modal-inner', text: 'Check what the patient told you — options re-rank', noClick: true, wait: 3000 },
+      ],
+    },
+    {
+      id: 'copy-output',
+      title: 'Copy & EMR Export',
+      desc: 'Copy Rx, chart note, or structured JSON for EMR auto-fill.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>',
+      setup: () => {
+        applyPatientPreset('adult-f');
+        app.state.domain = 'infection';
+        app.state.subtype = 'urinary';
+        app.applyConditionToState('cystitis');
+        render();
+      },
+      steps: [
+        { sel: '[data-copy-block="rx"]', text: 'Copy just the Rx text', noClick: true, wait: 1800 },
+        { sel: '[data-copy-block="chart"]', text: 'Copy the chart note', noClick: true, wait: 1800 },
+        { sel: '[data-copy-block="all"]', text: 'Copy All — grabs everything at once', noClick: true, wait: 1800 },
+        { sel: '[data-copy-block="emr"]', text: 'Copy for EMR — structured JSON for the browser extension', noClick: true, wait: 2500 },
+      ],
+    },
+    {
+      id: 'templates',
+      title: 'Saved Templates',
+      desc: 'Jump into doctor-authored templates for fast repeat prescribing.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+      setup: () => {
+        applyPatientPreset('adult-f');
+      },
+      steps: [
+        { sel: '[data-set-field="workflowMode"][data-value="template"]', text: 'Switch to Template mode', wait: 1500 },
+        { sel: '.option-list', text: 'Pick a saved template — guardrails are checked automatically', noClick: true, wait: 2500 },
+      ],
+    },
+    {
+      id: 'lookup',
+      title: 'Formulary Browser',
+      desc: 'Browse all 500+ medications grouped by condition.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
+      setup: () => {
+        applyPatientPreset('adult-f');
+      },
+      steps: [
+        { sel: '[data-set-field="workflowMode"][data-value="lookup"]', text: 'Switch to Lookup mode', wait: 1500 },
+        { sel: '[data-search-field="lookupSearch"]', text: 'Search any medication or condition', noClick: true, wait: 2000 },
+        { sel: '.lookup-group', text: 'Medications grouped by condition with pricing', noClick: true, wait: 2500 },
+      ],
+    },
+    {
+      id: 'allergies',
+      title: 'Allergy & Interaction Checks',
+      desc: 'Toggle patient allergies and current meds to block unsafe options.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+      setup: () => {},
+      steps: [
+        { sel: '[data-toggle-list="allergies"]', text: 'Toggle allergies — unsafe drugs are blocked automatically', noClick: true, wait: 2500 },
+        { sel: '[data-toggle-list="currentMeds"]', text: 'Set current meds — interaction warnings appear', noClick: true, wait: 2500 },
+      ],
+    },
+    {
+      id: 'print',
+      title: 'Print Prescription',
+      desc: 'Print a clean Rx page with Ctrl+P — only the output prints.',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+      setup: () => {},
+      steps: [],
+      action: 'print',
+    },
+  ];
+
+  function renderHelpModal() {
+    const el = dom.helpModal;
+    if (!app._helpOpen) {
+      el.hidden = true;
+      return;
+    }
+    el.hidden = false;
+
+    let h = `<div class="help-modal-inner">`;
+    h += `<div class="help-modal-head"><h2>How to use Tree of Life</h2><button type="button" class="tour-close" data-help-close>&times;</button></div>`;
+    h += `<p class="help-subtitle">Click any feature below to see a guided walkthrough.</p>`;
+
+    h += `<ul class="help-feature-list">`;
+    HELP_FEATURES.forEach(f => {
+      h += `<li class="help-feature-item" data-help-feature="${f.id}">`;
+      h += `<div class="help-feature-icon">${f.icon}</div>`;
+      h += `<div class="help-feature-body"><strong>${escape(f.title)}</strong><span>${escape(f.desc)}</span></div>`;
+      h += `<div class="help-feature-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>`;
+      h += `</li>`;
+    });
+    h += `</ul>`;
+
+    // Keyboard shortcuts reference
+    h += `<div class="help-shortcuts">`;
+    h += `<div class="help-shortcuts-title">Keyboard shortcuts</div>`;
+    const shortcuts = [
+      ['Focus search', 'Ctrl + K'],
+      ['New case', 'Ctrl + N'],
+      ['Copy all', 'Ctrl + Shift + C'],
+      ['Print Rx', 'Ctrl + P'],
+      ['Close modal / stop demo', 'Esc'],
+    ];
+    shortcuts.forEach(([label, keys]) => {
+      h += `<div class="help-shortcut-row"><span>${escape(label)}</span><span>${keys.split(' + ').map(k => `<kbd class="kbd">${k}</kbd>`).join(' + ')}</span></div>`;
+    });
+    h += `</div>`;
+
+    h += `</div>`;
+    el.innerHTML = h;
+  }
+
+  async function runFeatureWalkthrough(featureId) {
+    const feature = HELP_FEATURES.find(f => f.id === featureId);
+    if (!feature) return;
+
+    // Close help modal
+    app._helpOpen = false;
+    renderHelpModal();
+
+    // Handle special actions
+    if (feature.action === 'print') {
+      const printDate = document.getElementById('printDate');
+      if (printDate) printDate.textContent = new Date().toLocaleDateString('en-CA');
+      showToast('Use Ctrl+P to print — only the Rx output is included');
+      return;
+    }
+
+    if (!feature.steps.length) return;
+
+    // Run setup to get the UI into the right state
+    feature.setup();
+    await demoSleep(300);
+
+    const spotlight = document.getElementById('demoSpotlight');
+    const cursorEl = document.getElementById('demoCursor');
+    const labelEl = document.getElementById('demoLabel');
+
+    // Init cursor at center
+    cursorEl.style.transition = 'none';
+    spotlight.style.transition = 'none';
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    cursorEl.style.left = cx + 'px';
+    cursorEl.style.top = cy + 'px';
+    spotlight.style.left = (cx - 20) + 'px';
+    spotlight.style.top = (cy - 20) + 'px';
+    spotlight.style.width = '40px';
+    spotlight.style.height = '40px';
+    void cursorEl.offsetHeight;
+    cursorEl.style.transition = '';
+    spotlight.style.transition = '';
+
+    spotlight.hidden = false;
+    cursorEl.hidden = false;
+    labelEl.hidden = false;
+    app._demoRunning = true;
+
+    await demoSleep(400);
+
+    for (let i = 0; i < feature.steps.length; i++) {
+      if (!app._demoRunning) break;
+      const step = feature.steps[i];
+
+      // Handle type-into-search steps
+      if (step.typeText) {
+        const input = document.querySelector(step.sel);
+        if (input) {
+          input.focus();
+          const rect = input.getBoundingClientRect();
+          const pad = 8;
+          spotlight.style.left = (rect.left - pad) + 'px';
+          spotlight.style.top = (rect.top - pad) + 'px';
+          spotlight.style.width = (rect.width + pad * 2) + 'px';
+          spotlight.style.height = (rect.height + pad * 2) + 'px';
+          cursorEl.style.left = (rect.left + 20) + 'px';
+          cursorEl.style.top = (rect.top + rect.height / 2) + 'px';
+          labelEl.textContent = step.text;
+          const lx = rect.right + 16;
+          const ly = rect.top + rect.height / 2 - 14;
+          labelEl.style.left = Math.min(lx, window.innerWidth - 280) + 'px';
+          labelEl.style.top = Math.max(ly, 8) + 'px';
+
+          // Type characters one by one
+          for (const ch of step.typeText) {
+            if (!app._demoRunning) break;
+            app._searchGuided = (app._searchGuided || '') + ch;
+            render();
+            input.focus();
+            await demoSleep(120);
+          }
+        }
+        await demoSleep(step.wait || 1500);
+        continue;
+      }
+
+      const el = document.querySelector(step.sel);
+      if (!el) { await demoSleep(300); continue; }
+
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      await demoSleep(250);
+
+      const rect = el.getBoundingClientRect();
+      const pad = 8;
+
+      spotlight.style.left = (rect.left - pad) + 'px';
+      spotlight.style.top = (rect.top - pad) + 'px';
+      spotlight.style.width = (rect.width + pad * 2) + 'px';
+      spotlight.style.height = (rect.height + pad * 2) + 'px';
+
+      cursorEl.style.left = (rect.left + rect.width * 0.3) + 'px';
+      cursorEl.style.top = (rect.top + rect.height * 0.5) + 'px';
+
+      labelEl.textContent = step.text;
+      const lx = rect.right + 16;
+      const ly = rect.top + rect.height / 2 - 14;
+      labelEl.style.left = Math.min(lx, window.innerWidth - 280) + 'px';
+      labelEl.style.top = Math.max(ly, 8) + 'px';
+
+      await demoSleep(600);
+      if (!app._demoRunning) break;
+
+      if (!step.noClick) {
+        cursorEl.classList.add('demo-clicking');
+        await demoSleep(150);
+        el.click();
+        cursorEl.classList.remove('demo-clicking');
+      }
+
+      await demoSleep(step.wait || 1200);
+    }
+
+    spotlight.hidden = true;
+    cursorEl.hidden = true;
+    labelEl.hidden = true;
+    app._demoRunning = false;
+  }
+
   // ─── RENDER ALL ───────────────────────────────────────────────────
 
   function render() {
@@ -1038,6 +1355,7 @@
     if (app._refineOpen === undefined) app._refineOpen = false;
     app._refinePrefs ||= {};
     if (app._refineSubmitted === undefined) app._refineSubmitted = false;
+    if (app._helpOpen === undefined) app._helpOpen = false;
     app.ensureGuidedSelections();
     app.ensureTemplateSelection();
   }
@@ -1344,10 +1662,36 @@
 
     dom.refineBtn = document.getElementById('refineBtn');
     dom.refineModal = document.getElementById('refineModal');
+    dom.helpBtn = document.getElementById('helpBtn');
+    dom.helpModal = document.getElementById('helpModal');
 
     bindColumn(dom.patientPanel);
     bindColumn(dom.clinicalPanel);
     bindColumn(dom.outputPanel);
+
+    // Help button
+    dom.helpBtn.addEventListener('click', () => {
+      app._helpOpen = true;
+      renderHelpModal();
+    });
+
+    // Help modal events
+    dom.helpModal.addEventListener('click', (e) => {
+      const close = e.target.closest('[data-help-close]');
+      if (close) { app._helpOpen = false; renderHelpModal(); return; }
+
+      const feature = e.target.closest('[data-help-feature]');
+      if (feature) {
+        runFeatureWalkthrough(feature.dataset.helpFeature);
+        return;
+      }
+
+      // Click backdrop to close
+      if (e.target === dom.helpModal) {
+        app._helpOpen = false;
+        renderHelpModal();
+      }
+    });
 
     // Fixed refine button
     dom.refineBtn.addEventListener('click', () => {
@@ -1427,6 +1771,11 @@
           document.getElementById('demoSpotlight').hidden = true;
           document.getElementById('demoCursor').hidden = true;
           document.getElementById('demoLabel').hidden = true;
+          return;
+        }
+        if (app._helpOpen) {
+          app._helpOpen = false;
+          renderHelpModal();
           return;
         }
         if (app._refineOpen) {

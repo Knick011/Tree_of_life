@@ -3153,6 +3153,171 @@ select:focus,
   opacity: 1;
 }
 
+/* ─── Help button & modal ───────────────────────────────────────── */
+.ghost-button-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.ghost-button-help:hover {
+  background: var(--teal-light);
+  color: var(--teal);
+  border-color: var(--teal);
+}
+
+.ghost-button-help svg {
+  flex-shrink: 0;
+}
+
+.help-overlay[hidden] {
+  display: none !important;
+}
+
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(26, 35, 50, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.help-modal-inner {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 16px 48px rgba(26, 35, 50, 0.25);
+}
+
+.help-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.help-modal-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.help-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 14px;
+}
+
+.help-feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.help-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-light);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--surface);
+}
+
+.help-feature-item:hover {
+  background: var(--teal-light);
+  border-color: var(--teal);
+}
+
+.help-feature-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--teal);
+}
+
+.help-feature-item:hover .help-feature-icon {
+  background: var(--teal);
+  color: #fff;
+}
+
+.help-feature-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.help-feature-body strong {
+  font-size: 13px;
+  display: block;
+  margin-bottom: 1px;
+}
+
+.help-feature-body span {
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+}
+
+.help-feature-arrow {
+  flex-shrink: 0;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform: translateX(-4px);
+}
+
+.help-feature-item:hover .help-feature-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.help-shortcuts {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-light);
+}
+
+.help-shortcuts-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.help-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.help-shortcut-row .kbd {
+  font-size: 11px;
+}
+
 /* ─── Condition summary card ────────────────────────────────────── */
 .condition-summary-card {
   background: var(--teal-light);
@@ -3186,6 +3351,7 @@ select:focus,
   .col-patient,
   .col-clinical,
   .refine-fab,
+  .help-overlay,
   .refine-overlay,
   .tour-overlay,
   .tour-card,
