@@ -176,7 +176,7 @@
       h += `<span>Age${ageVal ? ` <span class="field-error-hint">${escape(ageVal.msg)}</span>` : ''}</span>`;
       h += `<div class="stepper-input${ageVal?.error ? ' stepper-error' : ''}">`;
       h += `<button type="button" class="stepper-btn" data-stepper="age" data-dir="-1" ${s.age <= 0 ? 'disabled' : ''}>-</button>`;
-      h += `<input type="number" class="stepper-value" min="0" max="120" step="1" value="${s.age || ''}" placeholder="0" data-number-field="age" />`;
+      h += `<input type="text" inputMode="numeric" pattern="[0-9]*" class="stepper-value" value="${s.age || ''}" placeholder="0" data-number-field="age" />`;
       h += `<button type="button" class="stepper-btn" data-stepper="age" data-dir="1">+</button>`;
       h += `</div>`;
     }
@@ -187,7 +187,7 @@
     h += `<span>Weight (kg)</span>`;
     h += `<div class="stepper-input">`;
     h += `<button type="button" class="stepper-btn" data-stepper="weight" data-dir="-1" ${s.weight <= 0 ? 'disabled' : ''}>-</button>`;
-    h += `<input type="number" class="stepper-value" min="1" max="300" step="1" value="${s.weight || ''}" placeholder="0" data-number-field="weight" />`;
+    h += `<input type="text" inputMode="numeric" pattern="[0-9]*" class="stepper-value" value="${s.weight || ''}" placeholder="0" data-number-field="weight" />`;
     h += `<button type="button" class="stepper-btn" data-stepper="weight" data-dir="1">+</button>`;
     h += `</div>`;
     h += `</div>`;
@@ -1749,8 +1749,9 @@
       }
       const numField = e.target.dataset.numberField;
       if (numField) {
-        let val = Number(e.target.value || 0);
-        // Don't clamp — let it through, validation will show a warning
+        // Strip non-numeric chars (input is type="text" for cursor support)
+        const raw = e.target.value.replace(/[^0-9]/g, '');
+        let val = Number(raw || 0);
         app.state[numField] = Math.max(0, val);
         // Check if domain conflicts after age change
         if (numField === 'age' && app.state.domain && getExcludedDomains().has(app.state.domain)) {
@@ -1759,7 +1760,19 @@
           app.state.condition = '';
           app.state.symptoms = [];
         }
-        return render();
+        // Don't full-render while typing — just update output panels
+        autoProcess();
+        renderOutputPanel();
+        dom.refineBtn.classList.toggle('visible', !!app.processedSnapshot);
+        // Update validation styling in-place
+        const stepperEl = e.target.closest('.stepper-input');
+        const ageV = numField === 'age' ? getAgeValidation() : null;
+        if (stepperEl) {
+          stepperEl.classList.toggle('stepper-error', !!ageV?.error);
+        }
+        const hintEl = e.target.closest('.field')?.querySelector('.field-error-hint');
+        if (hintEl) hintEl.textContent = ageV?.msg || '';
+        return;
       }
       const selectField = e.target.dataset?.selectField;
       if (selectField) {
