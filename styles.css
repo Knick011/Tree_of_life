@@ -573,7 +573,7 @@ select:focus,
   font-weight: 600;
 }
 
-.alt-row span {
+.alt-row span:not(.score-badge) {
   color: var(--muted);
   font-size: 11px;
 }
