@@ -11,7 +11,13 @@
     { id: 'adult-f', label: 'Adult F', age: 34, weight: 68, sex: 'female', pregnancy: 'no' },
     { id: 'adult-m', label: 'Adult M', age: 36, weight: 82, sex: 'male', pregnancy: 'na' },
     { id: 'older', label: 'Older', age: 74, weight: 69, sex: 'female', pregnancy: 'no' },
-    { id: 'teen', label: 'Teen', age: 15, weight: 54, sex: 'male', pregnancy: 'na' },
+    { id: 'child', label: 'Child', age: 0, weight: 0, sex: 'male', pregnancy: 'na', isChild: true },
+  ];
+
+  const CHILD_AGE_BUCKETS = [
+    { id: 'infant', label: '0 – 11 months', age: 0.5, weight: 7 },
+    { id: 'toddler', label: '1 – 5 years', age: 3, weight: 15 },
+    { id: 'school', label: '5 – 12 years', age: 8, weight: 30 },
   ];
 
   const EGFR_PRESETS = [
@@ -55,9 +61,19 @@
     });
     h += `</div>`;
 
+    // Child age bucket picker
+    if (s.patientPresetId === 'child') {
+      h += `<div class="section-label">Age range</div>`;
+      h += `<div class="chip-group">`;
+      CHILD_AGE_BUCKETS.forEach((b) => {
+        h += `<button type="button" class="chip ${app._childBucket === b.id ? 'active' : ''}" data-child-bucket="${b.id}">${escape(b.label)}</button>`;
+      });
+      h += `</div>`;
+    }
+
     h += `<div class="section-label">Demographics</div>`;
     h += `<div class="field-row">`;
-    h += `<div class="field"><span>Age</span><input type="number" class="input-sm" min="0" max="120" value="${s.age}" data-number-field="age" /></div>`;
+    h += `<div class="field"><span>Age</span><input type="number" class="input-sm" min="0" max="120" step="any" value="${s.age}" data-number-field="age" /></div>`;
     h += `<div class="field"><span>Weight (kg)</span><input type="number" class="input-sm" min="1" max="300" value="${s.weight}" data-number-field="weight" /></div>`;
     h += `</div>`;
 
@@ -522,29 +538,49 @@
       h += `<div class="check-item level-${templateFit.status}"><div><strong>${escape(templateFit.title)}</strong><p>${escape(templateFit.body)}</p></div></div>`;
     }
 
+    // Build ranked list (all options sorted by score, selected first)
+    const RANK_COLORS = ['rank-green', 'rank-amber', 'rank-red'];
+    const ranked = selected
+      ? [selected, ...options.filter((o) => o.id !== app.selectedOptionId)]
+      : options;
+
     // Primary selection
     if (selected) {
       const copyPack = app.buildCopyPack(selected, ctx);
-      h += `<div class="section-label" style="margin-top:6px">Primary</div>`;
-      h += `<div class="primary-card status-tint-${selected.status}">`;
+      h += `<div class="section-label" style="margin-top:6px">Recommended</div>`;
+      h += `<div class="primary-card ${RANK_COLORS[0]}">`;
       h += `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px">`;
       h += `<div><strong style="font-size:14px">${escape(selected.label)}</strong><div style="color:var(--muted);font-size:12px">${escape(selected.dosePreview)}</div></div>`;
-      h += `<div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${selected.status}">Score: ${selected.score}</span><span class="status-badge status-${selected.status}">${escape(selected.status)}</span></div>`;
+      h += `<div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${selected.status}">${escape(selected.status)}</span></div>`;
       h += `</div>`;
       h += `<div style="display:flex;gap:4px;margin-bottom:2px"><span class="tag-sm">${escape(selected.price)}</span><span class="tag-sm">${escape(selected.regionData.formulary)}</span></div>`;
       h += `</div>`;
 
       // Alternatives — directly below primary card
-      if (options.length > 1) {
+      if (ranked.length > 1) {
         h += `<div class="section-label" style="margin-top:4px">Alternatives</div>`;
-        options.filter((o) => o.id !== app.selectedOptionId).forEach((o) => {
-          h += `<div class="alt-row status-tint-${o.status}" data-option="${o.id}"><div><strong>${escape(o.label)}</strong><span>${escape(o.dosePreview)}</span></div><div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${o.status}">Score: ${o.score}</span><span class="status-badge status-${o.status}">${escape(o.status)}</span></div></div>`;
+        ranked.slice(1).forEach((o, i) => {
+          const rankColor = RANK_COLORS[Math.min(i + 1, 2)];
+          h += `<div class="alt-row ${rankColor}" data-option="${o.id}"><div><strong>${escape(o.label)}</strong><span>${escape(o.dosePreview)}</span></div><div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${o.status}">${escape(o.status)}</span></div></div>`;
         });
       }
 
       // Rx block
       h += `<div class="rx-block-head"><strong>Rx</strong><button type="button" class="copy-btn" data-copy-block="rx">Copy</button></div>`;
       h += `<div class="rx-block" id="rxText">${escape(copyPack.rx)}</div>`;
+
+      // Pediatric dose calculation note
+      if (ctx.age < 13) {
+        const med = app.getOptionMeta(selected.id);
+        const doseText = text(med.dose);
+        h += `<div class="peds-calc">`;
+        h += `<div class="peds-calc-head">Dose calculation (pediatric)</div>`;
+        h += `<div class="peds-calc-body">`;
+        h += `<div>Patient: ${escape(ctx.age < 1 ? Math.round(ctx.age * 12) + ' months' : ctx.age + ' years')}, ${ctx.weight} kg</div>`;
+        h += `<div>Standard dosing: ${escape(doseText)}</div>`;
+        h += `<div>Basis: weight-based (${ctx.weight} kg) — verify against formulary for pediatric-specific adjustments</div>`;
+        h += `</div></div>`;
+      }
 
       // Chart block
       h += `<div class="chart-block-head"><strong>Chart note</strong><button type="button" class="copy-btn" data-copy-block="chart">Copy</button></div>`;
@@ -735,11 +771,13 @@
         h += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${activePrefs.map((k) => `<span class="tag-sm tag-teal">${escape(prefLabels[k]||k)}</span>`).join('')}</div>`;
       }
       if (refined.length) {
+        const RANK_COLORS_R = ['rank-green', 'rank-amber', 'rank-red'];
         refined.forEach((o, i) => {
           const isBest = i === 0;
-          h += `<div class="refine-result-row ${isBest ? 'refine-result-best' : ''}" data-refine-pick="${o.id}">`;
+          const rc = RANK_COLORS_R[Math.min(i, 2)];
+          h += `<div class="refine-result-row ${rc} ${isBest ? 'refine-result-best' : ''}" data-refine-pick="${o.id}">`;
           h += `<div><strong>${escape(o.label)}</strong><span style="display:block;color:var(--muted);font-size:11px">${escape(o.dosePreview)}</span>`;
-          h += `<div style="display:flex;gap:4px;margin-top:3px"><span class="tag-sm">${escape(o.price)}</span><span class="score-badge score-${o.status}">Score: ${o._refinedScore}</span><span class="status-badge status-${o.status}">${escape(o.status)}</span></div>`;
+          h += `<div style="display:flex;gap:4px;margin-top:3px"><span class="tag-sm">${escape(o.price)}</span><span class="score-badge score-${o.status}">${escape(o.status)}</span></div>`;
           h += `</div>`;
           if (isBest) h += `<span class="tag-sm tag-teal" style="flex-shrink:0">Best fit</span>`;
           h += `</div>`;
@@ -916,6 +954,7 @@
     app._searchGuided ||= '';
     app._searchTemplate ||= '';
     app._searchLookup ||= '';
+    if (app._childBucket === undefined) app._childBucket = null;
     app._lookupSelectedMed ||= '';
     if (app._refineOpen === undefined) app._refineOpen = false;
     app._refinePrefs ||= {};
@@ -963,10 +1002,27 @@
     const p = PATIENT_PRESETS.find((x) => x.id === id);
     if (!p) return;
     app.state.patientPresetId = p.id;
-    app.state.age = p.age;
-    app.state.weight = p.weight;
     app.state.sex = p.sex;
     app.state.pregnancy = p.pregnancy;
+    if (p.isChild) {
+      // Show age bucket picker — don't set age/weight yet
+      app._childBucket = null;
+      app.state.age = 0;
+      app.state.weight = 0;
+    } else {
+      app._childBucket = null;
+      app.state.age = p.age;
+      app.state.weight = p.weight;
+    }
+    render();
+  }
+
+  function applyChildBucket(bucketId) {
+    const b = CHILD_AGE_BUCKETS.find((x) => x.id === bucketId);
+    if (!b) return;
+    app._childBucket = b.id;
+    app.state.age = b.age;
+    app.state.weight = b.weight;
     render();
   }
 
@@ -1011,6 +1067,7 @@
     app._lookupSelectedMed = '';
     app._refineOpen = false;
     app._refinePrefs = {};
+    app._childBucket = null;
     render();
   }
 
@@ -1048,6 +1105,9 @@
     el.addEventListener('click', (e) => {
       const preset = e.target.closest('[data-patient-preset]');
       if (preset) return applyPatientPreset(preset.dataset.patientPreset);
+
+      const childBucket = e.target.closest('[data-child-bucket]');
+      if (childBucket) return applyChildBucket(childBucket.dataset.childBucket);
 
       const egfr = e.target.closest('[data-egfr-preset]');
       if (egfr) return applyEgfrPreset(egfr.dataset.egfrPreset);
@@ -1107,8 +1167,19 @@
       }
       const numField = e.target.dataset.numberField;
       if (numField) {
-        app.state[numField] = Number(e.target.value || 0);
-        if (numField === 'age' || numField === 'weight') app.state.patientPresetId = '';
+        let val = Number(e.target.value || 0);
+        if (numField === 'age') {
+          // Enforce preset age limits
+          if (app.state.patientPresetId === 'adult-f' || app.state.patientPresetId === 'adult-m') {
+            val = Math.max(val, 13);
+          } else if (app.state.patientPresetId === 'older') {
+            val = Math.max(val, 60);
+          } else if (app.state.patientPresetId === 'child') {
+            val = Math.min(val, 12);
+          }
+        }
+        app.state[numField] = val;
+        if (numField === 'age' || numField === 'weight') app.state.patientPresetId = app.state.patientPresetId || '';
         return render();
       }
       const selectField = e.target.dataset?.selectField;
@@ -1211,6 +1282,7 @@
       app._lookupSelectedMed = '';
       app._refineOpen = false;
       app._refinePrefs = {};
+      app._childBucket = null;
       app.processedSnapshot = null;
       app.selectedOptionId = null;
       render();

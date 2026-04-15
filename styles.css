@@ -2848,9 +2848,22 @@ select:focus,
 }
 
 .refine-result-best {
-  background: var(--teal-light);
   border-color: var(--teal);
-  border-left: 3px solid var(--teal);
+}
+
+.refine-result-row.rank-green {
+  border-left: 3px solid var(--success);
+  background: rgba(29, 131, 72, 0.04);
+}
+
+.refine-result-row.rank-amber {
+  border-left: 3px solid var(--caution);
+  background: rgba(212, 160, 23, 0.04);
+}
+
+.refine-result-row.rank-red {
+  border-left: 3px solid var(--danger);
+  background: rgba(192, 57, 43, 0.04);
 }
 
 .refine-signal-row {
@@ -2941,19 +2954,33 @@ select:focus,
   font-size: 11px;
 }
 
-/* ─── Enhanced status colors ─────────────────────── */
+/* ─── Rank-based colors (position, not status) ───── */
 
-.primary-card.status-tint-eligible {
+.primary-card.rank-green,
+.alt-row.rank-green {
   border-left: 3px solid var(--success);
+  background: rgba(29, 131, 72, 0.04);
+  border-color: rgba(29, 131, 72, 0.2);
+  border-left-color: var(--success);
 }
 
-.primary-card.status-tint-caution {
+.primary-card.rank-amber,
+.alt-row.rank-amber {
   border-left: 3px solid var(--caution);
+  background: rgba(212, 160, 23, 0.06);
+  border-color: rgba(212, 160, 23, 0.25);
+  border-left-color: var(--caution);
 }
 
-.primary-card.status-tint-blocked {
+.primary-card.rank-red,
+.alt-row.rank-red {
   border-left: 3px solid var(--danger);
+  background: rgba(192, 57, 43, 0.06);
+  border-color: rgba(192, 57, 43, 0.2);
+  border-left-color: var(--danger);
 }
+
+/* ─── Status pills (eligibility indicator) ───────── */
 
 .score-badge.score-eligible {
   background: var(--success);
@@ -2967,16 +2994,34 @@ select:focus,
   background: var(--danger);
 }
 
-.alt-row.status-tint-eligible {
-  border-left: 3px solid var(--success);
+/* ─── Pediatric dose calculation ─────────────────── */
+
+.peds-calc {
+  margin: 6px 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(13, 115, 119, 0.3);
+  border-left: 3px solid var(--teal);
+  border-radius: var(--radius);
+  background: var(--teal-light);
 }
 
-.alt-row.status-tint-caution {
-  border-left: 3px solid var(--caution);
+.peds-calc-head {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--teal);
+  margin-bottom: 4px;
 }
 
-.alt-row.status-tint-blocked {
-  border-left: 3px solid var(--danger);
+.peds-calc-body {
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.peds-calc-body div + div {
+  margin-top: 2px;
 }
 
 /* ─── Animated demo ──────────────────────────────── */
