@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 320px;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      color: #1a2332;
+      background: #f7f8fa;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #1a2332;
+      color: #fff;
+    }
+    .brand-mark {
+      width: 24px; height: 24px;
+      display: grid; place-items: center;
+      border-radius: 5px;
+      background: #0d7377;
+      font-weight: 800; font-size: 9px;
+      letter-spacing: 0.04em;
+    }
+    .header h1 { font-size: 13px; font-weight: 700; }
+    .body { padding: 12px 14px; }
+    .status-box {
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .status-empty {
+      background: #f0f2f5;
+      color: #6b7785;
+      border: 1px dashed #e2e5e9;
+    }
+    .status-ready {
+      background: rgba(29, 131, 72, 0.08);
+      color: #1d8348;
+      border: 1px solid rgba(29, 131, 72, 0.2);
+    }
+    .status-ready strong { color: #1d8348; }
+    .rx-preview {
+      margin-top: 8px;
+      padding: 8px;
+      background: #fff;
+      border: 1px solid #e2e5e9;
+      border-radius: 4px;
+      font-family: "Consolas", monospace;
+      font-size: 11px;
+      white-space: pre-wrap;
+      max-height: 120px;
+      overflow-y: auto;
+      color: #1a2332;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 36px;
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 120ms ease;
+    }
+    .btn-primary { background: #0d7377; color: #fff; }
+    .btn-primary:hover { background: #0a5f62; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary {
+      background: #f0f2f5; color: #1a2332;
+      border: 1px solid #e2e5e9;
+      margin-top: 6px;
+    }
+    .btn-secondary:hover { background: #e2e5e9; }
+    .emr-select {
+      width: 100%;
+      height: 32px;
+      padding: 0 8px;
+      border: 1px solid #e2e5e9;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 12px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+    .label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6b7785;
+      margin-bottom: 4px;
+    }
+    .footer {
+      padding: 8px 14px;
+      border-top: 1px solid #e2e5e9;
+      font-size: 10px;
+      color: #6b7785;
+      text-align: center;
+    }
+    .field-list {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #6b7785;
+    }
+    .field-list div {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .field-list .val { color: #1a2332; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand-mark">TOL</div>
+    <h1>Tree of Life Rx Filler</h1>
+  </div>
+
+  <div class="body">
+    <span class="label">Target EMR</span>
+    <select id="emrSelect" class="emr-select">
+      <option value="oscar">OSCAR / Juno</option>
+      <option value="pssuite">PS Suite (Telus)</option>
+      <option value="accuro">Accuro (QHR)</option>
+      <option value="generic">Other (generic)</option>
+    </select>
+
+    <div id="statusBox" class="status-box status-empty">
+      No Rx data in clipboard. Copy a prescription from Tree of Life first.
+    </div>
+
+    <div id="fieldList" class="field-list" hidden></div>
+
+    <button id="fillBtn" class="btn btn-primary" disabled>Fill Rx Fields</button>
+    <button id="readBtn" class="btn btn-secondary">Read Clipboard</button>
+  </div>
+
+  <div class="footer">v1.0 &middot; Tree of Life Prescribing Tool</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

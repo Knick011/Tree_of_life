@@ -617,6 +617,9 @@
       // Copy all
       h += `<button type="button" class="copy-all-btn" data-copy-block="all">Copy All</button>`;
 
+      // Copy for EMR (structured JSON for browser extension)
+      h += `<button type="button" class="copy-emr-btn" data-copy-block="emr">Copy for EMR</button>`;
+
       // Why this (collapsed)
       h += `<details class="fold-section" style="margin-top:6px">`;
       h += `<summary>Why this</summary>`;
@@ -1059,7 +1062,51 @@
 
   async function copyBlock(kind) {
     let content = '';
-    if (kind === 'rx') content = document.getElementById('rxText')?.textContent || '';
+    if (kind === 'emr') {
+      // Structured JSON for browser extension
+      const ctx = app.processedSnapshot;
+      const options = app.evaluateOptions(ctx);
+      const sel = selectBestOption(options, ctx);
+      if (sel) {
+        const med = app.getOptionMeta(sel.id);
+        const emrData = {
+          _tol: true,
+          medication: med.order.medication,
+          sig: text(med.order.sig),
+          quantity: med.order.dispense,
+          frequency: '',
+          duration: med.order.duration,
+          refills: med.order.refills,
+          route: '',
+          dosePreview: sel.dosePreview,
+          condition: app.currentConditionLabel(ctx) || '',
+        };
+        // Extract frequency from sig (e.g., "twice daily" → "BID")
+        const sigLower = emrData.sig.toLowerCase();
+        if (/once daily|every day|qd/i.test(sigLower)) emrData.frequency = 'OD';
+        else if (/twice daily|bid/i.test(sigLower)) emrData.frequency = 'BID';
+        else if (/three times|tid/i.test(sigLower)) emrData.frequency = 'TID';
+        else if (/four times|qid/i.test(sigLower)) emrData.frequency = 'QID';
+        else if (/at bedtime|qhs/i.test(sigLower)) emrData.frequency = 'QHS';
+        else if (/every \d+ hours/i.test(sigLower)) {
+          const hrs = sigLower.match(/every (\d+) hours/i);
+          if (hrs) emrData.frequency = `Q${hrs[1]}H`;
+        }
+        // Extract route from sig
+        if (/\boral|by mouth|po\b/i.test(sigLower)) emrData.route = 'PO';
+        else if (/topical|apply/i.test(sigLower)) emrData.route = 'TOP';
+        else if (/\bim\b|intramuscular/i.test(sigLower)) emrData.route = 'IM';
+        else if (/\biv\b|intravenous/i.test(sigLower)) emrData.route = 'IV';
+        else if (/sublingual|\bsl\b/i.test(sigLower)) emrData.route = 'SL';
+        else if (/nasal|intranasal|nostril/i.test(sigLower)) emrData.route = 'IN';
+        else if (/ophthalmic|eye/i.test(sigLower)) emrData.route = 'OPH';
+        else if (/otic|ear/i.test(sigLower)) emrData.route = 'OT';
+        else if (/vaginal/i.test(sigLower)) emrData.route = 'VAG';
+        else if (/rectal/i.test(sigLower)) emrData.route = 'PR';
+
+        content = JSON.stringify(emrData);
+      }
+    } else if (kind === 'rx') content = document.getElementById('rxText')?.textContent || '';
     else if (kind === 'chart') content = document.getElementById('chartText')?.textContent || '';
     else if (kind === 'pharmacy') content = document.getElementById('pharmacyText')?.textContent || '';
     else if (kind === 'all') {
@@ -1074,7 +1121,7 @@
       const btn = dom.outputPanel.querySelector(`[data-copy-block="${kind}"]`);
       if (btn) {
         const orig = btn.textContent;
-        btn.textContent = 'Copied';
+        btn.textContent = kind === 'emr' ? 'Copied JSON!' : 'Copied';
         setTimeout(() => { btn.textContent = orig; }, 1000);
       }
     } catch { /* fallback: user can select text */ }
