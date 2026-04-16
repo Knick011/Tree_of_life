@@ -14,9 +14,6 @@
       <h1>Tree of Life</h1>
     </div>
     <div class="header-actions">
-      <button id="newCaseBtn" class="ghost-button" type="button">New case</button>
-      <button id="loadScenarioBtn" class="ghost-button ghost-button-secondary" type="button">Demo</button>
-      <button id="startTourBtn" class="ghost-button ghost-button-secondary" type="button">Tour</button>
       <button id="helpBtn" class="ghost-button ghost-button-help" type="button">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Help
@@ -60,25 +57,6 @@
   <!-- Refine modal -->
   <div id="refineModal" class="refine-overlay" hidden></div>
 
-  <!-- Tour overlay (kept from old version) -->
-  <div id="tourOverlay" class="tour-overlay" hidden></div>
-  <div id="tourCard" class="tour-card" hidden>
-    <div class="tour-card-head">
-      <span id="tourStepBadge" class="tour-badge"></span>
-      <button id="tourCloseBtn" class="tour-close" type="button" aria-label="Close">&times;</button>
-    </div>
-    <h2 id="tourTitle"></h2>
-    <p id="tourBody" class="tour-body"></p>
-    <div class="tour-note">
-      <strong>Try this</strong>
-      <span id="tourTry"></span>
-    </div>
-    <div class="tour-actions">
-      <button id="tourBackBtn" type="button" class="tour-button tour-button-muted">Back</button>
-      <button id="tourNextBtn" type="button" class="tour-button">Next</button>
-    </div>
-  </div>
-
   <!-- Demo walkthrough elements -->
   <div id="demoSpotlight" class="demo-spotlight" hidden></div>
   <div id="demoCursor" class="demo-cursor" hidden>
@@ -100,6 +78,7 @@
   <script src="app-catalog-j.js"></script>
   <script src="app-catalog-k.js"></script>
   <script src="app-catalog-l.js"></script>
+  <script src="app-scores.js"></script>
   <script src="app-logic.js"></script>
   <script src="app-ui.js"></script>
 </body>

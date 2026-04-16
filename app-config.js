@@ -195,6 +195,7 @@ window.TOLConfig = {
     { value: 'guided', en: 'Guided prescribing', fr: 'Prescription guidee' },
     { value: 'template', en: 'Saved template / fast apply', fr: 'Modele enregistre / application rapide' },
     { value: 'lookup', en: 'Lookup / formulary browser', fr: 'Consultation / navigateur formulaire' },
+    { value: 'scores', en: 'Clinical decision support', fr: 'Aide a la decision clinique' },
   ],
   HEPATIC_OPTIONS: [
     { value: 'normal', en: 'No major hepatic concern', fr: 'Pas de grande alerte hepatique' },

@@ -119,7 +119,7 @@
 
   function isReady() {
     const s = app.state;
-    if (s.workflowMode === 'lookup') return false;
+    if (s.workflowMode === 'lookup' || s.workflowMode === 'scores') return false;
     if (s.age <= 0 || s.weight <= 0) return false;
     if (s.workflowMode === 'guided' && !s.condition) return false;
     if (s.workflowMode === 'template' && !s.templateId) return false;
@@ -253,6 +253,7 @@
     h += `<button type="button" class="${s.workflowMode === 'guided' ? 'active' : ''}" data-set-field="workflowMode" data-value="guided">Guided</button>`;
     h += `<button type="button" class="${s.workflowMode === 'template' ? 'active' : ''}" data-set-field="workflowMode" data-value="template">Template</button>`;
     h += `<button type="button" class="${s.workflowMode === 'lookup' ? 'active' : ''}" data-set-field="workflowMode" data-value="lookup">Lookup</button>`;
+    h += `<button type="button" class="${s.workflowMode === 'scores' ? 'active' : ''}" data-set-field="workflowMode" data-value="scores">Scores</button>`;
     h += `</div>`;
 
     if (s.workflowMode === 'guided') {
@@ -261,9 +262,11 @@
       h += renderTemplateSection();
     } else if (s.workflowMode === 'lookup') {
       h += renderLookupSection();
+    } else if (s.workflowMode === 'scores') {
+      h += renderScoresSection();
     }
 
-    if (s.workflowMode !== 'lookup') {
+    if (s.workflowMode !== 'lookup' && s.workflowMode !== 'scores') {
       h += renderSettingsSection();
     }
 
@@ -589,6 +592,157 @@
         h += `</div>`;
         h += `</div>`;
       }
+    }
+
+    return h;
+  }
+
+  // ─── SCORES TAB ──────────────────────────────────────────────────
+
+  function renderScoresSection() {
+    const scores = window.TOLScores;
+    if (!scores) return '<div class="section-label">Scores module not loaded</div>';
+
+    const searchVal = app._searchScores || '';
+    const activeId = app._activeScoreId;
+    let h = '';
+
+    // If a calculator is active, show its form
+    if (activeId) {
+      const calc = scores.getCalculator(activeId);
+      if (calc) {
+        h += renderScoreCalculator(calc);
+        return h;
+      }
+    }
+
+    // Calculator list
+    h += `<div class="section-label">Clinical Decision Support</div>`;
+    h += `<input type="search" class="search-box" placeholder="Search calculators..." data-search-field="scoresSearch" value="${escape(searchVal)}" />`;
+
+    const filtered = scores.search(searchVal);
+
+    // Group by category
+    const grouped = {};
+    filtered.forEach(c => {
+      if (!grouped[c.category]) grouped[c.category] = [];
+      grouped[c.category].push(c);
+    });
+
+    h += `<div class="scores-list" style="margin-top:8px">`;
+    scores.CATEGORIES.forEach(cat => {
+      const calcs = grouped[cat];
+      if (!calcs || !calcs.length) return;
+
+      h += `<div class="scores-category">`;
+      h += `<div class="scores-category-head">${escape(cat)} <span class="tag-sm">${calcs.length}</span></div>`;
+      calcs.forEach(c => {
+        h += `<div class="score-card" data-open-score="${c.id}">`;
+        h += `<div class="score-card-name">${c.name}</div>`;
+        h += `<div class="score-card-desc">${escape(c.desc)}</div>`;
+        h += `</div>`;
+      });
+      h += `</div>`;
+    });
+
+    if (!filtered.length) {
+      h += `<div class="option-item"><span>No calculators match "${escape(searchVal)}"</span></div>`;
+    }
+    h += `</div>`;
+    return h;
+  }
+
+  function renderScoreCalculator(calc) {
+    const scores = window.TOLScores;
+    const vals = app._scoreValues || {};
+    let h = '';
+
+    // Back button + title
+    h += `<div class="score-header">`;
+    h += `<button type="button" class="score-back-btn" data-score-back>`;
+    h += `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back`;
+    h += `</button>`;
+    h += `<span class="tag-sm tag-teal">${escape(calc.category)}</span>`;
+    h += `</div>`;
+    h += `<div class="score-title">${calc.name}</div>`;
+    h += `<div class="score-desc">${escape(calc.desc)}</div>`;
+
+    // Scale header (for PHQ-9, GAD-7, IPSS etc.)
+    if (calc.scaleHeader) {
+      h += `<div class="score-scale-legend">`;
+      calc.scaleHeader.forEach(lbl => {
+        h += `<span class="score-scale-label">${escape(lbl)}</span>`;
+      });
+      h += `</div>`;
+    }
+
+    // Fields
+    h += `<div class="score-fields">`;
+    calc.fields.forEach(f => {
+      const val = vals[f.id];
+
+      if (f.type === 'bool') {
+        h += `<label class="score-bool-row">`;
+        h += `<input type="checkbox" data-score-bool="${f.id}" ${val ? 'checked' : ''} />`;
+        h += `<span>${escape(f.label)}</span>`;
+        h += `</label>`;
+      } else if (f.type === 'select') {
+        h += `<div class="score-field-row">`;
+        h += `<span class="score-field-label">${escape(f.label)}</span>`;
+        h += `<select data-score-select="${f.id}">`;
+        h += `<option value="">-- Select --</option>`;
+        f.options.forEach(o => {
+          h += `<option value="${o.value}" ${String(val) === String(o.value) ? 'selected' : ''}>${escape(o.label)}</option>`;
+        });
+        h += `</select>`;
+        h += `</div>`;
+      } else if (f.type === 'number') {
+        h += `<div class="score-field-row">`;
+        h += `<span class="score-field-label">${escape(f.label)}</span>`;
+        h += `<input type="number" class="score-number-input" data-score-number="${f.id}" value="${val !== undefined ? val : ''}" placeholder="${f.placeholder || ''}" min="${f.min || ''}" max="${f.max || ''}" step="${f.step || 1}" />`;
+        h += `</div>`;
+      } else if (f.type === 'scale') {
+        h += `<div class="score-scale-row">`;
+        h += `<span class="score-field-label">${escape(f.label)}</span>`;
+        h += `<div class="score-scale-btns">`;
+        for (let i = 0; i <= f.max; i++) {
+          const scaleLabel = f.scaleLabels ? f.scaleLabels[i] : '';
+          h += `<button type="button" class="score-scale-btn ${Number(val) === i ? 'active' : ''}" data-score-scale="${f.id}" data-score-scale-val="${i}" title="${escape(scaleLabel || String(i))}">${i}</button>`;
+        }
+        h += `</div>`;
+        h += `</div>`;
+      }
+    });
+    h += `</div>`;
+
+    // Calculate button
+    h += `<button type="button" class="score-calculate-btn" data-score-calculate>Calculate</button>`;
+
+    // Results (if calculated)
+    if (app._scoreResult) {
+      const r = app._scoreResult;
+      h += `<div class="score-result score-result-${r.risk || 'none'}">`;
+      h += `<div class="score-result-head">`;
+      if (r.score !== null && r.score !== undefined) {
+        h += `<div class="score-result-number">${r.score}${r.unit ? ' ' + r.unit : ''}${r.max ? ' / ' + r.max : ''}</div>`;
+      }
+      h += `<div class="score-result-label">${escape(r.label)}</div>`;
+      h += `</div>`;
+      h += `<div class="score-result-interp">${escape(r.interpretation)}</div>`;
+
+      if (r.meds && r.meds.length) {
+        h += `<div class="score-meds">`;
+        h += `<div class="score-meds-title">Medication Recommendations</div>`;
+        r.meds.forEach(m => {
+          h += `<div class="score-med-card">`;
+          h += `<div class="score-med-name">${escape(m.name)}</div>`;
+          h += `<div class="score-med-dose">${escape(m.dose)}</div>`;
+          h += `<div class="score-med-rationale">${escape(m.rationale)}</div>`;
+          h += `</div>`;
+        });
+        h += `</div>`;
+      }
+      h += `</div>`;
     }
 
     return h;
@@ -1634,33 +1788,11 @@
     render();
   }
 
-  // ─── TOUR ─────────────────────────────────────────────────────────
-
+  // ─── TOUR (legacy, buttons removed) ────────────────────────────
   function closeTour() {
-    app.tourState.open = false;
-    dom.tourOverlay.hidden = true;
-    dom.tourCard.hidden = true;
+    if (app.tourState) app.tourState.open = false;
   }
-
-  function renderTourStep() {
-    if (!app.tourState.open) return;
-    const steps = [
-      { title: 'Dashboard layout', body: 'Patient on the left, condition in the center, output on the right. Everything visible at once.', tryText: 'Click Demo to load a sample case instantly.' },
-      { title: 'Fast patient input', body: 'Preset buttons fill demographics in one click. Edit any field to override.', tryText: 'Try clicking Adult F then change the age.' },
-      { title: 'Condition search', body: 'Type to search conditions directly. No drill-down needed. Or switch to Template mode for saved presets.', tryText: 'Type "cystitis" in the condition search box.' },
-      { title: 'Live output', body: 'The right panel updates automatically as you fill fields. Copy Rx, Chart, or Pharmacy with one click.', tryText: 'Click Copy All to grab everything at once.' },
-    ];
-    const step = steps[app.tourState.index];
-    if (!step) return closeTour();
-    dom.tourOverlay.hidden = false;
-    dom.tourCard.hidden = false;
-    dom.tourStepBadge.textContent = `Step ${app.tourState.index + 1} / ${steps.length}`;
-    dom.tourTitle.textContent = step.title;
-    dom.tourBody.textContent = step.body;
-    dom.tourTry.textContent = step.tryText;
-    dom.tourBackBtn.disabled = app.tourState.index === 0;
-    dom.tourNextBtn.textContent = app.tourState.index === steps.length - 1 ? 'Finish' : 'Next';
-  }
+  function renderTourStep() {}
 
   // ─── EVENT BINDING ────────────────────────────────────────────────
 
@@ -1730,6 +1862,54 @@
         app.ensureGuidedSelections();
         return render();
       }
+
+      // ─── Score events ───
+      const openScore = e.target.closest('[data-open-score]');
+      if (openScore) {
+        const calcId = openScore.dataset.openScore;
+        const calc = window.TOLScores?.getCalculator(calcId);
+        app._activeScoreId = calcId;
+        app._scoreResult = null;
+        // Auto-fill from patient context
+        app._scoreValues = calc ? window.TOLScores.autoFillFromPatient(calc, app.state) : {};
+        return render();
+      }
+
+      const scoreBack = e.target.closest('[data-score-back]');
+      if (scoreBack) {
+        app._activeScoreId = null;
+        app._scoreValues = {};
+        app._scoreResult = null;
+        return render();
+      }
+
+      const scoreCalc = e.target.closest('[data-score-calculate]');
+      if (scoreCalc) {
+        const calc = window.TOLScores?.getCalculator(app._activeScoreId);
+        if (calc) {
+          app._scoreResult = calc.calculate(app._scoreValues || {}, app.state);
+        }
+        return render();
+      }
+
+      const scoreBool = e.target.closest('[data-score-bool]');
+      if (scoreBool) {
+        const fid = scoreBool.dataset.scoreBool;
+        if (!app._scoreValues) app._scoreValues = {};
+        app._scoreValues[fid] = !app._scoreValues[fid];
+        app._scoreResult = null;
+        return render();
+      }
+
+      const scaleBtn = e.target.closest('[data-score-scale]');
+      if (scaleBtn) {
+        const fid = scaleBtn.dataset.scoreScale;
+        const val = Number(scaleBtn.dataset.scoreScaleVal);
+        if (!app._scoreValues) app._scoreValues = {};
+        app._scoreValues[fid] = val;
+        app._scoreResult = null;
+        return render();
+      }
     });
 
     el.addEventListener('input', (e) => {
@@ -1746,6 +1926,26 @@
         app._searchLookup = e.target.value;
         app._lookupSelectedMed = '';
         return render();
+      }
+      if (searchField === 'scoresSearch') {
+        app._searchScores = e.target.value;
+        return render();
+      }
+
+      // Score select/number inputs
+      const scoreSelect = e.target.dataset.scoreSelect;
+      if (scoreSelect) {
+        if (!app._scoreValues) app._scoreValues = {};
+        app._scoreValues[scoreSelect] = e.target.value;
+        app._scoreResult = null;
+        return;
+      }
+      const scoreNumber = e.target.dataset.scoreNumber;
+      if (scoreNumber) {
+        if (!app._scoreValues) app._scoreValues = {};
+        app._scoreValues[scoreNumber] = e.target.value;
+        app._scoreResult = null;
+        return;
       }
       const numField = e.target.dataset.numberField;
       if (numField) {
@@ -1796,18 +1996,6 @@
     dom.patientPanel = document.getElementById('patientPanel');
     dom.clinicalPanel = document.getElementById('clinicalPanel');
     dom.outputPanel = document.getElementById('outputPanel');
-    dom.loadScenarioBtn = document.getElementById('loadScenarioBtn');
-    dom.startTourBtn = document.getElementById('startTourBtn');
-    dom.tourOverlay = document.getElementById('tourOverlay');
-    dom.tourCard = document.getElementById('tourCard');
-    dom.tourStepBadge = document.getElementById('tourStepBadge');
-    dom.tourTitle = document.getElementById('tourTitle');
-    dom.tourBody = document.getElementById('tourBody');
-    dom.tourTry = document.getElementById('tourTry');
-    dom.tourBackBtn = document.getElementById('tourBackBtn');
-    dom.tourNextBtn = document.getElementById('tourNextBtn');
-    dom.tourCloseBtn = document.getElementById('tourCloseBtn');
-
     dom.refineBtn = document.getElementById('refineBtn');
     dom.refineModal = document.getElementById('refineModal');
     dom.helpBtn = document.getElementById('helpBtn');
@@ -1891,25 +2079,22 @@
       }
     });
 
-    dom.newCaseBtn = document.getElementById('newCaseBtn');
-    dom.newCaseBtn.addEventListener('click', () => {
+    function resetCase() {
       Object.assign(app.state, structuredClone(app.config.state));
       app._searchGuided = '';
       app._searchTemplate = '';
       app._searchLookup = '';
+      app._searchScores = '';
       app._lookupSelectedMed = '';
+      app._activeScoreId = null;
+      app._scoreValues = {};
       app._refineOpen = false;
       app._refinePrefs = {};
       app._childBucket = null;
       app.processedSnapshot = null;
       app.selectedOptionId = null;
       render();
-    });
-
-    dom.loadScenarioBtn.addEventListener('click', () => {
-      if (app._demoRunning) { app._demoRunning = false; return; }
-      startAnimatedDemo();
-    });
+    }
 
     document.addEventListener('keydown', (e) => {
       // Escape — close demo, refine modal, or tour
@@ -1932,8 +2117,8 @@
           render();
           return;
         }
-        if (app.tourState.open) {
-          closeTour();
+        if (app.tourState?.open) {
+          if (typeof closeTour === 'function') closeTour();
           return;
         }
       }
@@ -1966,28 +2151,10 @@
       // Ctrl+N — new case
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
-        dom.newCaseBtn.click();
+        resetCase();
         return;
       }
     });
-
-    dom.startTourBtn.addEventListener('click', () => {
-      app.tourState.open = true;
-      app.tourState.index = 0;
-      renderTourStep();
-    });
-
-    dom.tourBackBtn.addEventListener('click', () => {
-      if (app.tourState.index > 0) { app.tourState.index -= 1; renderTourStep(); }
-    });
-
-    dom.tourNextBtn.addEventListener('click', () => {
-      app.tourState.index += 1;
-      renderTourStep();
-    });
-
-    dom.tourCloseBtn.addEventListener('click', () => closeTour());
-    dom.tourOverlay.addEventListener('click', () => closeTour());
 
     render();
   }

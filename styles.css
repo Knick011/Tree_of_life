@@ -3438,6 +3438,347 @@ select:focus,
   color: var(--muted);
 }
 
+/* ─── Scores tab ───────────────────────────────────────────────── */
+
+.scores-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scores-category {}
+
+.scores-category-head {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.score-card {
+  background: var(--surface-alt);
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.score-card:hover {
+  border-color: var(--teal);
+  background: var(--teal-light);
+}
+
+.score-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.score-card-desc {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Score calculator form */
+
+.score-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.score-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s ease;
+}
+
+.score-back-btn:hover {
+  background: var(--teal-light);
+}
+
+.score-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.score-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.score-scale-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 6px 8px;
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+}
+
+.score-scale-label {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.score-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.score-bool-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s ease;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.score-bool-row:hover {
+  background: var(--surface-alt);
+}
+
+.score-bool-row input[type="checkbox"] {
+  margin-top: 2px;
+  accent-color: var(--teal);
+  flex-shrink: 0;
+}
+
+.score-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.score-field-row:nth-child(odd) {
+  background: var(--surface-alt);
+}
+
+.score-field-label {
+  flex: 1;
+  color: var(--ink);
+  min-width: 0;
+}
+
+.score-field-row select {
+  flex: 0 0 auto;
+  max-width: 200px;
+  min-width: 120px;
+  font-size: 11px;
+  padding: 4px 6px;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.score-number-input {
+  width: 80px;
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: right;
+}
+
+.score-number-input:focus {
+  border-color: var(--teal);
+  outline: none;
+}
+
+.score-scale-row {
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.score-scale-row:nth-child(odd) {
+  background: var(--surface-alt);
+}
+
+.score-scale-row .score-field-label {
+  display: block;
+  font-size: 12px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.score-scale-btns {
+  display: flex;
+  gap: 3px;
+}
+
+.score-scale-btn {
+  width: 28px;
+  height: 26px;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.score-scale-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.score-scale-btn.active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
+
+.score-calculate-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.score-calculate-btn:hover {
+  opacity: 0.9;
+}
+
+/* Score result */
+
+.score-result {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--line-light);
+  background: var(--surface-alt);
+}
+
+.score-result-low {
+  border-left-color: var(--green);
+  background: rgba(72, 187, 120, 0.06);
+}
+
+.score-result-caution {
+  border-left-color: #ecc94b;
+  background: rgba(236, 201, 75, 0.06);
+}
+
+.score-result-high {
+  border-left-color: #f56565;
+  background: rgba(245, 101, 101, 0.06);
+}
+
+.score-result-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.score-result-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.score-result-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.score-result-interp {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Medication recommendations */
+
+.score-meds {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-light);
+}
+
+.score-meds-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--teal);
+  margin-bottom: 8px;
+}
+
+.score-med-card {
+  background: var(--surface);
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-bottom: 4px;
+}
+
+.score-med-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.score-med-dose {
+  font-size: 12px;
+  color: var(--teal);
+  margin: 1px 0;
+}
+
+.score-med-rationale {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+
 /* ─── Print styles ──────────────────────────────────────────────── */
 @media print {
   body {
