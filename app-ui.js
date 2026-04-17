@@ -682,9 +682,16 @@
       const val = vals[f.id];
 
       if (f.type === 'bool') {
-        h += `<label class="score-bool-row">`;
+        const autoFilled = f.patientAuto && app._scoreAutoFields && app._scoreAutoFields.has(f.id);
+        h += `<label class="score-bool-card ${val ? 'checked' : ''}">`;
         h += `<input type="checkbox" data-score-bool="${f.id}" ${val ? 'checked' : ''} />`;
-        h += `<span>${escape(f.label)}</span>`;
+        h += `<span class="score-bool-label">${escape(f.label)}</span>`;
+        if (f.points !== undefined) {
+          h += `<span class="score-bool-points">${f.points > 0 ? '+' : ''}${f.points}</span>`;
+        }
+        if (autoFilled) {
+          h += `<span class="score-autofill-badge">auto</span>`;
+        }
         h += `</label>`;
       } else if (f.type === 'select') {
         h += `<div class="score-field-row">`;
@@ -708,6 +715,9 @@
         for (let i = 0; i <= f.max; i++) {
           const scaleLabel = f.scaleLabels ? f.scaleLabels[i] : '';
           h += `<button type="button" class="score-scale-btn ${Number(val) === i ? 'active' : ''}" data-score-scale="${f.id}" data-score-scale-val="${i}" title="${escape(scaleLabel || String(i))}">${i}</button>`;
+          if (Number(val) === i && scaleLabel) {
+            h += `<span class="score-scale-active-label">${escape(scaleLabel)}</span>`;
+          }
         }
         h += `</div>`;
         h += `</div>`;
@@ -718,7 +728,7 @@
     // Calculate button
     h += `<button type="button" class="score-calculate-btn" data-score-calculate>Calculate</button>`;
 
-    // Results (if calculated)
+    // Results (if calculated) — score + interpretation stay in center column
     if (app._scoreResult) {
       const r = app._scoreResult;
       h += `<div class="score-result score-result-${r.risk || 'none'}">`;
@@ -729,19 +739,6 @@
       h += `<div class="score-result-label">${escape(r.label)}</div>`;
       h += `</div>`;
       h += `<div class="score-result-interp">${escape(r.interpretation)}</div>`;
-
-      if (r.meds && r.meds.length) {
-        h += `<div class="score-meds">`;
-        h += `<div class="score-meds-title">Medication Recommendations</div>`;
-        r.meds.forEach(m => {
-          h += `<div class="score-med-card">`;
-          h += `<div class="score-med-name">${escape(m.name)}</div>`;
-          h += `<div class="score-med-dose">${escape(m.dose)}</div>`;
-          h += `<div class="score-med-rationale">${escape(m.rationale)}</div>`;
-          h += `</div>`;
-        });
-        h += `</div>`;
-      }
       h += `</div>`;
     }
 
@@ -791,7 +788,123 @@
 
   // ─── RIGHT COLUMN: OUTPUT ─────────────────────────────────────────
 
+  // ─── SCORE OUTPUT PANEL (RIGHT RAIL) ──────────────────────────────
+
+  function renderScoreOutputPanel() {
+    const r = app._scoreResult;
+    const calc = window.TOLScores?.getCalculator(app._activeScoreId);
+
+    if (!r || !calc) {
+      // Empty state for scores mode
+      let h = `<div class="score-output-empty">`;
+      h += `<div class="section-label">Score output</div>`;
+      h += `<div class="score-output-placeholder">`;
+      h += `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.2" opacity="0.4"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>`;
+      h += `<p>Select a calculator and compute a score to see recommended actions here.</p>`;
+      h += `</div></div>`;
+      return h;
+    }
+
+    let h = '';
+
+    // Score summary header
+    h += `<div class="score-output-header score-output-${r.risk || 'none'}">`;
+    h += `<div class="score-output-calc-name">${calc.name}</div>`;
+    if (r.score !== null && r.score !== undefined) {
+      h += `<div class="score-output-value">${r.score}${r.unit ? ' ' + r.unit : ''}${r.max ? ' <span class="score-output-max">/ ' + r.max + '</span>' : ''}</div>`;
+    }
+    h += `<div class="score-output-label">${escape(r.label)}</div>`;
+    h += `<div class="score-output-interp">${escape(r.interpretation)}</div>`;
+    h += `</div>`;
+
+    if (!r.actions || !r.actions.length) return h;
+
+    // Group actions by kind
+    const rxActions = r.actions.filter(a => a.kind === 'rx');
+    const testActions = r.actions.filter(a => a.kind === 'test');
+    const referralActions = r.actions.filter(a => a.kind === 'referral');
+    const monitorActions = r.actions.filter(a => a.kind === 'monitor');
+
+    // Prescriptions
+    if (rxActions.length) {
+      h += `<div class="score-action-group">`;
+      h += `<div class="score-action-group-head"><span class="score-action-icon score-action-icon-rx">\u211e</span> Prescriptions</div>`;
+      rxActions.forEach((a, i) => {
+        const isSelected = app._selectedScoreAction === `rx-${i}`;
+        h += `<div class="score-action-card score-action-rx ${isSelected ? 'selected' : ''}" data-score-action="rx-${i}">`;
+        h += `<div class="score-action-name">${escape(a.name)}</div>`;
+        h += `<div class="score-action-dose">${escape(a.dose)}</div>`;
+        h += `<div class="score-action-rationale">${escape(a.rationale)}</div>`;
+        h += `</div>`;
+
+        // Expanded Rx output when selected
+        if (isSelected) {
+          const copyPack = window.TOLScores.buildScoreCopyPack(a, app.state);
+          if (copyPack) {
+            h += `<div class="score-rx-output">`;
+            h += `<div class="rx-block-head"><strong>Rx</strong><button type="button" class="copy-sm" data-copy-score-rx="${i}">Copy</button></div>`;
+            h += `<pre class="rx-block">${escape(copyPack.rx)}</pre>`;
+            h += `<div class="rx-block-head"><strong>Chart note</strong><button type="button" class="copy-sm" data-copy-score-chart="${i}">Copy</button></div>`;
+            h += `<pre class="rx-block">${escape(copyPack.chart)}</pre>`;
+            h += `</div>`;
+          }
+        }
+      });
+      h += `</div>`;
+    }
+
+    // Tests
+    if (testActions.length) {
+      h += `<div class="score-action-group">`;
+      h += `<div class="score-action-group-head"><span class="score-action-icon score-action-icon-test">\u2691</span> Tests / Investigations</div>`;
+      testActions.forEach(a => {
+        h += `<div class="score-action-card score-action-test">`;
+        h += `<div class="score-action-name">${escape(a.name)}</div>`;
+        h += `<div class="score-action-dose">${escape(a.dose)}</div>`;
+        h += `<div class="score-action-rationale">${escape(a.rationale)}</div>`;
+        h += `</div>`;
+      });
+      h += `</div>`;
+    }
+
+    // Referrals
+    if (referralActions.length) {
+      h += `<div class="score-action-group">`;
+      h += `<div class="score-action-group-head"><span class="score-action-icon score-action-icon-referral">\u2192</span> Referrals</div>`;
+      referralActions.forEach(a => {
+        h += `<div class="score-action-card score-action-referral">`;
+        h += `<div class="score-action-name">${escape(a.name)}</div>`;
+        h += `<div class="score-action-dose">${escape(a.dose)}</div>`;
+        h += `<div class="score-action-rationale">${escape(a.rationale)}</div>`;
+        h += `</div>`;
+      });
+      h += `</div>`;
+    }
+
+    // Monitoring
+    if (monitorActions.length) {
+      h += `<div class="score-action-group">`;
+      h += `<div class="score-action-group-head"><span class="score-action-icon score-action-icon-monitor">\u25cb</span> Monitoring / Next Steps</div>`;
+      monitorActions.forEach(a => {
+        h += `<div class="score-action-card score-action-monitor">`;
+        h += `<div class="score-action-name">${escape(a.name)}</div>`;
+        h += `<div class="score-action-dose">${escape(a.dose)}</div>`;
+        h += `<div class="score-action-rationale">${escape(a.rationale)}</div>`;
+        h += `</div>`;
+      });
+      h += `</div>`;
+    }
+
+    return h;
+  }
+
   function renderOutputPanel() {
+    // ─── SCORES MODE OUTPUT ───────────────────────────────────────
+    if (app.state.workflowMode === 'scores') {
+      dom.outputPanel.innerHTML = renderScoreOutputPanel();
+      return;
+    }
+
     if (!app.processedSnapshot) {
       const s = app.state;
       const missing = [];
@@ -1870,8 +1983,11 @@
         const calc = window.TOLScores?.getCalculator(calcId);
         app._activeScoreId = calcId;
         app._scoreResult = null;
-        // Auto-fill from patient context
-        app._scoreValues = calc ? window.TOLScores.autoFillFromPatient(calc, app.state) : {};
+        app._selectedScoreAction = null;
+        // Auto-fill from patient context and track which fields were auto-filled
+        const autoVals = calc ? window.TOLScores.autoFillFromPatient(calc, app.state) : {};
+        app._scoreValues = autoVals;
+        app._scoreAutoFields = new Set(Object.keys(autoVals));
         return render();
       }
 
@@ -1909,6 +2025,45 @@
         app._scoreValues[fid] = val;
         app._scoreResult = null;
         return render();
+      }
+
+      // Score action selection (Rx cards in right rail)
+      const scoreAction = e.target.closest('[data-score-action]');
+      if (scoreAction) {
+        const actionKey = scoreAction.dataset.scoreAction;
+        app._selectedScoreAction = app._selectedScoreAction === actionKey ? null : actionKey;
+        renderOutputPanel();
+        return;
+      }
+
+      // Score Rx copy buttons
+      const copyScoreRx = e.target.closest('[data-copy-score-rx]');
+      if (copyScoreRx) {
+        const idx = Number(copyScoreRx.dataset.copyScoreRx);
+        const r = app._scoreResult;
+        if (r) {
+          const rxActions = r.actions.filter(a => a.kind === 'rx');
+          const action = rxActions[idx];
+          if (action) {
+            const pack = window.TOLScores.buildScoreCopyPack(action, app.state);
+            if (pack) { navigator.clipboard.writeText(pack.rx).then(() => showToast('Rx copied')); }
+          }
+        }
+        return;
+      }
+      const copyScoreChart = e.target.closest('[data-copy-score-chart]');
+      if (copyScoreChart) {
+        const idx = Number(copyScoreChart.dataset.copyScoreChart);
+        const r = app._scoreResult;
+        if (r) {
+          const rxActions = r.actions.filter(a => a.kind === 'rx');
+          const action = rxActions[idx];
+          if (action) {
+            const pack = window.TOLScores.buildScoreCopyPack(action, app.state);
+            if (pack) { navigator.clipboard.writeText(pack.chart).then(() => showToast('Chart note copied')); }
+          }
+        }
+        return;
       }
     });
 

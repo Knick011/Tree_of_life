@@ -3551,26 +3551,65 @@ select:focus,
   margin-bottom: 12px;
 }
 
-.score-bool-row {
+/* Bool card (checklist item) */
+.score-bool-card {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-light);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.12s ease;
+  transition: all 0.12s ease;
   font-size: 12px;
   color: var(--ink);
+  background: var(--surface);
 }
 
-.score-bool-row:hover {
-  background: var(--surface-alt);
+.score-bool-card:hover {
+  border-color: var(--teal);
+  background: var(--teal-light);
 }
 
-.score-bool-row input[type="checkbox"] {
-  margin-top: 2px;
+.score-bool-card.checked {
+  border-color: var(--teal);
+  background: rgba(56, 178, 172, 0.08);
+}
+
+.score-bool-card input[type="checkbox"] {
   accent-color: var(--teal);
   flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.score-bool-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.score-bool-points {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--teal);
+  background: var(--teal-light);
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.score-autofill-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #805ad5;
+  background: rgba(128, 90, 213, 0.1);
+  padding: 2px 5px;
+  border-radius: 3px;
 }
 
 .score-field-row {
@@ -3773,10 +3812,208 @@ select:focus,
   margin: 1px 0;
 }
 
-.score-med-rationale {
+/* Active scale label (visible meaning under selected value) */
+.score-scale-active-label {
+  font-size: 10px;
+  color: var(--teal);
+  font-weight: 500;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+/* ─── Score output panel (right rail) ──────────────────────────── */
+
+.score-output-empty {
+  padding: 20px 0;
+}
+
+.score-output-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.score-output-placeholder p {
+  margin: 12px 0 0;
+  max-width: 200px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+.score-output-header {
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--line-light);
+  margin-bottom: 12px;
+  background: var(--surface-alt);
+}
+
+.score-output-low { border-left-color: var(--green); background: rgba(72, 187, 120, 0.06); }
+.score-output-caution { border-left-color: #ecc94b; background: rgba(236, 201, 75, 0.06); }
+.score-output-high { border-left-color: #f56565; background: rgba(245, 101, 101, 0.06); }
+
+.score-output-calc-name {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.score-output-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.score-output-max {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.score-output-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 4px 0 6px;
+}
+
+.score-output-interp {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Action groups */
+
+.score-action-group {
+  margin-bottom: 14px;
+}
+
+.score-action-group-head {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.score-action-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.score-action-icon-rx { color: var(--teal); }
+.score-action-icon-test { color: #805ad5; }
+.score-action-icon-referral { color: #dd6b20; }
+.score-action-icon-monitor { color: var(--muted); }
+
+.score-action-card {
+  padding: 8px 10px;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  background: var(--surface);
+  transition: border-color 0.12s ease;
+}
+
+.score-action-rx {
+  cursor: pointer;
+}
+
+.score-action-rx:hover {
+  border-color: var(--teal);
+}
+
+.score-action-rx.selected {
+  border-color: var(--teal);
+  background: rgba(56, 178, 172, 0.06);
+}
+
+.score-action-test { border-left: 3px solid #805ad5; }
+.score-action-referral { border-left: 3px solid #dd6b20; }
+.score-action-monitor { border-left: 3px solid var(--line-light); }
+
+.score-action-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.score-action-dose {
+  font-size: 12px;
+  color: var(--teal);
+  margin: 1px 0;
+}
+
+.score-action-rationale {
   font-size: 11px;
   color: var(--muted);
   font-style: italic;
+}
+
+/* Score Rx copy output */
+
+.score-rx-output {
+  padding: 8px 10px;
+  background: var(--surface-alt);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  margin-top: -4px;
+  margin-bottom: 4px;
+  border: 1px solid var(--teal);
+  border-top: none;
+}
+
+.score-rx-output .rx-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.score-rx-output .rx-block-head strong {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+
+.score-rx-output .rx-block {
+  font-size: 11px;
+  white-space: pre-wrap;
+  background: var(--surface);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-light);
+  margin-bottom: 6px;
+  font-family: var(--font-mono, 'SF Mono', 'Consolas', monospace);
+  color: var(--ink);
+}
+
+.copy-sm {
+  font-size: 10px;
+  padding: 2px 8px;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--teal);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.copy-sm:hover {
+  background: var(--teal);
+  color: #fff;
+  border-color: var(--teal);
 }
 
 /* ─── Print styles ──────────────────────────────────────────────── */
