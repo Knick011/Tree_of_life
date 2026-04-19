@@ -140,21 +140,19 @@
     }
 
     function showApp() {
-      wall.hidden = true;
+      wall.style.display = 'none';
+      shell.style.display = '';
       shell.hidden = false;
       // Init the app if TOLUI exists and hasn't been initialized yet
       if (window.TOLUI && !window._tolInitDone) {
         window._tolInitDone = true;
-        // DOMContentLoaded already fired, manually trigger init
-        // TOLUI.init is called by DOMContentLoaded in app-ui.js,
-        // but since shell was hidden, let's re-render
         TOLUI.render();
       }
     }
 
     function showLogin() {
-      wall.hidden = false;
-      shell.hidden = true;
+      wall.style.display = '';
+      shell.style.display = 'none';
     }
 
     // Check session on load
