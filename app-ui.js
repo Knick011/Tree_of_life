@@ -1099,7 +1099,7 @@
     // Sponsored alternatives placeholder
     h += `<div class="sponsored-section">`;
     h += `<div class="sponsored-label">Sponsored alternatives</div>`;
-    h += `<p class="sponsored-disclaimer">These options are presented by pharmaceutical partners. Tree of Life does not endorse or rank sponsored content.</p>`;
+    h += `<p class="sponsored-disclaimer">These options are presented by pharmaceutical partners. TOL Scribe does not endorse or rank sponsored content.</p>`;
     h += `<div class="sponsored-placeholder">No sponsored content available. This section is reserved for future pharmaceutical partner integrations.</div>`;
     h += `</div>`;
 
@@ -1519,7 +1519,7 @@
     el.hidden = false;
 
     let h = `<div class="help-modal-inner">`;
-    h += `<div class="help-modal-head"><h2>How to use Tree of Life</h2><button type="button" class="tour-close" data-help-close>&times;</button></div>`;
+    h += `<div class="help-modal-head"><h2>How to use TOL Scribe</h2><button type="button" class="tour-close" data-help-close>&times;</button></div>`;
     h += `<p class="help-subtitle">Click any feature below to see a guided walkthrough.</p>`;
 
     h += `<ul class="help-feature-list">`;

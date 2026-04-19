@@ -51,5 +51,5 @@ http
     });
   })
   .listen(port, host, () => {
-    console.log(`Tree of Life running at http://${host}:${port}`);
+    console.log(`TOL Scribe running at http://${host}:${port}`);
   });

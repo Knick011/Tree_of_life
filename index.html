@@ -3,66 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tree of Life</title>
+  <title>TOL Scribe &mdash; Beta</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Thin header bar -->
-  <header class="app-header">
-    <div class="brand">
-      <div class="brand-mark">TOL</div>
-      <h1>Tree of Life</h1>
+  <!-- Login wall -->
+  <div id="loginWall" class="login-wall">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="login-brand-mark">TOL</div>
+        <div class="login-brand-name">Scribe</div>
+        <span class="login-beta-badge">BETA</span>
+      </div>
+      <p class="login-subtitle">Clinical prescribing decision support</p>
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <div class="login-field">
+          <label for="loginUser">Username</label>
+          <input id="loginUser" type="text" placeholder="Enter username" autocomplete="username" required />
+        </div>
+        <div class="login-field">
+          <label for="loginPass">Password</label>
+          <input id="loginPass" type="password" placeholder="Enter password" autocomplete="current-password" required />
+        </div>
+        <div id="loginError" class="login-error" hidden>Invalid username or password</div>
+        <button type="submit" class="login-btn">Sign in</button>
+      </form>
+      <p class="login-footer">For authorized clinicians only. Not for clinical use.</p>
     </div>
-    <div class="header-actions">
-      <button id="helpBtn" class="ghost-button ghost-button-help" type="button">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Help
-      </button>
-    </div>
-  </header>
-
-  <!-- Print header (only visible when printing) -->
-  <div class="print-header">
-    <h1>Tree of Life &mdash; Prescription Draft</h1>
-    <p>Generated on <span id="printDate"></span> &bull; For clinician review only</p>
   </div>
 
-  <!-- Toast notification -->
-  <div id="toast" class="toast"></div>
+  <!-- App container (hidden until authenticated) -->
+  <div id="appShell" class="app-shell" hidden>
 
-  <!-- 3-column dashboard -->
-  <main class="app-dashboard">
-    <!-- Left column: Patient -->
-    <section class="col-patient" id="colPatient">
-      <div class="col-inner" id="patientPanel"></div>
-    </section>
+    <!-- Thin header bar -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-mark">TOL</div>
+        <h1>Scribe <span class="beta-badge">BETA</span></h1>
+      </div>
+      <div class="header-actions">
+        <button id="logoutBtn" class="ghost-button ghost-button-secondary" type="button">Sign out</button>
+        <button id="helpBtn" class="ghost-button ghost-button-help" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Help
+        </button>
+      </div>
+    </header>
 
-    <!-- Center column: Clinical (condition/template + checks) -->
-    <section class="col-clinical" id="colClinical">
-      <div class="col-inner" id="clinicalPanel"></div>
-    </section>
+    <!-- Print header (only visible when printing) -->
+    <div class="print-header">
+      <h1>TOL Scribe &mdash; Prescription Draft</h1>
+      <p>Generated on <span id="printDate"></span> &bull; For clinician review only</p>
+    </div>
 
-    <!-- Right column: Output -->
-    <section class="col-output" id="colOutput">
-      <div class="col-inner" id="outputPanel"></div>
-      <button id="refineBtn" class="refine-fab" type="button" aria-label="Refine">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
-      </button>
-    </section>
-  </main>
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
 
-  <!-- Help modal -->
-  <div id="helpModal" class="help-overlay" hidden></div>
+    <!-- 3-column dashboard -->
+    <main class="app-dashboard">
+      <!-- Left column: Patient -->
+      <section class="col-patient" id="colPatient">
+        <div class="col-inner" id="patientPanel"></div>
+      </section>
 
-  <!-- Refine modal -->
-  <div id="refineModal" class="refine-overlay" hidden></div>
+      <!-- Center column: Clinical (condition/template + checks) -->
+      <section class="col-clinical" id="colClinical">
+        <div class="col-inner" id="clinicalPanel"></div>
+      </section>
 
-  <!-- Demo walkthrough elements -->
-  <div id="demoSpotlight" class="demo-spotlight" hidden></div>
-  <div id="demoCursor" class="demo-cursor" hidden>
-    <svg width="20" height="24" viewBox="0 0 20 24"><path d="M2 1l14 10.5-5.5 1.5-3 5.5z" fill="#1a2332" stroke="#fff" stroke-width="1.2"/></svg>
-  </div>
-  <div id="demoLabel" class="demo-label" hidden></div>
+      <!-- Right column: Output -->
+      <section class="col-output" id="colOutput">
+        <div class="col-inner" id="outputPanel"></div>
+        <button id="refineBtn" class="refine-fab" type="button" aria-label="Refine">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
+        </button>
+      </section>
+    </main>
+
+    <!-- Help modal -->
+    <div id="helpModal" class="help-overlay" hidden></div>
+
+    <!-- Refine modal -->
+    <div id="refineModal" class="refine-overlay" hidden></div>
+
+    <!-- Demo walkthrough elements -->
+    <div id="demoSpotlight" class="demo-spotlight" hidden></div>
+    <div id="demoCursor" class="demo-cursor" hidden>
+      <svg width="20" height="24" viewBox="0 0 20 24"><path d="M2 1l14 10.5-5.5 1.5-3 5.5z" fill="#1a2332" stroke="#fff" stroke-width="1.2"/></svg>
+    </div>
+    <div id="demoLabel" class="demo-label" hidden></div>
+
+  </div><!-- /appShell -->
 
   <script src="app-config.js"></script>
   <script src="app-data.js"></script>
@@ -81,5 +112,83 @@
   <script src="app-scores.js"></script>
   <script src="app-logic.js"></script>
   <script src="app-ui.js"></script>
+
+  <!-- Auth gate — runs after all scripts are loaded -->
+  <script>
+  (() => {
+    const SESSION_KEY = 'tol_session';
+    const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
+    const CREDS = { user: 'admin123', pass: 'password123' };
+
+    const wall = document.getElementById('loginWall');
+    const shell = document.getElementById('appShell');
+    const form = document.getElementById('loginForm');
+    const errEl = document.getElementById('loginError');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    function isSessionValid() {
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (!raw) return false;
+        const session = JSON.parse(raw);
+        if (Date.now() - session.ts > SESSION_TTL) {
+          localStorage.removeItem(SESSION_KEY);
+          return false;
+        }
+        return true;
+      } catch { return false; }
+    }
+
+    function showApp() {
+      wall.hidden = true;
+      shell.hidden = false;
+      // Init the app if TOLUI exists and hasn't been initialized yet
+      if (window.TOLUI && !window._tolInitDone) {
+        window._tolInitDone = true;
+        // DOMContentLoaded already fired, manually trigger init
+        // TOLUI.init is called by DOMContentLoaded in app-ui.js,
+        // but since shell was hidden, let's re-render
+        TOLUI.render();
+      }
+    }
+
+    function showLogin() {
+      wall.hidden = false;
+      shell.hidden = true;
+    }
+
+    // Check session on load
+    if (isSessionValid()) {
+      showApp();
+    } else {
+      showLogin();
+    }
+
+    // Login form submission
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value;
+
+      if (user === CREDS.user && pass === CREDS.pass) {
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ ts: Date.now() }));
+        errEl.hidden = true;
+        showApp();
+      } else {
+        errEl.hidden = false;
+        document.getElementById('loginPass').value = '';
+        document.getElementById('loginPass').focus();
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem(SESSION_KEY);
+      showLogin();
+      document.getElementById('loginUser').value = '';
+      document.getElementById('loginPass').value = '';
+    });
+  })();
+  </script>
 </body>
 </html>
