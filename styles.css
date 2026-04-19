@@ -4129,6 +4129,10 @@ select:focus,
   font-family: var(--font);
 }
 
+.login-wall[hidden] {
+  display: none;
+}
+
 .login-card {
   width: 100%;
   max-width: 380px;
