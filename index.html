@@ -125,66 +125,104 @@
     const form = document.getElementById('loginForm');
     const errEl = document.getElementById('loginError');
     const logoutBtn = document.getElementById('logoutBtn');
+    const userInput = document.getElementById('loginUser');
+    const passInput = document.getElementById('loginPass');
 
-    function isSessionValid() {
+    function readSession() {
       try {
         const raw = localStorage.getItem(SESSION_KEY);
-        if (!raw) return false;
-        const session = JSON.parse(raw);
-        if (Date.now() - session.ts > SESSION_TTL) {
-          localStorage.removeItem(SESSION_KEY);
-          return false;
-        }
-        return true;
-      } catch { return false; }
-    }
-
-    function showApp() {
-      wall.style.display = 'none';
-      shell.style.display = '';
-      shell.hidden = false;
-      // Init the app if TOLUI exists and hasn't been initialized yet
-      if (window.TOLUI && !window._tolInitDone) {
-        window._tolInitDone = true;
-        TOLUI.render();
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
       }
     }
 
-    function showLogin() {
-      wall.style.display = '';
-      shell.style.display = 'none';
+    function clearSession() {
+      localStorage.removeItem(SESSION_KEY);
+    }
+
+    function persistSession() {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
+        user: CREDS.user,
+        ts: Date.now(),
+      }));
+    }
+
+    function isSessionValid() {
+      const session = readSession();
+      if (!session?.ts) {
+        clearSession();
+        return false;
+      }
+      if (Date.now() - session.ts > SESSION_TTL) {
+        clearSession();
+        return false;
+      }
+      return true;
+    }
+
+    function ensureUiReady() {
+      if (window.TOLUI?.init) {
+        window.TOLUI.init();
+      }
+    }
+
+    function setAuthenticated(isAuthenticated, { resetForm = false } = {}) {
+      wall.hidden = isAuthenticated;
+      shell.hidden = !isAuthenticated;
+      wall.inert = isAuthenticated;
+      shell.inert = !isAuthenticated;
+
+      errEl.hidden = true;
+
+      if (isAuthenticated) {
+        ensureUiReady();
+      } else {
+        if (resetForm) {
+          form.reset();
+        }
+        userInput.focus();
+      }
     }
 
     // Check session on load
     if (isSessionValid()) {
-      showApp();
+      persistSession();
+      setAuthenticated(true);
     } else {
-      showLogin();
+      setAuthenticated(false);
     }
 
     // Login form submission
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const user = document.getElementById('loginUser').value.trim();
-      const pass = document.getElementById('loginPass').value;
+      const user = userInput.value.trim();
+      const pass = passInput.value;
 
       if (user === CREDS.user && pass === CREDS.pass) {
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ ts: Date.now() }));
-        errEl.hidden = true;
-        showApp();
+        persistSession();
+        setAuthenticated(true);
       } else {
+        clearSession();
         errEl.hidden = false;
-        document.getElementById('loginPass').value = '';
-        document.getElementById('loginPass').focus();
+        passInput.value = '';
+        passInput.focus();
       }
     });
 
     // Logout
     logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem(SESSION_KEY);
-      showLogin();
-      document.getElementById('loginUser').value = '';
-      document.getElementById('loginPass').value = '';
+      clearSession();
+      setAuthenticated(false, { resetForm: true });
+    });
+
+    window.addEventListener('storage', (e) => {
+      if (e.key !== SESSION_KEY) return;
+      if (isSessionValid()) {
+        setAuthenticated(true);
+      } else {
+        setAuthenticated(false, { resetForm: true });
+      }
     });
   })();
   </script>

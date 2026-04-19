@@ -2148,6 +2148,9 @@
   // ─── INIT ─────────────────────────────────────────────────────────
 
   function init() {
+    if (window.__tolUiInitialized) return;
+    window.__tolUiInitialized = true;
+
     dom.patientPanel = document.getElementById('patientPanel');
     dom.clinicalPanel = document.getElementById('clinicalPanel');
     dom.outputPanel = document.getElementById('outputPanel');
@@ -2315,5 +2318,9 @@
   }
 
   window.TOLUI = { init, render };
-  document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();
