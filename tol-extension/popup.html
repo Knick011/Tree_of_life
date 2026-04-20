@@ -1,155 +1,230 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOL Scribe EMR Filler</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; }
     body {
-      width: 320px;
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      width: 360px;
+      font-family: "Segoe UI", Arial, sans-serif;
       font-size: 13px;
-      color: #1a2332;
-      background: #f7f8fa;
+      color: #17212b;
+      background: #f4f7f8;
     }
     .header {
+      padding: 14px 16px 12px;
+      background: #162231;
+      color: #fff;
+    }
+    .brand-row {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 12px 14px;
-      background: #1a2332;
-      color: #fff;
     }
     .brand-mark {
-      width: 24px; height: 24px;
-      display: grid; place-items: center;
-      border-radius: 5px;
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
       background: #0d7377;
-      font-weight: 800; font-size: 9px;
+      font-size: 10px;
+      font-weight: 800;
       letter-spacing: 0.04em;
     }
-    .header h1 { font-size: 13px; font-weight: 700; }
-    .body { padding: 12px 14px; }
-    .status-box {
-      padding: 10px 12px;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      font-size: 12px;
-      line-height: 1.5;
-    }
-    .status-empty {
-      background: #f0f2f5;
-      color: #6b7785;
-      border: 1px dashed #e2e5e9;
-    }
-    .status-ready {
-      background: rgba(29, 131, 72, 0.08);
-      color: #1d8348;
-      border: 1px solid rgba(29, 131, 72, 0.2);
-    }
-    .status-ready strong { color: #1d8348; }
-    .rx-preview {
-      margin-top: 8px;
-      padding: 8px;
-      background: #fff;
-      border: 1px solid #e2e5e9;
-      border-radius: 4px;
-      font-family: "Consolas", monospace;
-      font-size: 11px;
-      white-space: pre-wrap;
-      max-height: 120px;
-      overflow-y: auto;
-      color: #1a2332;
-    }
-    .btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 36px;
-      border: none;
-      border-radius: 6px;
-      font: inherit;
-      font-size: 13px;
+    h1 {
+      margin: 0;
+      font-size: 14px;
       font-weight: 700;
-      cursor: pointer;
-      transition: background 120ms ease;
     }
-    .btn-primary { background: #0d7377; color: #fff; }
-    .btn-primary:hover { background: #0a5f62; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-secondary {
-      background: #f0f2f5; color: #1a2332;
-      border: 1px solid #e2e5e9;
+    .subhead {
       margin-top: 6px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.74);
     }
-    .btn-secondary:hover { background: #e2e5e9; }
-    .emr-select {
-      width: 100%;
-      height: 32px;
-      padding: 0 8px;
-      border: 1px solid #e2e5e9;
-      border-radius: 6px;
-      font: inherit;
-      font-size: 12px;
-      margin-bottom: 10px;
-      background: #fff;
-    }
+    .body { padding: 14px 16px 16px; }
     .label {
       display: block;
+      margin-bottom: 6px;
       font-size: 10px;
       font-weight: 700;
-      text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: #6b7785;
-      margin-bottom: 4px;
+      text-transform: uppercase;
+      color: #5e6b78;
     }
-    .footer {
-      padding: 8px 14px;
-      border-top: 1px solid #e2e5e9;
-      font-size: 10px;
-      color: #6b7785;
-      text-align: center;
+    .hint {
+      margin: 0 0 10px;
+      font-size: 11px;
+      color: #5e6b78;
+      line-height: 1.45;
+    }
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #d7dfe5;
+      border-radius: 8px;
+      background: #fff;
+      color: #17212b;
+    }
+    select {
+      height: 36px;
+      padding: 0 10px;
+      margin-bottom: 10px;
+    }
+    textarea {
+      min-height: 84px;
+      padding: 10px;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
+    .status-box {
+      padding: 11px 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      line-height: 1.45;
+    }
+    .status-empty {
+      background: #eef2f4;
+      color: #5d6975;
+      border: 1px dashed #d4dde4;
+    }
+    .status-ready {
+      background: rgba(13, 115, 119, 0.1);
+      color: #0d5f62;
+      border: 1px solid rgba(13, 115, 119, 0.24);
+    }
+    .status-subtle {
+      color: #5e6b78;
+      font-size: 11px;
     }
     .field-list {
-      margin-top: 8px;
-      font-size: 11px;
-      color: #6b7785;
+      border: 1px solid #d7dfe5;
+      border-radius: 8px;
+      background: #fff;
+      margin-bottom: 10px;
+      overflow: hidden;
     }
     .field-list div {
-      display: flex;
-      justify-content: space-between;
-      padding: 2px 0;
-      border-bottom: 1px solid #f0f2f5;
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 8px;
+      padding: 8px 10px;
+      border-top: 1px solid #eef2f4;
     }
-    .field-list .val { color: #1a2332; font-weight: 600; }
+    .field-list div:first-child { border-top: 0; }
+    .field-list span:first-child {
+      color: #5e6b78;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .field-list .val {
+      color: #17212b;
+      font-size: 11px;
+      font-weight: 600;
+      word-break: break-word;
+      text-align: right;
+    }
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    button {
+      height: 36px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .btn-primary {
+      background: #0d7377;
+      color: #fff;
+    }
+    .btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: #fff;
+      color: #17212b;
+      border: 1px solid #d7dfe5;
+    }
+    .section {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #dbe3e8;
+    }
+    details summary {
+      cursor: pointer;
+      color: #5e6b78;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .footer {
+      margin-top: 12px;
+      color: #5e6b78;
+      font-size: 10px;
+      line-height: 1.45;
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <div class="brand-mark">TOL</div>
-    <h1>Tree of Life Rx Filler</h1>
+    <div class="brand-row">
+      <div class="brand-mark">TOL</div>
+      <h1>TOL Scribe EMR Filler</h1>
+    </div>
+    <div class="subhead">Cross-browser extension for copy-to-fill prescribing drafts</div>
   </div>
 
   <div class="body">
-    <span class="label">Target EMR</span>
-    <select id="emrSelect" class="emr-select">
+    <label class="label" for="emrSelect">Target EMR</label>
+    <select id="emrSelect">
+      <option value="auto">Auto-detect</option>
       <option value="oscar">OSCAR / Juno</option>
-      <option value="pssuite">PS Suite (Telus)</option>
-      <option value="accuro">Accuro (QHR)</option>
-      <option value="generic">Other (generic)</option>
+      <option value="pssuite">PS Suite</option>
+      <option value="accuro">Accuro</option>
+      <option value="epic">Epic</option>
+      <option value="athena">Athena</option>
+      <option value="generic">Generic fallback</option>
     </select>
 
+    <p id="pageHint" class="hint">Detecting active page...</p>
+
     <div id="statusBox" class="status-box status-empty">
-      No Rx data in clipboard. Copy a prescription from Tree of Life first.
+      No TOL Scribe payload loaded yet. Use <strong>Copy for EMR</strong> in the app or paste JSON below.
     </div>
 
     <div id="fieldList" class="field-list" hidden></div>
 
-    <button id="fillBtn" class="btn btn-primary" disabled>Fill Rx Fields</button>
-    <button id="readBtn" class="btn btn-secondary">Read Clipboard</button>
-  </div>
+    <div class="button-row">
+      <button id="fillBtn" class="btn-primary" disabled>Fill Fields</button>
+      <button id="readBtn" class="btn-secondary">Read Clipboard</button>
+    </div>
 
-  <div class="footer">v1.0 &middot; Tree of Life Prescribing Tool</div>
+    <div class="section">
+      <details>
+        <summary>Paste JSON manually</summary>
+        <div style="margin-top:10px">
+          <textarea id="payloadInput" spellcheck="false" placeholder="Paste the TOL Scribe EMR payload here"></textarea>
+          <button id="loadBtn" class="btn-secondary" style="width:100%">Load JSON</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="footer">
+      Works as a WebExtension in Chrome, Edge, Brave, and Firefox. The same folder can be packaged for Safari using Apple's Safari Web Extension tooling.
+    </div>
+  </div>
 
   <script src="popup.js"></script>
 </body>

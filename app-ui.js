@@ -1288,28 +1288,34 @@
   }
 
   function selectBestOption(options, ctx) {
+    const isUsable = (o) => o.status !== 'blocked';
+    const usableOptions = options.filter(isUsable);
+
+    if (!usableOptions.length) {
+      app.selectedOptionId = null;
+      return null;
+    }
+
     const prefs = app._refinePrefs || {};
     const hasPrefs = Object.keys(prefs).length > 0;
 
     if (hasPrefs) {
       // Use refined ranking to pick best option
-      const currentSel = options.find((o) => o.id === app.selectedOptionId) || options[0];
-      const refined = applyRefinePrefs(options, currentSel, prefs);
+      const currentSel = usableOptions.find((o) => o.id === app.selectedOptionId) || usableOptions[0];
+      const refined = applyRefinePrefs(usableOptions, currentSel, prefs);
       if (refined.length) {
         app.selectedOptionId = refined[0].id;
-        return options.find((o) => o.id === app.selectedOptionId) || options[0] || null;
+        return usableOptions.find((o) => o.id === app.selectedOptionId) || usableOptions[0] || null;
       }
     }
 
     const preferredId = ctx.templateSnapshot?.defaultMedication;
-    const isUsable = (o) => o.status !== 'blocked';
-    if (!app.selectedOptionId || !options.some((o) => o.id === app.selectedOptionId && isUsable(o))) {
+    if (!app.selectedOptionId || !usableOptions.some((o) => o.id === app.selectedOptionId)) {
       app.selectedOptionId =
-        options.find((o) => o.id === preferredId && isUsable(o))?.id ||
-        options.find((o) => isUsable(o))?.id ||
-        options[0]?.id || null;
+        usableOptions.find((o) => o.id === preferredId)?.id ||
+        usableOptions[0]?.id || null;
     }
-    return options.find((o) => o.id === app.selectedOptionId) || options[0] || null;
+    return usableOptions.find((o) => o.id === app.selectedOptionId) || usableOptions[0] || null;
   }
 
   // ─── ANIMATED DEMO ─────────────────────────────────────────────────
@@ -1877,6 +1883,9 @@
       const sel = selectBestOption(options, ctx);
       if (sel) {
         const med = app.getOptionMeta(sel.id);
+        if (app.buildEmrPayload) {
+          content = JSON.stringify(app.buildEmrPayload(sel, ctx), null, 2);
+        }
         const emrData = {
           _tol: true,
           medication: med.order.medication,
@@ -1912,7 +1921,7 @@
         else if (/vaginal/i.test(sigLower)) emrData.route = 'VAG';
         else if (/rectal/i.test(sigLower)) emrData.route = 'PR';
 
-        content = JSON.stringify(emrData);
+        if (!content) content = JSON.stringify(emrData);
       }
     } else if (kind === 'rx') content = document.getElementById('rxText')?.textContent || '';
     else if (kind === 'chart') content = document.getElementById('chartText')?.textContent || '';

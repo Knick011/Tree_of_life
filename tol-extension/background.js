@@ -1,6 +1,5 @@
-// background.js — Tree of Life EMR Rx Filler service worker
-// Minimal background script for extension lifecycle.
+const ext = globalThis.browser ?? globalThis.chrome;
 
-chrome.runtime.onInstalled.addListener(() => {
-  console.log('Tree of Life Rx Filler installed');
+ext.runtime.onInstalled.addListener(() => {
+  console.log('TOL Scribe EMR Filler installed');
 });

@@ -87,7 +87,7 @@
       contraindications: pd.contraindications || [],
       ageMonths: ageMonths,
       weight: weight,
-      bandLabel: band ? (band.minMonths + '-' + band.maxMonths + ' months') : null,
+      bandLabel: app.formatAgeBandLabel(band),
     };
   };
 
@@ -114,6 +114,26 @@
   app.currentWorkflowLabel = (ctx) => app.textFor(app.getWorkflowMeta(ctx.workflowMode), ctx.language);
   app.currentConditionLabel = (ctx) => app.textFor(app.getConditionMeta(ctx.condition), ctx.language);
   app.currentTemplateLabel = (ctx) => ctx.templateSnapshot?.name || app.t('outputTemplateNone');
+
+  app.formatAgeBandLabel = (band) => {
+    if (!band) return null;
+    const monthLabel = (value) => `${value} month${value === 1 ? '' : 's'}`;
+    const yearLabel = (value) => `${value} year${value === 1 ? '' : 's'}`;
+
+    if (band.minMonths === 0 && band.maxMonths === 1) return 'Under 1 month';
+    if (band.minMonths === 0 && band.maxMonths === 12) return 'Under 1 year';
+    if (band.maxMonths <= 12) return `${monthLabel(band.minMonths)} to ${monthLabel(band.maxMonths)}`;
+
+    const minYears = band.minMonths / 12;
+    const maxYears = band.maxMonths / 12;
+    if (Number.isInteger(minYears) && Number.isInteger(maxYears)) {
+      return `${yearLabel(minYears)} to ${yearLabel(maxYears)}`;
+    }
+    if (band.minMonths < 12 && Number.isInteger(maxYears)) {
+      return `${monthLabel(band.minMonths)} to ${yearLabel(maxYears)}`;
+    }
+    return `${band.minMonths}-${band.maxMonths} months`;
+  };
 
   app.buildPathLabel = (ctx) =>
     [app.getDomainMeta(ctx.domain), app.getSubtypeMeta(ctx.subtype), app.getConditionMeta(ctx.condition)]
@@ -421,6 +441,159 @@
       });
     }
     return checks;
+  };
+
+  function inferFrequencyCode(sigText) {
+    const sigLower = String(sigText || '').toLowerCase();
+    if (/once daily|every day|\bod\b|\bqd\b/.test(sigLower)) return 'OD';
+    if (/twice daily|\bbid\b/.test(sigLower)) return 'BID';
+    if (/three times daily|\btid\b/.test(sigLower)) return 'TID';
+    if (/four times daily|\bqid\b/.test(sigLower)) return 'QID';
+    if (/at bedtime|\bqhs\b/.test(sigLower)) return 'QHS';
+    const everyHours = sigLower.match(/every (\d+) hours?/);
+    if (everyHours) return `Q${everyHours[1]}H`;
+    if (/single dose|single stat dose|\bstat\b/.test(sigLower)) return 'ONCE';
+    return '';
+  }
+
+  function inferRouteCode(sigText, medicationText) {
+    const source = `${sigText || ''} ${medicationText || ''}`.toLowerCase();
+    if (/\boral\b|by mouth|\bpo\b|suspension|tablet|capsule/.test(source) && !/eye|ear|topical/.test(source)) return 'PO';
+    if (/topical|apply|cream|ointment/.test(source)) return 'TOP';
+    if (/\bim\b|intramuscular/.test(source)) return 'IM';
+    if (/\biv\b|intravenous/.test(source)) return 'IV';
+    if (/sublingual|\bsl\b/.test(source)) return 'SL';
+    if (/nasal|intranasal|nostril/.test(source)) return 'IN';
+    if (/ophthalmic|eye drops|eye ointment|eye\b/.test(source)) return 'OPH';
+    if (/otic|ear drops|ear\b/.test(source)) return 'OTIC';
+    if (/vaginal/.test(source)) return 'VAG';
+    if (/rectal/.test(source)) return 'PR';
+    if (/nebul/i.test(source)) return 'NEB';
+    if (/buccal|oromucosal/.test(source)) return 'BUCCAL';
+    return '';
+  }
+
+  function inferDoseAmount(sigText) {
+    const sigLower = String(sigText || '').toLowerCase();
+    const match =
+      sigLower.match(/(\d+(?:\.\d+)?)\s*(micrograms?|mcg|mg|g|mL|ml|units?)(?!\/)/i) ||
+      sigLower.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*(mL|ml)/i);
+    if (!match) return { amount: '', unit: '' };
+    if (match[3] && /mL|ml/i.test(match[3])) {
+      return { amount: `${match[1]}/${match[2]}`, unit: 'mL' };
+    }
+    return { amount: match[1], unit: match[2] };
+  }
+
+  function normalizeQuantity(value) {
+    const raw = String(value || '').trim();
+    const match = raw.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+    return {
+      raw,
+      amount: match ? match[1] : '',
+      unit: match ? match[2].trim() : '',
+    };
+  }
+
+  function normalizeDuration(value) {
+    return String(value || '').trim();
+  }
+
+  function buildPlatformFieldMap(canonical) {
+    const shared = {
+      medication: canonical.medicationDisplay,
+      sig: canonical.sig,
+      quantity: canonical.dispense.raw,
+      refills: canonical.refills,
+      duration: canonical.duration,
+      indication: canonical.indication,
+      pharmacyNote: canonical.pharmacyNote,
+    };
+
+    return {
+      pssuite: {
+        fields: {
+          medication: shared.medication,
+          instructions: shared.sig,
+          quantity: shared.quantity,
+          repeats: shared.refills,
+          duration: shared.duration,
+          indication: shared.indication,
+          noteToPharmacy: shared.pharmacyNote,
+        },
+      },
+      oscar: {
+        fields: {
+          drugName: shared.medication,
+          instructions: shared.sig,
+          quantity: shared.quantity,
+          repeats: shared.refills,
+          duration: shared.duration,
+          specialInstruction: shared.indication,
+          noteToPharmacy: shared.pharmacyNote,
+        },
+      },
+      epic: {
+        fields: {
+          medicationDisplay: shared.medication,
+          sig: shared.sig,
+          dispenseQuantity: shared.quantity,
+          refills: shared.refills,
+          duration: shared.duration,
+          indication: shared.indication,
+          pharmacyNote: shared.pharmacyNote,
+        },
+      },
+      athena: {
+        fields: {
+          medicationDisplay: shared.medication,
+          sig: shared.sig,
+          quantity: shared.quantity,
+          refills: shared.refills,
+          duration: shared.duration,
+          patientNote: shared.indication,
+          pharmacyNote: shared.pharmacyNote,
+        },
+      },
+    };
+  }
+
+  app.buildEmrPayload = (selected, ctx) => {
+    const sig = app.textFor(selected.order.sig, ctx.language);
+    const quantity = normalizeQuantity(selected.order.dispense);
+    const dose = inferDoseAmount(sig);
+    const canonical = {
+      medicationDisplay: selected.order.medication,
+      sig,
+      route: inferRouteCode(sig, selected.order.medication),
+      frequencyCode: inferFrequencyCode(sig),
+      doseAmount: dose.amount,
+      doseUnit: dose.unit,
+      dispense: quantity,
+      duration: normalizeDuration(selected.order.duration),
+      refills: String(selected.order.refills ?? ''),
+      indication: app.currentConditionLabel(ctx),
+      pharmacyNote: app.textFor(selected.order.pharmacy, ctx.language),
+      region: ctx.region,
+      emrType: ctx.emrType,
+      conditionKey: ctx.condition,
+      templateId: ctx.templateSnapshot?.id || '',
+      selectedOptionId: selected.id,
+    };
+    const platformMap = buildPlatformFieldMap(canonical);
+
+    return {
+      _tol: true,
+      schemaVersion: 2,
+      generatedAt: new Date().toISOString(),
+      mode: 'copy-fill',
+      canonical,
+      adapter: {
+        type: ctx.emrType,
+        fields: platformMap[ctx.emrType]?.fields || platformMap.athena.fields,
+      },
+      adapters: platformMap,
+    };
   };
 
   app.buildCopyPack = (selected, ctx) => {

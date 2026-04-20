@@ -1,29 +1,48 @@
 {
   "manifest_version": 3,
-  "name": "Tree of Life — EMR Rx Filler",
-  "version": "1.0.0",
-  "description": "Auto-fills prescription fields in OSCAR, PS Suite, and other EMRs from Tree of Life clipboard data.",
-  "permissions": ["activeTab", "clipboardRead"],
+  "name": "TOL Scribe EMR Filler",
+  "version": "1.1.0",
+  "description": "Fills prescription fields in supported EMRs from TOL Scribe clipboard payloads.",
+  "permissions": [
+    "activeTab",
+    "clipboardRead",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
   "action": {
+    "default_title": "TOL Scribe EMR Filler",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
-      "48": "icons/icon48.png"
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     }
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
-  "background": {
-    "service_worker": "background.js"
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tol-scribe-emr-filler@formulaires.local"
+    }
   }
 }
