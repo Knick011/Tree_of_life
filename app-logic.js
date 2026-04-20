@@ -52,6 +52,45 @@
   app.getSymptomsForCondition = (conditionValue) => app.data.CONDITION_SYMPTOMS[conditionValue] || [];
   app.getMedicationOptionsForCondition = (conditionValue) => app.catalog.filter((item) => item.condition === conditionValue);
 
+  // ─── Paediatric dose engine (BNFc age-banded) ────────────────────
+  app.computePedsDose = (option, ctx) => {
+    const pd = option && option.pedsData;
+    if (!pd) return null;
+
+    const ageMonths = ctx.age < 1 ? Math.round(ctx.age * 12) : Math.round(ctx.age * 12);
+    const weight = ctx.weight || 0;
+
+    // Find matching age band
+    const band = (pd.ageBands || []).find(b => ageMonths >= b.minMonths && ageMonths < b.maxMonths);
+
+    let perDose = null;
+    if (band && band.fixedDose) {
+      perDose = band.fixedDose;
+    } else if (pd.mgPerKg && weight > 0) {
+      perDose = Math.round(pd.mgPerKg * weight * 10) / 10;
+      if (pd.maxDose) perDose = Math.min(perDose, pd.maxDose);
+    }
+
+    return {
+      perDose: perDose,
+      unit: (band && band.unit) || pd.unit || 'mg',
+      frequency: pd.frequency || '',
+      maxDailyDoses: pd.maxDailyDoses || 0,
+      dailyTotal: perDose && pd.maxDailyDoses ? Math.round(perDose * pd.maxDailyDoses * 10) / 10 : null,
+      duration: pd.duration || '',
+      form: (band && band.form) || (option.form && option.form.en) || '',
+      line: pd.line || 0,
+      isEmergency: pd.isEmergency || false,
+      isStat: pd.isStat || false,
+      referralRequired: pd.referralRequired || false,
+      sideEffects: pd.sideEffects || [],
+      contraindications: pd.contraindications || [],
+      ageMonths: ageMonths,
+      weight: weight,
+      bandLabel: band ? (band.minMonths + '-' + band.maxMonths + ' months') : null,
+    };
+  };
+
   app.formatCurrency = (amount, regionValue) => {
     const meta = app.getRegionMeta(regionValue);
     if (!meta || amount === undefined || amount === null || amount === 0) {
@@ -351,6 +390,28 @@
     if (ctx.currentMeds.length >= 2) {
       checks.push({ level: 'info', title: 'Medication burden noted', body: 'The current medicines make interaction messaging more relevant in this review.' });
     }
+    // ─── Paediatric red flags (0-5 years) ─────────────────────────
+    if (ctx.age > 0 && ctx.age <= 5) {
+      if (ctx.age < 0.25 && ctx.symptoms && ctx.symptoms.includes('feverUnder3mo')) {
+        checks.push({ level: 'blocked', title: 'RED FLAG: Fever in infant <3 months', body: 'Any fever in an infant under 3 months requires immediate hospital referral. Do not prescribe — refer urgently.' });
+      }
+      if (ctx.symptoms && ctx.symptoms.includes('nonBlanchingRash')) {
+        checks.push({ level: 'blocked', title: 'RED FLAG: Non-blanching rash', body: 'Non-blanching rash in a child requires emergency assessment for meningococcal disease. Administer benzylpenicillin IM if available and refer immediately.' });
+      }
+      if (ctx.symptoms && ctx.symptoms.includes('reducedConsciousness')) {
+        checks.push({ level: 'blocked', title: 'RED FLAG: Reduced consciousness', body: 'Reduced consciousness in a child requires immediate emergency referral.' });
+      }
+      if (ctx.symptoms && ctx.symptoms.includes('respDistress')) {
+        checks.push({ level: 'caution', title: 'Respiratory distress', body: 'Signs of significant respiratory distress (grunting, recession, cyanosis) — assess for severity and consider hospital referral.' });
+      }
+      if (ctx.symptoms && ctx.symptoms.includes('dehydration')) {
+        checks.push({ level: 'caution', title: 'Dehydration warning', body: 'Avoid NSAIDs (ibuprofen) in dehydrated children — increased renal risk. Use paracetamol only until rehydrated.' });
+      }
+      if (ctx.symptoms && ctx.symptoms.includes('apnoea')) {
+        checks.push({ level: 'blocked', title: 'RED FLAG: Apnoeic episodes', body: 'Apnoeic episodes in an infant require urgent hospital admission.' });
+      }
+    }
+
     const blockedCount = options.filter((item) => item.status === 'blocked').length;
     if (blockedCount) {
       checks.push({

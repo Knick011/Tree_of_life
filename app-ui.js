@@ -15,8 +15,12 @@
   ];
 
   const CHILD_AGE_BUCKETS = [
-    { id: 'infant', label: '0 – 11 months', age: 0.5, weight: 7 },
-    { id: 'toddler', label: '1 – 5 years', age: 3, weight: 15 },
+    { id: 'neonate', label: '0 – 28 days', age: 0.07, weight: 3.5 },
+    { id: 'infant-young', label: '1 – 3 months', age: 0.17, weight: 5 },
+    { id: 'infant-mid', label: '3 – 6 months', age: 0.38, weight: 7 },
+    { id: 'infant-older', label: '6 – 12 months', age: 0.75, weight: 9 },
+    { id: 'toddler-young', label: '1 – 2 years', age: 1.5, weight: 11 },
+    { id: 'toddler-older', label: '2 – 5 years', age: 3.5, weight: 15 },
     { id: 'school', label: '5 – 12 years', age: 8, weight: 30 },
   ];
 
@@ -987,37 +991,84 @@
       // Pediatric dose calculation note
       if (ctx.age < 13) {
         const med = app.getOptionMeta(selected.id);
-        const doseText = text(med.dose);
-        const sigText = text(med.order.sig);
-        // Extract mg/kg if present in dose or sig text
-        const mgKgMatch = (doseText + ' ' + sigText).match(/(\d+(?:\.\d+)?)\s*mg\s*\/\s*kg/i);
-        const mgMatch = (doseText + ' ' + sigText).match(/(\d+(?:\.\d+)?)\s*mg/i);
+        const pedsResult = app.computePedsDose(med, ctx);
         const ageLabel = ctx.age < 1 ? Math.round(ctx.age * 12) + ' months' : ctx.age + ' years';
 
-        h += `<div class="peds-calc">`;
-        h += `<div class="peds-calc-head">Dose calculation (pediatric)</div>`;
-        h += `<div class="peds-calc-body">`;
-        h += `<div><strong>Patient:</strong> ${escape(ageLabel)}, ${ctx.weight} kg</div>`;
-
-        if (mgKgMatch) {
-          const perKg = parseFloat(mgKgMatch[1]);
-          const totalDose = Math.round(perKg * ctx.weight * 10) / 10;
-          h += `<div><strong>Formula:</strong> ${perKg} mg/kg &times; ${ctx.weight} kg = <strong>${totalDose} mg</strong></div>`;
-          h += `<div><strong>Per dose:</strong> ${totalDose} mg</div>`;
-        } else if (mgMatch) {
-          const adultDose = parseFloat(mgMatch[1]);
-          // Use Clark's formula for pediatric adjustment: child dose = (weight / 70) * adult dose
-          const pedsDose = Math.round((ctx.weight / 70) * adultDose * 10) / 10;
-          h += `<div><strong>Adult dose:</strong> ${adultDose} mg</div>`;
-          h += `<div><strong>Clark's formula:</strong> (${ctx.weight} kg &divide; 70 kg) &times; ${adultDose} mg = <strong>${pedsDose} mg</strong></div>`;
-          h += `<div style="color:var(--muted);font-size:11px;margin-top:2px">Clark's rule approximation — verify against pediatric formulary</div>`;
+        if (pedsResult && pedsResult.perDose !== null) {
+          // ── BNFc precise paediatric dosing ──
+          h += `<div class="peds-calc${pedsResult.isEmergency ? ' peds-calc-emergency' : ''}">`;
+          h += `<div class="peds-calc-head">`;
+          h += pedsResult.isEmergency ? 'EMERGENCY PROTOCOL (BNFc)' : 'Paediatric dose (BNFc)';
+          if (pedsResult.line) h += `<span class="peds-line-badge">Line ${pedsResult.line}</span>`;
+          h += `</div>`;
+          h += `<div class="peds-calc-body">`;
+          h += `<div><strong>Patient:</strong> ${escape(ageLabel)}, ${ctx.weight} kg</div>`;
+          if (pedsResult.bandLabel) h += `<div><strong>Age band:</strong> ${escape(pedsResult.bandLabel)}</div>`;
+          h += `<div><strong>Per dose:</strong> ${pedsResult.perDose} ${escape(pedsResult.unit)}</div>`;
+          if (pedsResult.maxDailyDoses > 0) h += `<div><strong>Frequency:</strong> ${escape(pedsResult.frequency)}, max ${pedsResult.maxDailyDoses} doses/day</div>`;
+          if (pedsResult.dailyTotal) h += `<div><strong>Daily total:</strong> ${pedsResult.dailyTotal} ${escape(pedsResult.unit)}</div>`;
+          h += `<div><strong>Duration:</strong> ${escape(pedsResult.duration)}</div>`;
+          if (pedsResult.form) h += `<div><strong>Form:</strong> ${escape(pedsResult.form)}</div>`;
+          if (pedsResult.isEmergency) h += `<div class="peds-emergency-badge">EMERGENCY — Administer stat</div>`;
+          if (pedsResult.referralRequired) h += `<div class="peds-referral-badge">Hospital referral required</div>`;
+          if (pedsResult.sideEffects.length) h += `<div class="peds-detail"><strong>Side effects:</strong> ${escape(pedsResult.sideEffects.join(', '))}</div>`;
+          if (pedsResult.contraindications.length) h += `<div class="peds-detail"><strong>Contraindications:</strong> ${escape(pedsResult.contraindications.join(', '))}</div>`;
+          h += `</div></div>`;
+        } else if (pedsResult && pedsResult.frequency === 'N/A') {
+          // Supportive care entries — no dose to show
+          h += `<div class="peds-calc">`;
+          h += `<div class="peds-calc-head">Paediatric guidance (BNFc)</div>`;
+          h += `<div class="peds-calc-body">`;
+          h += `<div><strong>Patient:</strong> ${escape(ageLabel)}, ${ctx.weight} kg</div>`;
+          h += `<div><strong>Recommendation:</strong> ${escape(text(med.dose))}</div>`;
+          h += `<div><strong>Duration:</strong> ${escape(pedsResult.duration)}</div>`;
+          h += `</div></div>`;
         } else {
-          h += `<div><strong>Standard dosing:</strong> ${escape(doseText)}</div>`;
-          h += `<div style="color:var(--muted);font-size:11px;margin-top:2px">No mg/kg data — verify pediatric dose with formulary</div>`;
+          // Fallback: Clark's rule for entries without pedsData
+          const doseText = text(med.dose);
+          const sigText = text(med.order.sig);
+          const mgKgMatch = (doseText + ' ' + sigText).match(/(\d+(?:\.\d+)?)\s*mg\s*\/\s*kg/i);
+          const mgMatch = (doseText + ' ' + sigText).match(/(\d+(?:\.\d+)?)\s*mg/i);
+          h += `<div class="peds-calc">`;
+          h += `<div class="peds-calc-head">Dose calculation (pediatric)</div>`;
+          h += `<div class="peds-calc-body">`;
+          h += `<div><strong>Patient:</strong> ${escape(ageLabel)}, ${ctx.weight} kg</div>`;
+          if (mgKgMatch) {
+            const perKg = parseFloat(mgKgMatch[1]);
+            const totalDose = Math.round(perKg * ctx.weight * 10) / 10;
+            h += `<div><strong>Formula:</strong> ${perKg} mg/kg &times; ${ctx.weight} kg = <strong>${totalDose} mg</strong></div>`;
+          } else if (mgMatch) {
+            const adultDose = parseFloat(mgMatch[1]);
+            const pedsDose = Math.round((ctx.weight / 70) * adultDose * 10) / 10;
+            h += `<div><strong>Clark's formula:</strong> (${ctx.weight} kg &divide; 70 kg) &times; ${adultDose} mg = <strong>${pedsDose} mg</strong></div>`;
+            h += `<div style="color:var(--muted);font-size:11px;margin-top:2px">Clark's rule approximation — verify against pediatric formulary</div>`;
+          } else {
+            h += `<div><strong>Standard dosing:</strong> ${escape(doseText)}</div>`;
+          }
+          h += `</div></div>`;
         }
 
-        h += `<div><strong>Regimen:</strong> ${escape(doseText)}</div>`;
-        h += `</div></div>`;
+        // ── Escalation ladder for peds- conditions ──
+        if (ctx.condition && ctx.condition.startsWith('peds-')) {
+          const allOpts = app.catalog.filter(o => o.condition === ctx.condition && o.pedsData);
+          const lines = {};
+          allOpts.forEach(o => { if (o.pedsData.line) lines[o.pedsData.line] = o; });
+          const lineNums = Object.keys(lines).map(Number).sort();
+          if (lineNums.length > 1) {
+            h += `<div class="peds-ladder">`;
+            h += `<div class="peds-ladder-head">Escalation pathway</div>`;
+            lineNums.forEach(n => {
+              const opt = lines[n];
+              const isCurrent = opt.id === selected.id;
+              h += `<div class="peds-ladder-step${isCurrent ? ' active' : ''}">`;
+              h += `<span class="peds-ladder-num">${n}</span>`;
+              h += `<span class="peds-ladder-label">${escape(text(opt.labels))}</span>`;
+              if (isCurrent) h += `<span class="peds-ladder-current">Current</span>`;
+              h += `</div>`;
+            });
+            h += `</div>`;
+          }
+        }
       }
 
       // Chart block
@@ -1422,7 +1473,7 @@
         { sel: '[data-set-field="domain"][data-value="infection"]', text: 'Choose a clinical area', wait: 1200 },
         { sel: '[data-set-field="subtype"][data-value="urinary"]', text: 'Narrow to subtype', wait: 1200 },
         { sel: '[data-set-field="condition"][data-value="cystitis"]', text: 'Select condition', wait: 1200 },
-        { sel: '.peds-calc', text: 'Dose calculation shown with Clark\'s formula', noClick: true, wait: 3000 },
+        { sel: '.peds-calc', text: 'BNFc age-banded paediatric dose calculation', noClick: true, wait: 3000 },
       ],
     },
     {
