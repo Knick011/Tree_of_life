@@ -250,6 +250,280 @@ function showToast(message, tone = 'ok') {
   setTimeout(() => toast.remove(), 2400);
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitFor(predicate, timeoutMs = 4000, intervalMs = 120) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const result = predicate();
+    if (result) return result;
+    await sleep(intervalMs);
+  }
+  return null;
+}
+
+function normalizeLooseText(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function clickElement(element) {
+  if (!element) return false;
+  element.focus?.();
+  ['pointerdown', 'mousedown', 'mouseup', 'click'].forEach((type) => {
+    const EventCtor =
+      type === 'pointerdown' && typeof PointerEvent === 'function'
+        ? PointerEvent
+        : MouseEvent;
+    element.dispatchEvent(new EventCtor(type, { bubbles: true, cancelable: true }));
+  });
+  return true;
+}
+
+function getOscarRowIds() {
+  return Array.from(document.querySelectorAll('#rxText [id^="instructions_"]'))
+    .map((element) => element.id.replace('instructions_', ''))
+    .filter(Boolean);
+}
+
+function getLatestOscarRowId() {
+  const ids = getOscarRowIds();
+  return ids.length ? ids[ids.length - 1] : null;
+}
+
+function getOscarRowFields(rowId) {
+  if (!rowId) return {};
+  return {
+    row: document.getElementById(`set_${rowId}`),
+    drugName: document.getElementById(`drugName_${rowId}`),
+    instructions: document.getElementById(`instructions_${rowId}`),
+    specialWrap: document.getElementById(`siAutoComplete_${rowId}`),
+    specialInstruction: document.getElementById(`siInput_${rowId}`),
+    quantity: document.getElementById(`quantity_${rowId}`),
+    repeats: document.getElementById(`repeats_${rowId}`),
+    longTerm: document.getElementById(`longTerm_${rowId}`),
+    prnValue: document.getElementById(`prnVal_${rowId}`),
+    comment: document.getElementById(`comment_${rowId}`),
+  };
+}
+
+function getOscarAutocompleteOptions() {
+  return Array.from(document.querySelectorAll('#autocomplete_choices a[title], #autocomplete_choices li a[title]'))
+    .filter((element) => element.getClientRects().length > 0);
+}
+
+function findBestOscarAutocompleteOption(drugName) {
+  const wanted = normalizeLooseText(drugName);
+  const options = getOscarAutocompleteOptions();
+  if (!options.length) return null;
+
+  let exact = options.find((option) => normalizeLooseText(option.getAttribute('title') || option.textContent) === wanted);
+  if (exact) return exact;
+
+  let contains = options.find((option) => normalizeLooseText(option.getAttribute('title') || option.textContent).includes(wanted));
+  if (contains) return contains;
+
+  const wantedTokens = wanted.split(' ').filter(Boolean);
+  return (
+    options.find((option) => {
+      const label = normalizeLooseText(option.getAttribute('title') || option.textContent);
+      return wantedTokens.every((token) => label.includes(token));
+    }) || options[0]
+  );
+}
+
+function findOscarMatchingRowId(drugName) {
+  const wanted = normalizeLooseText(drugName);
+  const drugInputs = Array.from(document.querySelectorAll('#rxText input[id^="drugName_"]'));
+  const match = drugInputs.find((input) => normalizeLooseText(input.value) === wanted);
+  return match ? match.id.replace('drugName_', '') : null;
+}
+
+function setOscarSearchValue(value) {
+  const searchField = document.getElementById('searchString');
+  if (!searchField || !value) return false;
+  searchField.focus();
+  setElementValue(searchField, value);
+  ['keydown', 'keyup'].forEach((type) => {
+    searchField.dispatchEvent(new KeyboardEvent(type, { key: 'a', bubbles: true }));
+  });
+  return true;
+}
+
+function buildOscarSearchQueries(drugName) {
+  const raw = String(drugName || '').trim();
+  const tokens = raw.split(/\s+/).filter(Boolean);
+  const queries = [
+    raw,
+    tokens.slice(0, 3).join(' '),
+    tokens.slice(0, 2).join(' '),
+    tokens[0],
+  ].filter(Boolean);
+  return [...new Set(queries)];
+}
+
+async function addOscarDrugRow(drugName) {
+  if (!drugName || !document.getElementById('searchString') || !document.getElementById('rxText')) return null;
+
+  for (const query of buildOscarSearchQueries(drugName)) {
+    const initialIds = new Set(getOscarRowIds());
+    setOscarSearchValue(query);
+
+    const option = await waitFor(() => findBestOscarAutocompleteOption(drugName), 2200, 120)
+      || await waitFor(() => findBestOscarAutocompleteOption(query), 1200, 120);
+    if (!option) continue;
+
+    clickElement(option);
+
+    const newRowId = await waitFor(() => {
+      const ids = getOscarRowIds();
+      return ids.find((id) => !initialIds.has(id)) || null;
+    }, 4500, 120);
+
+    if (newRowId) return newRowId;
+    const matchedRowId = findOscarMatchingRowId(drugName) || findOscarMatchingRowId(query);
+    if (matchedRowId) return matchedRowId;
+  }
+
+  return findOscarMatchingRowId(drugName) || getLatestOscarRowId();
+}
+
+async function fillOscarRow(rowId, adapterFields) {
+  const fields = getOscarRowFields(rowId);
+  const filled = [];
+  const missing = [];
+
+  if (!fields.row) {
+    return { success: false, filled, missing: ['row'], rowId: null };
+  }
+
+  if (fields.row) highlightElement(fields.row);
+
+  if (adapterFields.instructions) {
+    if (fields.instructions) {
+      setElementValue(fields.instructions, adapterFields.instructions);
+      highlightElement(fields.instructions);
+      filled.push('instructions');
+      await sleep(180);
+    } else {
+      missing.push('instructions');
+    }
+  }
+
+  if (adapterFields.specialInstruction) {
+    if (fields.specialInstruction) {
+      if (fields.specialWrap && fields.specialWrap.style.display === 'none') {
+        fields.specialWrap.style.display = 'block';
+      }
+      fields.specialInstruction.style.color = '#000';
+      setElementValue(fields.specialInstruction, adapterFields.specialInstruction);
+      highlightElement(fields.specialInstruction);
+      filled.push('specialInstruction');
+    } else {
+      missing.push('specialInstruction');
+    }
+  }
+
+  if (adapterFields.quantity) {
+    if (fields.quantity) {
+      setElementValue(fields.quantity, adapterFields.quantity);
+      highlightElement(fields.quantity);
+      filled.push('quantity');
+    } else {
+      missing.push('quantity');
+    }
+  }
+
+  if (adapterFields.repeats !== undefined && adapterFields.repeats !== null && adapterFields.repeats !== '') {
+    if (fields.repeats) {
+      setElementValue(fields.repeats, adapterFields.repeats);
+      highlightElement(fields.repeats);
+      filled.push('repeats');
+    } else {
+      missing.push('repeats');
+    }
+  }
+
+  if (adapterFields.noteToPharmacy) {
+    if (fields.comment) {
+      setElementValue(fields.comment, adapterFields.noteToPharmacy);
+      highlightElement(fields.comment);
+      filled.push('noteToPharmacy');
+    } else {
+      missing.push('noteToPharmacy');
+    }
+  }
+
+  if (adapterFields.longTerm) {
+    if (fields.longTerm) {
+      fields.longTerm.checked = true;
+      dispatchFormEvents(fields.longTerm);
+      highlightElement(fields.longTerm);
+      filled.push('longTerm');
+    } else {
+      missing.push('longTerm');
+    }
+  }
+
+  return { success: filled.length > 0, filled, missing, rowId };
+}
+
+async function fillOscarPrescription(message) {
+  const adapterFields = getAdapterFields(message, 'oscar');
+  const drugName =
+    adapterFields.drugName ||
+    adapterFields.medication ||
+    adapterFields.medicationDisplay;
+
+  if (!drugName) {
+    return {
+      success: false,
+      filledCount: 0,
+      missing: ['drugName'],
+      detectedEmr: 'oscar',
+      message: 'No OSCAR drug name was provided in the TOL payload.',
+    };
+  }
+
+  let rowId = await addOscarDrugRow(drugName);
+  if (!rowId) {
+    rowId = findOscarMatchingRowId(drugName);
+  }
+
+  if (!rowId) {
+    showToast('OSCAR row not found. Select the drug manually, then run Fill Fields again.', 'warn');
+    return {
+      success: false,
+      filledCount: 0,
+      missing: Object.keys(adapterFields),
+      detectedEmr: 'oscar',
+      message: 'No OSCAR pending prescription row was created from the drug search.',
+    };
+  }
+
+  const result = await fillOscarRow(rowId, adapterFields);
+  if (result.filled.length) {
+    showToast(`TOL prepared OSCAR row ${rowId} with ${result.filled.length} field${result.filled.length === 1 ? '' : 's'}`);
+  } else {
+    showToast('TOL found the OSCAR row but could not populate the expected fields', 'warn');
+  }
+
+  return {
+    success: result.success,
+    filledCount: result.filled.length,
+    missing: result.missing,
+    detectedEmr: 'oscar',
+    rowId,
+    message: result.success
+      ? `Prepared OSCAR pending prescription row ${rowId}.`
+      : `OSCAR row ${rowId} was found, but no fields were filled.`,
+  };
+}
+
 function detectEmr() {
   const host = location.hostname;
 
@@ -287,10 +561,15 @@ function getAdapterFields(message, emrType) {
   return {};
 }
 
-function fillPrescription(message) {
+async function fillPrescription(message) {
   const detected = detectEmr();
   const requestedEmr = message.emrType && message.emrType !== 'auto' ? message.emrType : detected.key;
   const emrDef = EMR_DEFS[requestedEmr] || EMR_DEFS.generic;
+
+  if (requestedEmr === 'oscar') {
+    return fillOscarPrescription(message);
+  }
+
   const adapterFields = getAdapterFields(message, requestedEmr);
   const filled = [];
   const missing = [];
@@ -344,6 +623,17 @@ ext.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'fillRx') {
-    sendResponse(fillPrescription(message));
+    Promise.resolve(fillPrescription(message))
+      .then((result) => sendResponse(result))
+      .catch((error) => {
+        sendResponse({
+          success: false,
+          filledCount: 0,
+          missing: [],
+          detectedEmr: detectEmr().key,
+          message: error?.message || 'TOL could not fill fields on this page.',
+        });
+      });
+    return true;
   }
 });

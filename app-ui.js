@@ -60,6 +60,29 @@
     _toastTimer = setTimeout(() => el.classList.remove('visible'), 2000);
   }
 
+  function renderAiModal() {
+    const el = dom.aiModal;
+    if (!el) return;
+    if (!app._aiOpen) {
+      el.hidden = true;
+      return;
+    }
+
+    el.hidden = false;
+    let h = `<div class="ai-modal-inner">`;
+    h += `<div class="ai-modal-head"><h2>AI Copilot</h2><button type="button" class="tour-close" data-ai-close>&times;</button></div>`;
+    h += `<p class="ai-modal-subtitle">Coming soon. This AI will support review and drafting tasks around the clinician workflow without taking control away from the prescriber.</p>`;
+    h += `<div class="ai-feature-list">`;
+    h += `<div class="ai-feature-item"><strong>Draft faster</strong><span>Turn the selected pathway, score, or template into a cleaner chart note, pharmacy clarification note, and patient instruction draft.</span></div>`;
+    h += `<div class="ai-feature-item"><strong>Check safer</strong><span>Highlight missing follow-up steps, monitoring reminders, duplicate therapy risks, and red-flag questions before the prescription is signed.</span></div>`;
+    h += `<div class="ai-feature-item"><strong>Offer options</strong><span>Suggest formulary-friendly alternatives, shortage fallbacks, and simpler sig wording for the same treatment goal.</span></div>`;
+    h += `<div class="ai-feature-item"><strong>Improve templates</strong><span>Spot repetitive prescribing patterns and recommend stronger clinic templates for common cases.</span></div>`;
+    h += `</div>`;
+    h += `<div class="ai-modal-note">Planned use: clinician-facing support only. Final prescribing remains manual and physician-controlled.</div>`;
+    h += `</div>`;
+    el.innerHTML = h;
+  }
+
   // ─── DOMAIN FILTERING BY PATIENT CONTEXT ────────────────────────
   // Returns which domains are irrelevant for the current patient
   function getExcludedDomains() {
@@ -2216,6 +2239,8 @@
     dom.outputPanel = document.getElementById('outputPanel');
     dom.refineBtn = document.getElementById('refineBtn');
     dom.refineModal = document.getElementById('refineModal');
+    dom.aiTeaserBtn = document.getElementById('aiTeaserBtn');
+    dom.aiModal = document.getElementById('aiModal');
     dom.helpBtn = document.getElementById('helpBtn');
     dom.helpModal = document.getElementById('helpModal');
 
@@ -2227,6 +2252,19 @@
     dom.helpBtn.addEventListener('click', () => {
       app._helpOpen = true;
       renderHelpModal();
+    });
+
+    dom.aiTeaserBtn.addEventListener('click', () => {
+      app._aiOpen = true;
+      renderAiModal();
+    });
+
+    dom.aiModal.addEventListener('click', (e) => {
+      const close = e.target.closest('[data-ai-close]');
+      if (close || e.target === dom.aiModal) {
+        app._aiOpen = false;
+        renderAiModal();
+      }
     });
 
     // Help modal events
@@ -2327,6 +2365,11 @@
         if (app._helpOpen) {
           app._helpOpen = false;
           renderHelpModal();
+          return;
+        }
+        if (app._aiOpen) {
+          app._aiOpen = false;
+          renderAiModal();
           return;
         }
         if (app._refineOpen) {

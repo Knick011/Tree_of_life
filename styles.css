@@ -3377,6 +3377,130 @@ select:focus,
   opacity: 1;
 }
 
+/* ─── AI teaser button + modal ─────────────────────────────────── */
+.ai-teaser-fab {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 1050;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(13, 115, 119, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+  box-shadow: 0 10px 28px rgba(26, 35, 50, 0.16);
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.ai-teaser-fab:hover {
+  transform: translateY(-1px);
+  border-color: var(--teal);
+  box-shadow: 0 12px 32px rgba(26, 35, 50, 0.2);
+}
+
+.ai-teaser-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.ai-teaser-meta {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--teal-light);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ai-overlay[hidden] {
+  display: none !important;
+}
+
+.ai-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  background: rgba(26, 35, 50, 0.55);
+  padding: 24px;
+}
+
+.ai-modal-inner {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 22px;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 16px 48px rgba(26, 35, 50, 0.25);
+}
+
+.ai-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ai-modal-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ai-modal-subtitle {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.ai-feature-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ai-feature-item {
+  display: grid;
+  gap: 3px;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-alt);
+}
+
+.ai-feature-item strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ai-feature-item span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ai-modal-note {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--teal-light);
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* ─── Help button & modal ───────────────────────────────────────── */
 .ghost-button-help {
   display: inline-flex;
@@ -4153,6 +4277,8 @@ select:focus,
   .col-patient,
   .col-clinical,
   .refine-fab,
+  .ai-teaser-fab,
+  .ai-overlay,
   .help-overlay,
   .refine-overlay,
   .tour-overlay,
