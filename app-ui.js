@@ -70,8 +70,8 @@
 
     el.hidden = false;
     let h = `<div class="ai-modal-inner">`;
-    h += `<div class="ai-modal-head"><h2>AI Copilot</h2><button type="button" class="tour-close" data-ai-close>&times;</button></div>`;
-    h += `<p class="ai-modal-subtitle">Coming soon. This AI will support review and drafting tasks around the clinician workflow without taking control away from the prescriber.</p>`;
+    h += `<div class="ai-modal-head"><div><div class="ai-coming-badge">Coming soon</div><h2>AI</h2></div><button type="button" class="tour-close" data-ai-close>&times;</button></div>`;
+    h += `<p class="ai-modal-subtitle">This future copilot is planned as a clinician support layer for faster drafting, safer checks, and cleaner prescribing workflow support without taking final control away from the prescriber.</p>`;
     h += `<div class="ai-feature-list">`;
     h += `<div class="ai-feature-item"><strong>Draft faster</strong><span>Turn the selected pathway, score, or template into a cleaner chart note, pharmacy clarification note, and patient instruction draft.</span></div>`;
     h += `<div class="ai-feature-item"><strong>Check safer</strong><span>Highlight missing follow-up steps, monitoring reminders, duplicate therapy risks, and red-flag questions before the prescription is signed.</span></div>`;

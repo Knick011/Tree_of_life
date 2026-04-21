@@ -3380,45 +3380,33 @@ select:focus,
 /* ─── AI teaser button + modal ─────────────────────────────────── */
 .ai-teaser-fab {
   position: fixed;
-  left: 18px;
+  right: 18px;
   bottom: 18px;
   z-index: 1050;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  padding: 0 14px;
-  border: 1px solid rgba(13, 115, 119, 0.24);
+  display: grid;
+  place-items: center;
+  min-width: 60px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(13, 115, 119, 0.72);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.94);
-  color: var(--ink);
-  box-shadow: 0 10px 28px rgba(26, 35, 50, 0.16);
+  background: var(--teal);
+  color: #ffffff;
+  box-shadow: 0 12px 30px rgba(13, 115, 119, 0.3);
   cursor: pointer;
-  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
 }
 
 .ai-teaser-fab:hover {
   transform: translateY(-1px);
-  border-color: var(--teal);
-  box-shadow: 0 12px 32px rgba(26, 35, 50, 0.2);
+  background: #0a6569;
+  box-shadow: 0 14px 34px rgba(13, 115, 119, 0.38);
 }
 
 .ai-teaser-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.ai-teaser-meta {
-  display: inline-flex;
-  align-items: center;
-  height: 22px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: var(--teal-light);
-  color: var(--teal);
-  font-size: 11px;
-  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
 .ai-overlay[hidden] {
@@ -3453,9 +3441,23 @@ select:focus,
 }
 
 .ai-modal-head h2 {
-  margin: 0;
+  margin: 6px 0 0;
   font-size: 18px;
   font-weight: 700;
+}
+
+.ai-coming-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--teal-light);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .ai-modal-subtitle {
