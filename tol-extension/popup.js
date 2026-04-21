@@ -110,17 +110,45 @@ function sendMessage(tabId, message) {
   });
 }
 
-function setStatus(kind, html) {
+function clearNode(node) {
+  while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+function appendTextLine(container, text, className = '') {
+  const line = document.createElement('div');
+  if (className) line.className = className;
+  line.textContent = text;
+  container.appendChild(line);
+}
+
+function setStatus(kind, { title = '', body = '', subtle = '' } = {}) {
   statusBox.className = `status-box status-${kind}`;
-  statusBox.innerHTML = html;
+  clearNode(statusBox);
+
+  if (title) {
+    const strong = document.createElement('strong');
+    strong.textContent = title;
+    statusBox.appendChild(strong);
+  }
+
+  if (body) {
+    if (title) statusBox.appendChild(document.createElement('br'));
+    statusBox.appendChild(document.createTextNode(body));
+  }
+
+  if (subtle) {
+    if (title || body) statusBox.appendChild(document.createElement('br'));
+    appendTextLine(statusBox, subtle, 'status-subtle');
+  }
 }
 
 function showEmpty(message) {
   state.rawPayload = null;
   state.normalized = null;
   fieldList.hidden = true;
+  clearNode(fieldList);
   fillBtn.disabled = true;
-  setStatus('empty', message);
+  setStatus('empty', { body: message });
 }
 
 function prettifyFieldName(name) {
@@ -178,20 +206,31 @@ function renderFieldPreview(normalized) {
   const fields = Object.entries(normalized.adapterFields || {}).filter(([, value]) => value !== '' && value !== null && value !== undefined);
   if (!fields.length) {
     fieldList.hidden = true;
+    clearNode(fieldList);
     return;
   }
 
   fieldList.hidden = false;
-  fieldList.innerHTML = fields
-    .map(([name, value]) => `<div><span>${prettifyFieldName(name)}</span><span class="val">${String(value)}</span></div>`)
-    .join('');
+  clearNode(fieldList);
+  fields.forEach(([name, value]) => {
+    const row = document.createElement('div');
+    const label = document.createElement('span');
+    const val = document.createElement('span');
+    label.textContent = prettifyFieldName(name);
+    val.className = 'val';
+    val.textContent = String(value);
+    row.appendChild(label);
+    row.appendChild(val);
+    fieldList.appendChild(row);
+  });
 }
 
 function showReady(normalized) {
-  setStatus(
-    'ready',
-    `<strong>Draft ready to fill</strong><br>${normalized.medicationLabel}<br><span class="status-subtle">Target: ${getSelectedEmr().toUpperCase()}</span>`
-  );
+  setStatus('ready', {
+    title: 'Draft ready to fill',
+    body: normalized.medicationLabel,
+    subtle: `Target: ${getSelectedEmr().toUpperCase()}`,
+  });
   renderFieldPreview(normalized);
   fillBtn.disabled = false;
 }
@@ -215,7 +254,8 @@ async function detectCurrentPage() {
     state.detectedEmr = response?.emrType || '';
     const emrLabel = response?.emrLabel || 'Unknown';
     const pageLabel = response?.title || response?.url || 'Active page';
-    pageHint.textContent = `Page: ${emrLabel} · ${pageLabel}`;
+    const sourceLabel = state.normalized?.defaultEmr ? `Payload: ${state.normalized.defaultEmr.toUpperCase()} · ` : '';
+    pageHint.textContent = `${sourceLabel}Page: ${emrLabel} · ${pageLabel}`;
     if (emrSelect.value === 'auto' && state.normalized) {
       showReady(state.normalized);
     }
@@ -240,7 +280,7 @@ async function fillActivePage() {
   try {
     const [tab] = await queryActiveTab();
     if (!tab?.id) {
-      setStatus('empty', '<strong>Error:</strong> No active tab found.');
+      setStatus('empty', { title: 'Error', body: 'No active tab found.' });
       return;
     }
 
@@ -253,16 +293,24 @@ async function fillActivePage() {
     });
 
     if (response?.success) {
-      const missing = response.missing?.length ? `<br><span class="status-subtle">Missing: ${response.missing.join(', ')}</span>` : '';
-      setStatus('ready', `<strong>Filled ${response.filledCount} fields</strong>${missing}`);
+      setStatus('ready', {
+        title: `Filled ${response.filledCount} field${response.filledCount === 1 ? '' : 's'}`,
+        subtle: response.missing?.length ? `Missing: ${response.missing.join(', ')}` : '',
+      });
       fillBtn.textContent = 'Filled';
       setTimeout(() => { fillBtn.textContent = 'Fill Fields'; }, 1200);
       return;
     }
 
-    setStatus('empty', `<strong>Fill failed:</strong> ${response?.message || 'No matching fields were found on the current page.'}`);
+    setStatus('empty', {
+      title: 'Fill failed',
+      body: response?.message || 'No matching fields were found on the current page.',
+    });
   } catch {
-    setStatus('empty', '<strong>Error:</strong> Could not reach the page. Refresh the EMR tab and try again.');
+    setStatus('empty', {
+      title: 'Error',
+      body: 'Could not reach the page. Refresh the EMR tab and try again.',
+    });
   }
 }
 
@@ -282,6 +330,7 @@ emrSelect.addEventListener('change', async () => {
   if (state.rawPayload) {
     applyPayload(state.rawPayload, getSelectedEmr());
   }
+  await detectCurrentPage();
 });
 
 (async () => {

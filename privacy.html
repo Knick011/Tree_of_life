@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TOL Scribe Privacy Policy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="site-doc-page">
+  <div class="site-doc-shell">
+    <div class="site-doc-topbar">
+      <a class="site-doc-brand" href="index.html">
+        <span class="site-doc-brand-mark">TOL</span>
+        <span class="site-doc-brand-copy">
+          <strong>TOL Scribe</strong>
+          <span>Clinical prescribing workflow tools</span>
+        </span>
+      </a>
+      <nav class="site-doc-nav" aria-label="Site navigation">
+        <a href="index.html">Home</a>
+        <a class="active" href="privacy.html">Privacy</a>
+        <a href="support.html">Support</a>
+      </nav>
+    </div>
+
+    <main class="site-doc-card">
+      <section class="site-doc-hero">
+        <span class="site-doc-kicker">Privacy Policy</span>
+        <h1>TOL Scribe Website and Extension Privacy Policy</h1>
+        <p>
+          This privacy policy describes how the TOL Scribe website and the TOL Scribe EMR Filler extension
+          handle data during the current pilot release.
+        </p>
+        <div class="site-doc-meta">
+          <span>Last updated: April 21, 2026</span>
+          <span>Current pilot scope: Juno OSCAR Rx</span>
+        </div>
+      </section>
+
+      <section class="site-doc-body">
+        <section class="site-doc-section">
+          <h2>Scope</h2>
+          <p>
+            This policy applies to the current TOL Scribe web application and the TOL Scribe EMR Filler
+            browser extension used to move clinician-authored prescription drafts into supported EMR
+            prescription forms.
+          </p>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>What the website stores</h2>
+          <ul>
+            <li>The website stores local session state in the browser so the user can stay signed in during a pilot session.</li>
+            <li>The website stores local workflow preferences such as the selected EMR output format and recently used options.</li>
+            <li>The website does not send prescription drafts, patient context, or clipboard content to a remote server in the current pilot build.</li>
+            <li>The website does not run third-party analytics, advertising scripts, or tracking pixels in the current pilot build.</li>
+          </ul>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>What the browser extension does</h2>
+          <ul>
+            <li>The extension reads clipboard text only after the user explicitly chooses the <strong>Read Clipboard</strong> action.</li>
+            <li>The extension fills EMR prescription fields only after the user explicitly chooses the <strong>Fill Fields</strong> action.</li>
+            <li>The extension stores the selected target EMR locally in browser extension storage.</li>
+            <li>The extension does not auto-sign prescriptions.</li>
+            <li>The extension does not auto-send prescriptions.</li>
+            <li>The extension does not transmit prescription payloads, patient information, or browsing activity to an external server in the current pilot build.</li>
+          </ul>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>Current host permissions</h2>
+          <p>
+            In the current pilot release, the extension is scoped to Juno OSCAR Rx pages matching:
+          </p>
+          <pre class="site-doc-code">https://*.junoemr.com/juno/oscarRx/*</pre>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>User control</h2>
+          <ul>
+            <li>The clinician remains responsible for reviewing all filled fields before saving, signing, or issuing a prescription.</li>
+            <li>The user can remove the browser extension at any time through the browser’s extension settings.</li>
+            <li>The website session and locally stored preferences can be cleared through normal browser storage controls.</li>
+          </ul>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>Data sharing</h2>
+          <p>
+            In the current pilot release, TOL Scribe does not intentionally transmit prescription payloads,
+            clipboard contents, or patient context to external services for processing.
+          </p>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>Support</h2>
+          <p>
+            For product support information, troubleshooting steps, and current extension scope, see the
+            <a href="support.html">Support page</a>.
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <div class="site-doc-footer">
+      TOL Scribe pilot release. Not for clinical use.
+    </div>
+  </div>
+</body>
+</html>

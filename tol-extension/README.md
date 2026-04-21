@@ -28,6 +28,26 @@ Cross-browser WebExtension for filling prescription fields from a `Copy for EMR`
 
 ## Install
 
+## Build packages
+
+Use the browser-specific build script from the repo root:
+
+```powershell
+python D:\formulaires\build-extension-packages.py
+```
+
+This generates:
+
+- `dist/tol-extension-chromium.zip` for Chrome, Edge, and Brave
+- `dist/tol-extension-firefox.zip` for AMO upload if needed
+- `dist/tol-extension-firefox.xpi` for Firefox signing/upload
+
+Important:
+
+- The Chromium package strips the Firefox-only `background.scripts` fallback.
+- The Firefox package keeps both `background.scripts` and `background.service_worker`.
+- Do not manually zip the `tol-extension` folder for store submission.
+
 ### Chrome / Edge / Brave
 
 1. Open the browser extensions page.

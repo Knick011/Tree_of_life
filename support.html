@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TOL Scribe Support</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="site-doc-page">
+  <div class="site-doc-shell">
+    <div class="site-doc-topbar">
+      <a class="site-doc-brand" href="index.html">
+        <span class="site-doc-brand-mark">TOL</span>
+        <span class="site-doc-brand-copy">
+          <strong>TOL Scribe</strong>
+          <span>Clinical prescribing workflow tools</span>
+        </span>
+      </a>
+      <nav class="site-doc-nav" aria-label="Site navigation">
+        <a href="index.html">Home</a>
+        <a href="privacy.html">Privacy</a>
+        <a class="active" href="support.html">Support</a>
+      </nav>
+    </div>
+
+    <main class="site-doc-card">
+      <section class="site-doc-hero">
+        <span class="site-doc-kicker">Support</span>
+        <h1>TOL Scribe Support and Extension Use</h1>
+        <p>
+          This page describes the current pilot scope, supported workflow, and the fastest way to
+          troubleshoot the TOL Scribe EMR Filler extension.
+        </p>
+        <div class="site-doc-meta">
+          <span>Current target: Juno OSCAR Rx</span>
+          <span>Supported pilot browsers: Edge, Chrome, Brave, Firefox</span>
+        </div>
+      </section>
+
+      <section class="site-doc-body">
+        <section class="site-doc-section">
+          <h2>Current pilot workflow</h2>
+          <div class="site-doc-grid">
+            <div class="site-doc-panel">
+              <strong>1. Build draft in TOL Scribe</strong>
+              <p>Choose the pathway, template, or score result and copy the EMR payload from the app.</p>
+            </div>
+            <div class="site-doc-panel">
+              <strong>2. Open the extension</strong>
+              <p>Use the extension popup on a supported Juno OSCAR Rx page and load the copied payload.</p>
+            </div>
+            <div class="site-doc-panel">
+              <strong>3. Fill and review</strong>
+              <p>Fill the pending prescription row, then review, save, print, and sign inside the EMR.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>Supported page scope</h2>
+          <p>
+            The current pilot extension is intentionally narrowed to Juno OSCAR Rx pages matching:
+          </p>
+          <pre class="site-doc-code">https://*.junoemr.com/juno/oscarRx/*</pre>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>What the extension fills</h2>
+          <ul>
+            <li>Prescription instructions</li>
+            <li>Special instruction / indication text</li>
+            <li>Quantity</li>
+            <li>Repeats</li>
+            <li>Comment / note to pharmacy field where mapped</li>
+          </ul>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>What the extension does not do</h2>
+          <ul>
+            <li>It does not read patient charts to determine diagnosis.</li>
+            <li>It does not auto-sign prescriptions.</li>
+            <li>It does not auto-send prescriptions.</li>
+            <li>It does not replace clinician review inside the EMR.</li>
+          </ul>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>Troubleshooting</h2>
+          <ul>
+            <li>Make sure the EMR in the TOL Scribe app header is set correctly before using <strong>Copy for EMR</strong>.</li>
+            <li>Confirm the active page URL is a supported Juno OSCAR Rx page.</li>
+            <li>If nothing fills, click <strong>Read Clipboard</strong> again in the extension and retry.</li>
+            <li>If the page layout changed, reload the EMR page and retry the fill action.</li>
+            <li>If fields are still missing, the site-specific selectors may need to be tuned for that deployment.</li>
+          </ul>
+        </section>
+
+        <section class="site-doc-section">
+          <h2>Privacy</h2>
+          <p>
+            See the <a href="privacy.html">Privacy Policy</a> for the current website and extension data-handling details.
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <div class="site-doc-footer">
+      TOL Scribe pilot release. Not for clinical use.
+    </div>
+  </div>
+</body>
+</html>
