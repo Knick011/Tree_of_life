@@ -197,7 +197,6 @@
     if (syncMarket) {
       app.state.region = template.region;
       app.state.policyModel = template.policyModel;
-      app.state.emrType = template.emrType;
     }
   };
 

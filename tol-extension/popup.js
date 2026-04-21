@@ -38,8 +38,9 @@ const LABELS = {
 
 function getSelectedEmr() {
   if (emrSelect.value !== 'auto') return emrSelect.value;
+  if (state.normalized?.defaultEmr) return state.normalized.defaultEmr;
   if (state.detectedEmr) return state.detectedEmr;
-  return state.normalized?.defaultEmr || 'generic';
+  return 'generic';
 }
 
 function storageGet(key) {

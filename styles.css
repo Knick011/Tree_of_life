@@ -109,6 +109,43 @@ body {
   gap: 8px;
 }
 
+.header-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 10px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.header-select-wrap span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.header-select {
+  height: 24px;
+  min-width: 132px;
+  padding: 0 22px 0 0;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  outline: none;
+  appearance: none;
+}
+
+.header-select option {
+  color: var(--ink);
+}
+
 .app-dashboard {
   display: grid;
   grid-template-columns: 280px 1fr 360px;

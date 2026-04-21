@@ -526,6 +526,11 @@ async function fillOscarPrescription(message) {
 
 function detectEmr() {
   const host = location.hostname;
+  const path = location.pathname || '';
+
+  if (/junoemr\.com$/i.test(host) && /\/juno\/oscarRx\//i.test(path)) {
+    return { key: 'oscar', label: EMR_DEFS.oscar.label };
+  }
 
   for (const [key, def] of Object.entries(EMR_DEFS)) {
     if (key === 'generic') continue;

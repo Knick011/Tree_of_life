@@ -6,6 +6,7 @@
     { value: 'female', en: 'Female' },
     { value: 'male', en: 'Male' },
   ];
+  const EMR_PREF_KEY = 'tol_emr_preference';
 
   const PATIENT_PRESETS = [
     { id: 'adult-f', label: 'Adult F', age: 34, weight: 68, sex: 'female', pregnancy: 'no' },
@@ -782,11 +783,6 @@
     h += `<div class="field"><span>Region</span><select data-select-field="region">`;
     app.config.REGIONS.forEach((r) => {
       h += `<option value="${r.value}" ${s.region === r.value ? 'selected' : ''}>${escape(text(r))}</option>`;
-    });
-    h += `</select></div>`;
-    h += `<div class="field"><span>EMR format</span><select data-select-field="emrType">`;
-    app.config.EMR_TYPES.forEach((e) => {
-      h += `<option value="${e.value}" ${s.emrType === e.value ? 'selected' : ''}>${escape(text(e))}</option>`;
     });
     h += `</select></div>`;
     h += `</div>`;
@@ -1766,6 +1762,7 @@
 
     ensureState();
     autoProcess();
+    if (dom.headerEmrSelect) dom.headerEmrSelect.value = app.state.emrType;
     renderPatientPanel();
     renderClinicalPanel();
     renderOutputPanel();
@@ -1786,6 +1783,15 @@
   }
 
   function ensureState() {
+    if (!app._emrPrefLoaded) {
+      try {
+        const saved = localStorage.getItem(EMR_PREF_KEY);
+        if (saved && app.config.EMR_TYPES.some((item) => item.value === saved)) {
+          app.state.emrType = saved;
+        }
+      } catch {}
+      app._emrPrefLoaded = true;
+    }
     if (!SEX_OPTIONS.some((o) => o.value === app.state.sex)) app.state.sex = 'female';
     if (app.state.sex === 'male') app.state.pregnancy = 'na';
     app.state.patientPresetId ||= '';
@@ -1840,6 +1846,8 @@
       if (field === 'region') {
         const subs = app.config.SUBREGIONS[value] || [];
         app.state.subRegion = subs[0]?.value || '';
+      } else if (field === 'emrType') {
+        try { localStorage.setItem(EMR_PREF_KEY, value); } catch {}
       }
     }
     render();
@@ -2239,10 +2247,20 @@
     dom.outputPanel = document.getElementById('outputPanel');
     dom.refineBtn = document.getElementById('refineBtn');
     dom.refineModal = document.getElementById('refineModal');
+    dom.headerEmrSelect = document.getElementById('headerEmrSelect');
     dom.aiTeaserBtn = document.getElementById('aiTeaserBtn');
     dom.aiModal = document.getElementById('aiModal');
     dom.helpBtn = document.getElementById('helpBtn');
     dom.helpModal = document.getElementById('helpModal');
+
+    if (dom.headerEmrSelect) {
+      dom.headerEmrSelect.innerHTML = app.config.EMR_TYPES
+        .map((item) => `<option value="${item.value}">${escape(text(item))}</option>`)
+        .join('');
+      dom.headerEmrSelect.addEventListener('change', (e) => {
+        updateState('emrType', e.target.value);
+      });
+    }
 
     bindColumn(dom.patientPanel);
     bindColumn(dom.clinicalPanel);
