@@ -12,8 +12,10 @@ const fieldList = document.getElementById('fieldList');
 const fillBtn = document.getElementById('fillBtn');
 const readBtn = document.getElementById('readBtn');
 const loadBtn = document.getElementById('loadBtn');
+const openPanelBtn = document.getElementById('openPanelBtn');
 const emrSelect = document.getElementById('emrSelect');
 const payloadInput = document.getElementById('payloadInput');
+const emrModels = globalThis.TOLEmrModels;
 
 const LABELS = {
   medication: 'Medication',
@@ -36,6 +38,46 @@ const LABELS = {
   frequencyCode: 'Frequency',
 };
 
+const EMR_LABELS = {
+  auto: 'Use app setting',
+  oscar: 'OSCAR / Juno',
+  pssuite: 'PS Suite',
+  accuro: 'Accuro',
+  medaccess: 'Med Access',
+  chr: 'CHR',
+  medesync: 'Medesync',
+  epic: 'Epic',
+  athena: 'Athena',
+  eclinicalworks: 'eClinicalWorks',
+  nextgen: 'NextGen',
+  practicefusion: 'Practice Fusion',
+  drchrono: 'DrChrono',
+  emis: 'EMIS Web',
+  systmone: 'TPP SystmOne',
+  vision: 'Vision',
+  generic: 'Generic fallback',
+};
+
+function getEmrModel(key) {
+  return emrModels?.getModel?.(key) || emrModels?.MODELS?.[key] || emrModels?.MODELS?.generic || null;
+}
+
+function getLogicalFieldName(fieldName) {
+  const aliases = {
+    medicationDisplay: 'medication',
+    drugName: 'medication',
+    instructions: 'sig',
+    dispenseQuantity: 'quantity',
+    repeats: 'refills',
+    specialInstruction: 'indication',
+    patientNote: 'indication',
+    noteToPharmacy: 'pharmacyNote',
+    frequencyCode: 'frequency',
+    reasonForRx: 'reasonForRx',
+  };
+  return aliases[fieldName] || fieldName;
+}
+
 function getSelectedEmr() {
   if (emrSelect.value !== 'auto') return emrSelect.value;
   if (state.normalized?.defaultEmr) return state.normalized.defaultEmr;
@@ -43,13 +85,15 @@ function getSelectedEmr() {
   return 'generic';
 }
 
+function getSelectedEmrLabel() {
+  return EMR_LABELS[getSelectedEmr()] || getSelectedEmr();
+}
+
 function storageGet(key) {
   if (!ext?.storage?.local?.get) return Promise.resolve({});
   try {
     const result = ext.storage.local.get(key);
-    if (result && typeof result.then === 'function') {
-      return result;
-    }
+    if (result && typeof result.then === 'function') return result;
   } catch {
     // Fall through to callback form.
   }
@@ -62,9 +106,7 @@ function storageSet(data) {
   if (!ext?.storage?.local?.set) return Promise.resolve();
   try {
     const result = ext.storage.local.set(data);
-    if (result && typeof result.then === 'function') {
-      return result;
-    }
+    if (result && typeof result.then === 'function') return result;
   } catch {
     // Fall through to callback form.
   }
@@ -77,9 +119,7 @@ function queryActiveTab() {
   if (!ext?.tabs?.query) return Promise.resolve([]);
   try {
     const result = ext.tabs.query({ active: true, currentWindow: true });
-    if (result && typeof result.then === 'function') {
-      return result;
-    }
+    if (result && typeof result.then === 'function') return result;
   } catch {
     // Fall through to callback form.
   }
@@ -92,9 +132,7 @@ function sendMessage(tabId, message) {
   if (!ext?.tabs?.sendMessage) return Promise.reject(new Error('tabs.sendMessage unavailable'));
   try {
     const result = ext.tabs.sendMessage(tabId, message);
-    if (result && typeof result.then === 'function') {
-      return result;
-    }
+    if (result && typeof result.then === 'function') return result;
   } catch {
     // Fall through to callback form.
   }
@@ -168,7 +206,12 @@ function normalizePayload(parsed, chosenEmr = '') {
       emrType,
       adapterFields,
       canonical: parsed.canonical,
-      medicationLabel: parsed.canonical.medicationDisplay || adapterFields.medication || adapterFields.medicationDisplay || '-',
+      medicationLabel:
+        parsed.canonical.medicationDisplay ||
+        adapterFields.medication ||
+        adapterFields.drugName ||
+        adapterFields.medicationDisplay ||
+        '-',
     };
   }
 
@@ -225,11 +268,31 @@ function renderFieldPreview(normalized) {
   });
 }
 
+function getMissingRequiredFields(normalized) {
+  const model = getEmrModel(getSelectedEmr());
+  if (!model?.requiredLogicalFields?.length) return [];
+
+  const present = new Set(
+    Object.entries(normalized.adapterFields || {})
+      .filter(([, value]) => value !== '' && value !== null && value !== undefined)
+      .map(([name]) => getLogicalFieldName(name)),
+  );
+
+  return model.requiredLogicalFields.filter((field) => !present.has(field));
+}
+
 function showReady(normalized) {
+  const missingRequired = getMissingRequiredFields(normalized);
+  const subtleParts = [`Target: ${getSelectedEmrLabel()}`];
+  if (missingRequired.length) {
+    subtleParts.push(`Missing required: ${missingRequired.map((field) => emrModels?.FIELD_LABELS?.[field] || field).join(', ')}`);
+  } else {
+    subtleParts.push('Required fields present');
+  }
   setStatus('ready', {
     title: 'Draft ready to fill',
     body: normalized.medicationLabel,
-    subtle: `Target: ${getSelectedEmr().toUpperCase()}`,
+    subtle: subtleParts.join(' · '),
   });
   renderFieldPreview(normalized);
   fillBtn.disabled = false;
@@ -254,8 +317,9 @@ async function detectCurrentPage() {
     state.detectedEmr = response?.emrType || '';
     const emrLabel = response?.emrLabel || 'Unknown';
     const pageLabel = response?.title || response?.url || 'Active page';
-    const sourceLabel = state.normalized?.defaultEmr ? `Payload: ${state.normalized.defaultEmr.toUpperCase()} · ` : '';
-    pageHint.textContent = `${sourceLabel}Page: ${emrLabel} · ${pageLabel}`;
+    const payloadLabel = state.normalized?.defaultEmr ? (EMR_LABELS[state.normalized.defaultEmr] || state.normalized.defaultEmr) : '';
+    const prefix = payloadLabel ? `Payload: ${payloadLabel} · ` : '';
+    pageHint.textContent = `${prefix}Page: ${emrLabel} · ${pageLabel}`;
     if (emrSelect.value === 'auto' && state.normalized) {
       showReady(state.normalized);
     }
@@ -298,7 +362,9 @@ async function fillActivePage() {
         subtle: response.missing?.length ? `Missing: ${response.missing.join(', ')}` : '',
       });
       fillBtn.textContent = 'Filled';
-      setTimeout(() => { fillBtn.textContent = 'Fill Fields'; }, 1200);
+      setTimeout(() => {
+        fillBtn.textContent = 'Fill Fields';
+      }, 1200);
       return;
     }
 
@@ -314,6 +380,34 @@ async function fillActivePage() {
   }
 }
 
+async function openInlinePanel() {
+  try {
+    const [tab] = await queryActiveTab();
+    if (!tab?.id) {
+      setStatus('empty', { title: 'Error', body: 'No active tab found.' });
+      return;
+    }
+
+    await sendMessage(tab.id, {
+      action: 'openInlinePanel',
+      emrType: getSelectedEmr(),
+      payload: state.rawPayload,
+      normalized: state.normalized || normalizePayload(state.rawPayload, getSelectedEmr()),
+    });
+
+    setStatus('ready', {
+      title: 'Page panel opened',
+      body: 'Use the floating TOL panel on the EMR page.',
+      subtle: 'This is the fallback when the browser toolbar is hidden.',
+    });
+  } catch {
+    setStatus('empty', {
+      title: 'Error',
+      body: 'Could not open the page panel. Refresh the EMR tab and try again.',
+    });
+  }
+}
+
 loadBtn.addEventListener('click', () => {
   try {
     applyPayload(JSON.parse(payloadInput.value), getSelectedEmr());
@@ -324,6 +418,7 @@ loadBtn.addEventListener('click', () => {
 
 readBtn.addEventListener('click', readClipboard);
 fillBtn.addEventListener('click', fillActivePage);
+openPanelBtn.addEventListener('click', openInlinePanel);
 
 emrSelect.addEventListener('change', async () => {
   await storageSet({ emrType: emrSelect.value });

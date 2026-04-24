@@ -498,6 +498,24 @@
     return String(value || '').trim();
   }
 
+  function inferDaysSupply(durationText) {
+    const raw = String(durationText || '').trim().toLowerCase();
+    if (!raw) return '';
+    const match = raw.match(/(\d+(?:\.\d+)?)\s*(day|days|week|weeks|month|months)/);
+    if (!match) return '';
+    const amount = Number(match[1]);
+    const unit = match[2];
+    if (!Number.isFinite(amount)) return '';
+    if (unit.startsWith('day')) return String(Math.round(amount));
+    if (unit.startsWith('week')) return String(Math.round(amount * 7));
+    if (unit.startsWith('month')) return String(Math.round(amount * 28));
+    return '';
+  }
+
+  function inferQuantityUnit(quantity) {
+    return String(quantity?.unit || '').trim();
+  }
+
   function buildPlatformFieldMap(canonical) {
     const shared = {
       medication: canonical.medicationDisplay,
@@ -505,21 +523,58 @@
       quantity: canonical.dispense.raw,
       refills: canonical.refills,
       duration: canonical.duration,
+      daysSupply: canonical.daysSupply,
+      unitType: canonical.unitType,
       indication: canonical.indication,
+      reasonForRx: canonical.indication,
       pharmacyNote: canonical.pharmacyNote,
+      route: canonical.route,
+      frequency: canonical.frequencyCode,
+      effectiveDate: canonical.effectiveDate,
+      allowSubstitution: canonical.allowSubstitution,
+    };
+
+    const canadaStructured = {
+      medication: shared.medication,
+      instructions: shared.sig,
+      quantity: shared.quantity,
+      repeats: shared.refills,
+      duration: shared.duration,
+      indication: shared.indication,
+      route: shared.route,
+      frequency: shared.frequency,
+      noteToPharmacy: shared.pharmacyNote,
+    };
+
+    const usStructured = {
+      medicationDisplay: shared.medication,
+      sig: shared.sig,
+      dispenseQuantity: shared.quantity,
+      quantity: shared.quantity,
+      refills: shared.refills,
+      duration: shared.duration,
+      route: shared.route,
+      frequencyCode: shared.frequency,
+      indication: shared.indication,
+      patientNote: shared.indication,
+      pharmacyNote: shared.pharmacyNote,
+    };
+
+    const ukStructured = {
+      medicationDisplay: shared.medication,
+      sig: shared.sig,
+      quantity: shared.quantity,
+      duration: shared.duration,
+      repeats: shared.refills,
+      route: shared.route,
+      frequency: shared.frequency,
+      indication: shared.indication,
+      pharmacyNote: shared.pharmacyNote,
     };
 
     return {
       pssuite: {
-        fields: {
-          medication: shared.medication,
-          instructions: shared.sig,
-          quantity: shared.quantity,
-          repeats: shared.refills,
-          duration: shared.duration,
-          indication: shared.indication,
-          noteToPharmacy: shared.pharmacyNote,
-        },
+        fields: canadaStructured,
       },
       oscar: {
         fields: {
@@ -528,30 +583,97 @@
           quantity: shared.quantity,
           repeats: shared.refills,
           duration: shared.duration,
+          route: shared.route,
+          frequency: shared.frequency,
           specialInstruction: shared.indication,
           noteToPharmacy: shared.pharmacyNote,
         },
       },
+      accuro: {
+        fields: canadaStructured,
+      },
+      medaccess: {
+        fields: canadaStructured,
+      },
+      chr: {
+        fields: canadaStructured,
+      },
+      medesync: {
+        fields: canadaStructured,
+      },
       epic: {
-        fields: {
-          medicationDisplay: shared.medication,
-          sig: shared.sig,
-          dispenseQuantity: shared.quantity,
-          refills: shared.refills,
-          duration: shared.duration,
-          indication: shared.indication,
-          pharmacyNote: shared.pharmacyNote,
-        },
+        fields: usStructured,
       },
       athena: {
+        fields: usStructured,
+      },
+      eclinicalworks: {
+        fields: {
+          ...usStructured,
+          reasonForRx: shared.reasonForRx,
+        },
+      },
+      nextgen: {
+        fields: {
+          ...usStructured,
+          unitType: shared.unitType,
+          daysSupply: shared.daysSupply,
+          reasonForRx: shared.reasonForRx,
+        },
+      },
+      practicefusion: {
+        fields: {
+          ...usStructured,
+          reasonForRx: shared.reasonForRx,
+        },
+      },
+      drchrono: {
         fields: {
           medicationDisplay: shared.medication,
+          medication: shared.medication,
           sig: shared.sig,
           quantity: shared.quantity,
+          unitType: shared.unitType,
           refills: shared.refills,
-          duration: shared.duration,
+          daysSupply: shared.daysSupply,
+          effectiveDate: shared.effectiveDate,
+          reasonForRx: shared.reasonForRx,
           patientNote: shared.indication,
           pharmacyNote: shared.pharmacyNote,
+          allowSubstitution: shared.allowSubstitution,
+        },
+      },
+      emis: {
+        fields: ukStructured,
+      },
+      systmone: {
+        fields: ukStructured,
+      },
+      vision: {
+        fields: ukStructured,
+      },
+      generic: {
+        fields: {
+          medication: shared.medication,
+          medicationDisplay: shared.medication,
+          sig: shared.sig,
+          instructions: shared.sig,
+          quantity: shared.quantity,
+          dispenseQuantity: shared.quantity,
+          refills: shared.refills,
+          repeats: shared.refills,
+          duration: shared.duration,
+          daysSupply: shared.daysSupply,
+          route: shared.route,
+          frequency: shared.frequency,
+          frequencyCode: shared.frequency,
+          indication: shared.indication,
+          reasonForRx: shared.reasonForRx,
+          patientNote: shared.indication,
+          pharmacyNote: shared.pharmacyNote,
+          noteToPharmacy: shared.pharmacyNote,
+          effectiveDate: shared.effectiveDate,
+          allowSubstitution: shared.allowSubstitution,
         },
       },
     };
@@ -570,9 +692,13 @@
       doseUnit: dose.unit,
       dispense: quantity,
       duration: normalizeDuration(selected.order.duration),
+      daysSupply: inferDaysSupply(selected.order.duration),
+      unitType: inferQuantityUnit(quantity),
       refills: String(selected.order.refills ?? ''),
       indication: app.currentConditionLabel(ctx),
       pharmacyNote: app.textFor(selected.order.pharmacy, ctx.language),
+      effectiveDate: new Date().toISOString().slice(0, 10),
+      allowSubstitution: true,
       region: ctx.region,
       emrType: ctx.emrType,
       conditionKey: ctx.condition,
@@ -589,7 +715,7 @@
       canonical,
       adapter: {
         type: ctx.emrType,
-        fields: platformMap[ctx.emrType]?.fields || platformMap.athena.fields,
+        fields: platformMap[ctx.emrType]?.fields || platformMap.generic.fields,
       },
       adapters: platformMap,
     };
@@ -607,12 +733,15 @@
     const chartReason = reasons || selected.rationale;
 
     let rxText = '';
-    if (ctx.emrType === 'pssuite') {
+    const emrType = ctx.emrType;
+    if (['pssuite', 'accuro', 'medaccess', 'chr', 'medesync'].includes(emrType)) {
       rxText = `Medication: ${selected.order.medication}\nSig: ${sig}\nDispense: ${selected.order.dispense}\nRefills: ${selected.order.refills}\n${app.t('copyIndication')}: ${conditionName}`;
-    } else if (ctx.emrType === 'oscar') {
+    } else if (emrType === 'oscar') {
       rxText = `${selected.order.medication}\n${sig}\nDisp: ${selected.order.dispense}\nRF: ${selected.order.refills}\n${app.t('copyIndication')}: ${conditionName}`;
-    } else if (ctx.emrType === 'epic') {
+    } else if (['epic', 'athena', 'eclinicalworks', 'nextgen', 'practicefusion', 'drchrono'].includes(emrType)) {
       rxText = `Medication: ${selected.order.medication}\nDose / Sig: ${sig}\nDuration: ${selected.order.duration}\nDispense: ${selected.order.dispense}\nRefills: ${selected.order.refills}\nIndication: ${conditionName}`;
+    } else if (['emis', 'systmone', 'vision'].includes(emrType)) {
+      rxText = `Medication: ${selected.order.medication}\nDirections: ${sig}\nQuantity: ${selected.order.dispense}\nRepeat issue: ${selected.order.refills}\nIndication: ${conditionName}`;
     } else {
       rxText = `${selected.order.medication} | ${sig} | Disp ${selected.order.dispense} | ${selected.order.refills} RF | ${conditionName}`;
     }

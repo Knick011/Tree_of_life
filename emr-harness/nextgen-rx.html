@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NextGen Rx Mock</title>
+  <style>
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: #f4f7f8; color: #17212b; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+    .shell { background: #fff; border-radius: 18px; box-shadow: 0 20px 60px rgba(15,23,42,.09); overflow: hidden; }
+    .head { padding: 18px 22px; background: #1f3a5f; color: #fff; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 22px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: .04em; }
+    input, select, textarea { font: inherit; border: 1px solid #cdd8df; border-radius: 10px; padding: 10px 12px; background: #fff; }
+    textarea { min-height: 86px; resize: vertical; }
+    .foot { padding: 0 22px 22px; color: #64748b; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="shell">
+      <div class="head">
+        <strong>NextGen ePrescribing Mock</strong>
+        <div style="margin-top:6px; opacity:.75; font-size:13px">Tests quantity, unit type, days supply, and reason-for-Rx fields</div>
+      </div>
+      <div class="grid">
+        <div class="field"><label for="medication">Medication</label><input id="medication" name="medication" placeholder="Medication" /></div>
+        <div class="field"><label for="quantity">Quantity</label><input id="quantity" name="quantity" placeholder="30" /></div>
+        <div class="field"><label for="unitType">Unit type</label><select id="unitType" name="unitType"><option value="">Select</option><option value="tablet">tablet</option><option value="capsule">capsule</option><option value="mL">mL</option></select></div>
+        <div class="field"><label for="daysSupply">Days supply</label><input id="daysSupply" name="daysSupply" placeholder="7" /></div>
+        <div class="field"><label for="refills">Refills</label><input id="refills" name="refills" placeholder="1" /></div>
+        <div class="field"><label for="reasonForRx">Reason for Rx</label><input id="reasonForRx" name="reasonForRx" placeholder="Condition / diagnosis" /></div>
+        <div class="field"><label for="frequency">Frequency</label><select id="frequency" name="frequency"><option value="">Select</option><option value="OD">OD</option><option value="BID">BID</option><option value="TID">TID</option><option value="QID">QID</option></select></div>
+        <div class="field"><label for="route">Route</label><select id="route" name="route"><option value="">Select</option><option value="PO">PO</option><option value="TOP">TOP</option><option value="IM">IM</option></select></div>
+        <div class="field full"><label for="sig">Valid SIG</label><textarea id="sig" name="sig" placeholder="Take 1 tablet by mouth twice daily"></textarea></div>
+        <div class="field full"><label for="pharmacyNote">Notes to pharmacy</label><textarea id="pharmacyNote" name="pharmacyNote" placeholder="Optional pharmacy note"></textarea></div>
+      </div>
+      <div class="foot">The TOL widget should appear here. This page is the structured test target for the NextGen field model.</div>
+    </div>
+  </div>
+</body>
+</html>

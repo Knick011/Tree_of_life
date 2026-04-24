@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OSCAR Rx Mock</title>
+  <style>
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: #eef3f6; color: #17212b; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 24px 20px 60px; }
+    .shell { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 22px 70px rgba(15,23,42,.1); }
+    .head { padding: 18px 22px; background: #143b57; color: #fff; }
+    .search { display: flex; gap: 10px; align-items: center; padding: 20px 22px 8px; }
+    .search input { flex: 1; padding: 11px 12px; border: 1px solid #cdd8df; border-radius: 10px; font: inherit; }
+    #autocomplete_choices { margin: 0 22px 12px; padding: 0; list-style: none; display: grid; gap: 6px; }
+    #autocomplete_choices[hidden] { display: none; }
+    #autocomplete_choices li a { display: block; padding: 10px 12px; border-radius: 10px; background: #f5f8f9; color: #17212b; text-decoration: none; border: 1px solid #d7e1e5; }
+    #rxText { padding: 0 22px 22px; display: grid; gap: 14px; }
+    .rx-row { border: 1px solid #d7e1e5; border-radius: 14px; padding: 16px; background: #fff; display: grid; gap: 12px; }
+    .rx-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: .04em; }
+    input, select, textarea { font: inherit; border: 1px solid #cdd8df; border-radius: 10px; padding: 10px 12px; background: #fff; }
+    textarea { min-height: 82px; resize: vertical; }
+    .foot { padding: 0 22px 22px; color: #64748b; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="shell">
+      <div class="head">
+        <strong>OSCAR Rx Mock</strong>
+        <div style="margin-top:6px; opacity:.75; font-size:13px">Tests the workflow-specific OSCAR adapter with autocomplete and pending-row creation.</div>
+      </div>
+
+      <div class="search">
+        <label for="searchString" style="font-size:12px; font-weight:700; color:#334155; text-transform:uppercase; letter-spacing:.04em;">Search</label>
+        <input id="searchString" name="searchString" placeholder="Search medication" autocomplete="off" />
+      </div>
+      <ul id="autocomplete_choices" hidden></ul>
+
+      <div id="rxText"></div>
+      <div class="foot">The TOL widget should appear here and the OSCAR adapter should create and fill the pending row.</div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const search = document.getElementById('searchString');
+      const choices = document.getElementById('autocomplete_choices');
+      const rxText = document.getElementById('rxText');
+      const drugs = [
+        'Nitrofurantoin 100 mg capsule',
+        'Amoxicillin 500 mg capsule',
+        'Trimethoprim 100 mg tablet',
+        'Hydrocortisone 1% cream',
+      ];
+
+      function renderChoices(query) {
+        const q = String(query || '').trim().toLowerCase();
+        const matches = drugs.filter((drug) => drug.toLowerCase().includes(q));
+        choices.innerHTML = '';
+        if (!q || !matches.length) {
+          choices.hidden = true;
+          return;
+        }
+        matches.forEach((drug) => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = '#';
+          a.title = drug;
+          a.textContent = drug;
+          a.addEventListener('click', (e) => {
+            e.preventDefault();
+            addRow(drug);
+            choices.hidden = true;
+            choices.innerHTML = '';
+          });
+          li.appendChild(a);
+          choices.appendChild(li);
+        });
+        choices.hidden = false;
+      }
+
+      function addRow(drug) {
+        const rowId = String(Date.now());
+        const wrap = document.createElement('div');
+        wrap.className = 'rx-row';
+        wrap.id = `set_${rowId}`;
+        wrap.innerHTML = `
+          <div class="rx-grid">
+            <div class="field full">
+              <label for="drugName_${rowId}">Drug</label>
+              <input id="drugName_${rowId}" value="${drug}" />
+            </div>
+            <div class="field full">
+              <label for="instructions_${rowId}">Instructions</label>
+              <textarea id="instructions_${rowId}"></textarea>
+            </div>
+            <div id="siAutoComplete_${rowId}" class="field full" style="display:none">
+              <label for="siInput_${rowId}">Special instruction</label>
+              <input id="siInput_${rowId}" />
+            </div>
+            <div class="field">
+              <label for="quantity_${rowId}">Quantity</label>
+              <input id="quantity_${rowId}" />
+            </div>
+            <div class="field">
+              <label for="repeats_${rowId}">Repeats</label>
+              <input id="repeats_${rowId}" />
+            </div>
+            <div class="field">
+              <label for="route_${rowId}">Route</label>
+              <select id="route_${rowId}">
+                <option value="">Select</option>
+                <option value="PO">PO</option>
+                <option value="TOP">TOP</option>
+                <option value="IM">IM</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="frequency_${rowId}">Frequency</label>
+              <select id="frequency_${rowId}">
+                <option value="">Select</option>
+                <option value="OD">OD</option>
+                <option value="BID">BID</option>
+                <option value="TID">TID</option>
+                <option value="QID">QID</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="duration_${rowId}">Duration</label>
+              <input id="duration_${rowId}" />
+            </div>
+            <div class="field">
+              <label for="durationUnit_${rowId}">Duration unit</label>
+              <select id="durationUnit_${rowId}">
+                <option value="">Select</option>
+                <option value="D">Days</option>
+                <option value="W">Weeks</option>
+                <option value="M">Months</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="comment_${rowId}">Comment</label>
+              <textarea id="comment_${rowId}"></textarea>
+            </div>
+          </div>
+        `;
+        rxText.appendChild(wrap);
+      }
+
+      search.addEventListener('input', () => renderChoices(search.value));
+      search.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          renderChoices(search.value);
+          const first = choices.querySelector('a[title]');
+          if (first) first.click();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

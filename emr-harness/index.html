@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TOL EMR Harness</title>
+  <style>
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: #f3f7f8; color: #17212b; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
+    h1 { margin: 0 0 8px; }
+    p { line-height: 1.55; color: #475569; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+    a.card { display: block; padding: 18px; border-radius: 16px; background: #fff; color: inherit; text-decoration: none; box-shadow: 0 14px 40px rgba(15,23,42,.08); border: 1px solid rgba(15,23,42,.08); }
+    a.card strong { display: block; margin-bottom: 6px; }
+    code { background: #e7eef0; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>TOL Extension Harness</h1>
+    <p>Use these pages to test the browser extension locally. The widget should <strong>not</strong> appear on the control page, and it <strong>should</strong> appear on the prescribing mocks once the extension is loaded.</p>
+    <div class="grid">
+      <a class="card" href="/emr-harness/non-prescribing.html">
+        <strong>Control page</strong>
+        <span>No prescribing fields. The widget should stay hidden here.</span>
+      </a>
+      <a class="card" href="/emr-harness/oscar-rx.html">
+        <strong>OSCAR Rx mock</strong>
+        <span>Tests the workflow-specific OSCAR adapter including search and pending row fill.</span>
+      </a>
+      <a class="card" href="/emr-harness/pssuite-rx.html">
+        <strong>PS Suite mock</strong>
+        <span>Tests the structured Canadian ambulatory field map.</span>
+      </a>
+      <a class="card" href="/emr-harness/nextgen-rx.html">
+        <strong>NextGen mock</strong>
+        <span>Tests quantity, unit type, days supply, and reason-for-Rx handling.</span>
+      </a>
+    </div>
+    <p style="margin-top:24px">Recommended manual flow: use <code>Copy for EMR</code> in TOL Scribe, open one of the prescribing mocks, click <code>TOL Fill</code>, then <code>Read clipboard</code> and <code>Fill draft</code>.</p>
+  </div>
+</body>
+</html>

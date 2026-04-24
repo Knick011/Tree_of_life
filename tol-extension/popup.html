@@ -193,8 +193,18 @@
       <option value="oscar">OSCAR / Juno</option>
       <option value="pssuite">PS Suite</option>
       <option value="accuro">Accuro</option>
+      <option value="medaccess">Med Access</option>
+      <option value="chr">CHR</option>
+      <option value="medesync">Medesync</option>
       <option value="epic">Epic</option>
       <option value="athena">Athena</option>
+      <option value="eclinicalworks">eClinicalWorks</option>
+      <option value="nextgen">NextGen</option>
+      <option value="practicefusion">Practice Fusion</option>
+      <option value="drchrono">DrChrono</option>
+      <option value="emis">EMIS Web</option>
+      <option value="systmone">TPP SystmOne</option>
+      <option value="vision">Vision</option>
       <option value="generic">Generic fallback</option>
     </select>
 
@@ -211,6 +221,8 @@
       <button id="readBtn" class="btn-secondary">Read Clipboard</button>
     </div>
 
+    <button id="openPanelBtn" class="btn-secondary" style="width:100%; margin-bottom: 12px;">Open Page Panel</button>
+
     <div class="section">
       <details>
         <summary>Paste JSON manually</summary>
@@ -222,10 +234,11 @@
     </div>
 
     <div class="footer">
-      Works as a WebExtension in Chrome, Edge, Brave, and Firefox. The same folder can be packaged for Safari using Apple's Safari Web Extension tooling.
+      If the browser toolbar is hidden in the EMR window, use the page panel or the keyboard shortcut to open TOL directly on the prescription page.
     </div>
   </div>
 
+  <script src="emr-models.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

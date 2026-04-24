@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PS Suite Rx Mock</title>
+  <style>
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: #eef4f7; color: #17212b; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+    .shell { background: #fff; border-radius: 18px; box-shadow: 0 20px 60px rgba(15,23,42,.09); overflow: hidden; }
+    .head { padding: 18px 22px; background: #12314a; color: #fff; }
+    .form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 22px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: .04em; }
+    input, select, textarea { font: inherit; border: 1px solid #cdd8df; border-radius: 10px; padding: 10px 12px; background: #fff; }
+    textarea { min-height: 86px; resize: vertical; }
+    .foot { padding: 0 22px 22px; color: #64748b; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="shell">
+      <div class="head">
+        <strong>PS Suite Prescribing Mock</strong>
+        <div style="margin-top:6px; opacity:.75; font-size:13px">Canadian ambulatory prescribing surface</div>
+      </div>
+      <div class="form">
+        <div class="field"><label for="txtDrugName">Medication</label><input id="txtDrugName" placeholder="Medication name" /></div>
+        <div class="field"><label for="txtQuantity">Quantity</label><input id="txtQuantity" name="quantity" placeholder="30 tablets" /></div>
+        <div class="field full"><label for="txtSig">Sig</label><textarea id="txtSig" name="sig" placeholder="Take 1 tablet by mouth twice daily"></textarea></div>
+        <div class="field"><label for="txtRefills">Refills</label><input id="txtRefills" name="refills" placeholder="1" /></div>
+        <div class="field"><label for="txtDuration">Duration</label><input id="txtDuration" name="duration" placeholder="7 days" /></div>
+        <div class="field"><label for="selRoute">Route</label><select id="selRoute" name="route"><option value="">Select</option><option value="PO">PO</option><option value="TOP">TOP</option><option value="IM">IM</option></select></div>
+        <div class="field"><label for="selFrequency">Frequency</label><select id="selFrequency" name="frequency"><option value="">Select</option><option value="OD">OD</option><option value="BID">BID</option><option value="TID">TID</option><option value="QID">QID</option></select></div>
+        <div class="field full"><label for="indication">Indication</label><textarea id="indication" name="indication" placeholder="Reason for treatment"></textarea></div>
+        <div class="field full"><label for="pharmacyNote">Notes to pharmacy</label><textarea id="pharmacyNote" name="pharmacyNote" placeholder="Optional pharmacy note"></textarea></div>
+      </div>
+      <div class="foot">The TOL widget should appear here because this page exposes prescribing fields that match the PS Suite adapter.</div>
+    </div>
+  </div>
+</body>
+</html>
