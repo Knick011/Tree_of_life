@@ -52,6 +52,7 @@
     (() => {
       const drugInput = document.getElementById('txtDrugName');
       const suggestions = document.getElementById('psDrugSuggestions');
+      let sawTypingEvent = false;
       const drugs = [
         'SULFAMETHOXAZOLE 800MG/TRIMETHOPRIM 160MG TABLET',
         'NITROFURANTOIN 100MG CAPSULE',
@@ -68,7 +69,7 @@
         const normalizedQuery = q.replace(/[/-]/g, ' ');
         const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
         suggestions.replaceChildren();
-        if (!q) {
+        if (!q || !sawTypingEvent) {
           closeSuggestions();
           return;
         }
@@ -98,6 +99,9 @@
         suggestions.hidden = false;
       }
 
+      drugInput.addEventListener('keydown', (event) => {
+        if (event.key && event.key.length === 1) sawTypingEvent = true;
+      });
       drugInput.addEventListener('input', () => renderSuggestions(drugInput.value));
       drugInput.addEventListener('blur', () => {
         setTimeout(closeSuggestions, 160);

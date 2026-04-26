@@ -371,12 +371,11 @@ function dispatchFormEvents(element) {
   });
 }
 
-function setElementValue(element, value) {
+function setNativeElementValue(element, value) {
   if (!element) return false;
   const nextValue = String(value ?? '');
   if (element.isContentEditable) {
     element.textContent = nextValue;
-    dispatchFormEvents(element);
     return true;
   }
 
@@ -389,6 +388,13 @@ function setElementValue(element, value) {
   const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
   if (setter) setter.call(element, nextValue);
   else element.value = nextValue;
+  return true;
+}
+
+function setElementValue(element, value) {
+  if (!element) return false;
+  const nextValue = String(value ?? '');
+  setNativeElementValue(element, nextValue);
   dispatchFormEvents(element);
   return true;
 }
@@ -447,16 +453,81 @@ function typeSearchField(element, value) {
   if (!element || !value) return false;
   element.focus();
   const nextValue = String(value ?? '');
-  const proto =
-    element.tagName === 'TEXTAREA'
-      ? HTMLTextAreaElement.prototype
-      : element.tagName === 'SELECT'
-        ? HTMLSelectElement.prototype
-        : HTMLInputElement.prototype;
-  const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-  if (setter) setter.call(element, nextValue);
-  else element.value = nextValue;
+  setNativeElementValue(element, nextValue);
   element.dispatchEvent(new Event('input', { bubbles: true }));
+  element.dispatchEvent(new Event('change', { bubbles: true }));
+  element.dispatchEvent(new Event('search', { bubbles: true }));
+  return true;
+}
+
+function dispatchSearchKeyboardEvent(element, type, key, extra = {}) {
+  const event = new KeyboardEvent(type, {
+    key,
+    code: key.length === 1 ? `Key${key.toUpperCase()}` : key,
+    bubbles: true,
+    cancelable: true,
+    ...extra,
+  });
+  element.dispatchEvent(event);
+  return event;
+}
+
+function dispatchSearchInputEvent(element, inputType, data = null) {
+  const EventCtor = typeof InputEvent === 'function' ? InputEvent : Event;
+  const event = new EventCtor('input', {
+    bubbles: true,
+    cancelable: false,
+    inputType,
+    data,
+  });
+  element.dispatchEvent(event);
+}
+
+async function clearSearchFieldLikeUser(element, runId) {
+  if (!element) return false;
+  element.focus();
+  clickElement(element);
+  dispatchSearchKeyboardEvent(element, 'keydown', 'a', { ctrlKey: true });
+  dispatchSearchKeyboardEvent(element, 'keyup', 'a', { ctrlKey: true });
+  dispatchSearchKeyboardEvent(element, 'keydown', 'Backspace');
+  setNativeElementValue(element, '');
+  dispatchSearchInputEvent(element, 'deleteContentBackward', null);
+  element.dispatchEvent(new Event('search', { bubbles: true }));
+  dispatchSearchKeyboardEvent(element, 'keyup', 'Backspace');
+  if (runId) ensureActiveFillRun(runId);
+  await sleep(35);
+  return true;
+}
+
+async function typeSearchFieldLikeUser(element, value, runId, options = {}) {
+  if (!element || !value) return false;
+  const text = String(value ?? '');
+  const delayMs = options.delayMs ?? 18;
+  await clearSearchFieldLikeUser(element, runId);
+
+  for (const char of text) {
+    if (runId) ensureActiveFillRun(runId);
+    dispatchSearchKeyboardEvent(element, 'keydown', char);
+    if (char.length === 1) {
+      if (typeof InputEvent === 'function') {
+        element.dispatchEvent(new InputEvent('beforeinput', {
+          bubbles: true,
+          cancelable: true,
+          inputType: 'insertText',
+          data: char,
+        }));
+      } else {
+        element.dispatchEvent(new Event('beforeinput', { bubbles: true, cancelable: true }));
+      }
+    }
+    const prior = element.isContentEditable ? element.textContent || '' : element.value || '';
+    setNativeElementValue(element, `${prior}${char}`);
+    dispatchSearchInputEvent(element, 'insertText', char);
+    element.dispatchEvent(new Event('search', { bubbles: true }));
+    dispatchSearchKeyboardEvent(element, 'keyup', char);
+    if (delayMs > 0) await sleep(delayMs);
+  }
+
   element.dispatchEvent(new Event('change', { bubbles: true }));
   element.dispatchEvent(new Event('search', { bubbles: true }));
   return true;
@@ -765,9 +836,10 @@ function clickElement(element) {
 }
 
 function getGenericAutocompleteOptions(fieldElement) {
+  const doc = fieldElement?.ownerDocument || document;
   const ownedIds = [fieldElement?.getAttribute?.('aria-controls'), fieldElement?.getAttribute?.('aria-owns')].filter(Boolean);
   const ownedOptions = ownedIds.flatMap((id) => {
-    const container = document.getElementById(id);
+    const container = doc.getElementById(id);
     if (!container) return [];
     return Array.from(container.querySelectorAll('[role="option"], li, a[title], .autocomplete-option, .autocomplete-item'));
   });
@@ -776,7 +848,7 @@ function getGenericAutocompleteOptions(fieldElement) {
     ? ownedOptions
     : SEARCH_OPTION_SELECTORS.flatMap((selector) => {
         try {
-          return Array.from(document.querySelectorAll(selector));
+          return Array.from(doc.querySelectorAll(selector));
         } catch {
           return [];
         }
@@ -785,6 +857,21 @@ function getGenericAutocompleteOptions(fieldElement) {
   return pool
     .filter(isVisibleElement)
     .filter((element) => getOptionLabel(element));
+}
+
+function isLikelyAutocompleteField(element) {
+  if (!element) return false;
+  const role = String(element.getAttribute?.('role') || '').toLowerCase();
+  const type = String(element.getAttribute?.('type') || '').toLowerCase();
+  const autocomplete = String(element.getAttribute?.('autocomplete') || '').toLowerCase();
+  return !!(
+    element.getAttribute?.('aria-controls') ||
+    element.getAttribute?.('aria-owns') ||
+    role === 'combobox' ||
+    role === 'searchbox' ||
+    type === 'search' ||
+    autocomplete === 'off'
+  );
 }
 
 async function selectGenericMedicationOption(fieldElement, drugName, emrType, progress, runId) {
@@ -796,7 +883,7 @@ async function selectGenericMedicationOption(fieldElement, drugName, emrType, pr
   for (const query of queries) {
     ensureActiveFillRun(runId);
     progress?.(`Searching ${EMR_DEFS[emrType]?.label || emrType} for ${query}`);
-    typeSearchField(fieldElement, query);
+    await typeSearchFieldLikeUser(fieldElement, query, runId);
 
     const options =
       (await waitFor(() => {
@@ -827,10 +914,10 @@ async function selectGenericMedicationOption(fieldElement, drugName, emrType, pr
   }
 
   return {
-    ok: !sawOptions,
+    ok: !sawOptions && !isLikelyAutocompleteField(fieldElement),
     usedDropdown: false,
     selectedLabel: '',
-    manualSelectionRequired: sawOptions,
+    manualSelectionRequired: sawOptions || isLikelyAutocompleteField(fieldElement),
     candidates: lastRanked.slice(0, 3).map((item) => item.label),
   };
 }
@@ -889,14 +976,10 @@ function findOscarMatchingRowId(drugName) {
   return match ? match.id.replace('drugName_', '') : null;
 }
 
-function setOscarSearchValue(value) {
+async function setOscarSearchValue(value, runId) {
   const searchField = document.getElementById('searchString');
   if (!searchField || !value) return false;
-  searchField.focus();
-  setElementValue(searchField, value);
-  ['keydown', 'keyup'].forEach((type) => {
-    searchField.dispatchEvent(new KeyboardEvent(type, { key: 'a', bubbles: true }));
-  });
+  await typeSearchFieldLikeUser(searchField, value, runId);
   return true;
 }
 
@@ -1473,7 +1556,7 @@ async function addOscarDrugRow(drugName, progress, runId) {
     ensureActiveFillRun(runId);
     progress?.(`Searching OSCAR for ${query}`);
     const initialIds = new Set(getOscarRowIds());
-    setOscarSearchValue(query);
+    await setOscarSearchValue(query, runId);
 
     const option =
       (await waitFor(() => findBestOscarAutocompleteOption(drugName), 2200, 120, () => isActiveFillRun(runId))) ||
