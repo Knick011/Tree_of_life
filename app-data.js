@@ -1799,7 +1799,56 @@ window.TOLData = {
       policyModel: 'local',
       notes: 'Intranasal corticosteroid first-line for moderate-severe allergic rhinitis.',
     },
-    /* ─── Paediatric templates ─── */
+    /* --- Multi-medication templates --- */
+    {
+      id: 'tpl-copd-exacerbation-combo-ca',
+      name: 'COPD flare steroid + antibiotic pack',
+      condition: 'copd-exacerbation',
+      defaultMedication: 'prednisone-copd',
+      quickPack: {
+        version: 1,
+        mode: 'bundle',
+        label: { en: 'COPD exacerbation quick pack' },
+        groups: [
+          {
+            id: 'steroid',
+            label: { en: 'Steroid' },
+            role: 'required',
+            selectionMode: 'one',
+            defaultOptionId: 'prednisone-copd',
+            optionIds: ['prednisone-copd'],
+            note: { en: 'Short course systemic steroid for flare symptoms.' },
+          },
+          {
+            id: 'antibiotic',
+            label: { en: 'Antibiotic' },
+            role: 'conditional',
+            selectionMode: 'one',
+            defaultOptionId: 'amox-clav-copd',
+            optionIds: ['amox-clav-copd', 'azithromycin-copd'],
+            note: { en: 'Use when sputum purulence, fever, or bacterial features are present.' },
+          },
+          {
+            id: 'reliever',
+            label: { en: 'Reliever inhaler' },
+            role: 'required',
+            selectionMode: 'one',
+            defaultOptionId: 'salbutamol-copd-exacerbation',
+            optionIds: ['salbutamol-copd-exacerbation'],
+            note: { en: 'Short-acting bronchodilator support.' },
+          },
+        ],
+      },
+      ageMin: 40,
+      ageMax: 90,
+      weightMin: 40,
+      weightMax: 180,
+      emrType: 'pssuite',
+      region: 'CA',
+      policyModel: 'local',
+      notes: 'Backend example for multi-medication prescribing packs: steroid + antibiotic group + reliever. Clinician still confirms whether antibiotic criteria are met.',
+    },
+    /* --- Paediatric templates --- */
     {
       id: 'tpl-peds-fever-uk',
       name: 'Paeds fever 0-5 (BNFc)',

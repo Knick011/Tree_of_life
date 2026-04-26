@@ -3080,6 +3080,43 @@ select:focus,
   color: var(--muted);
 }
 
+.quick-pack-preview,
+.quick-pack-output {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-light);
+}
+
+.quick-pack-preview div,
+.quick-pack-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.quick-pack-preview strong,
+.quick-pack-row strong {
+  color: var(--ink);
+}
+
+.quick-pack-preview span,
+.quick-pack-row span {
+  color: var(--muted);
+  text-align: right;
+}
+
+.quick-pack-row.status-caution span {
+  color: #9a7b0a;
+}
+
+.quick-pack-row.status-blocked span {
+  color: var(--danger);
+}
+
 /* Sig builder */
 .sig-builder {
   display: grid;

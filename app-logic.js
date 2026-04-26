@@ -234,11 +234,26 @@
 
   app.createTemplateFromCurrentCase = () => {
     const meds = app.getMedicationOptionsForCondition(app.state.condition);
+    const defaultMedication = app.selectedOptionId || meds[0]?.id || '';
     return {
       id: `tpl-custom-${Date.now()}`,
       name: `${app.currentConditionLabel(app.state)} custom draft`,
       condition: app.state.condition,
-      defaultMedication: meds[0]?.id || '',
+      defaultMedication,
+      quickPack: {
+        version: 1,
+        mode: 'single',
+        groups: [
+          {
+            id: 'primary',
+            label: { en: 'Primary medication' },
+            role: 'required',
+            selectionMode: 'one',
+            defaultOptionId: defaultMedication,
+            optionIds: defaultMedication ? [defaultMedication] : [],
+          },
+        ],
+      },
       ageMin: Math.max(0, app.state.age - 5),
       ageMax: app.state.age + 15,
       weightMin: Math.max(1, app.state.weight - 15),
@@ -247,6 +262,100 @@
       region: app.state.region,
       policyModel: app.state.policyModel,
       notes: 'Custom clinician-authored draft copied from the current mock case.',
+    };
+  };
+
+  app.normalizeTemplateQuickPack = (template) => {
+    if (!template) return null;
+    const existingGroups = Array.isArray(template.quickPack?.groups) ? template.quickPack.groups : null;
+    const groups = existingGroups || (template.defaultMedication
+      ? [{
+          id: 'primary',
+          label: { en: 'Primary medication' },
+          role: 'required',
+          selectionMode: 'one',
+          defaultOptionId: template.defaultMedication,
+          optionIds: [template.defaultMedication],
+        }]
+      : []);
+
+    if (!groups.length) return null;
+
+    return {
+      version: template.quickPack?.version || 1,
+      mode: template.quickPack?.mode || (groups.length > 1 ? 'bundle' : 'single'),
+      label: template.quickPack?.label || { en: template.name || 'Quick pack' },
+      groups: groups.map((group, index) => {
+        const optionIds = [
+          ...(group.defaultOptionId ? [group.defaultOptionId] : []),
+          ...(Array.isArray(group.optionIds) ? group.optionIds : []),
+          ...(Array.isArray(group.defaultOptionIds) ? group.defaultOptionIds : []),
+        ].filter(Boolean);
+        return {
+          id: group.id || `group-${index + 1}`,
+          label: group.label || { en: group.name || `Medication group ${index + 1}` },
+          role: group.role || 'required',
+          selectionMode: group.selectionMode || group.selection || 'one',
+          defaultOptionId: group.defaultOptionId || optionIds[0] || '',
+          defaultOptionIds: Array.isArray(group.defaultOptionIds) ? group.defaultOptionIds : [],
+          optionIds: Array.from(new Set(optionIds)),
+          note: group.note || '',
+        };
+      }),
+    };
+  };
+
+  app.getTemplateQuickPackMembership = (template, optionId) => {
+    const pack = app.normalizeTemplateQuickPack(template);
+    if (!pack || !optionId) return null;
+    return pack.groups.find((group) => group.optionIds.includes(optionId)) || null;
+  };
+
+  app.resolveTemplateQuickPack = (template, ctx) => {
+    const pack = app.normalizeTemplateQuickPack(template);
+    if (!pack) return null;
+    const packCtx = { ...ctx, condition: template.condition, templateSnapshot: template };
+    const evaluated = app.evaluateOptions(packCtx);
+    const byId = new Map(evaluated.map((option) => [option.id, option]));
+    const groups = pack.groups.map((group) => {
+      const candidates = group.optionIds.map((id) => byId.get(id)).filter(Boolean);
+      let selected = [];
+      if (group.selectionMode === 'all') {
+        const defaults = group.defaultOptionIds.length ? group.defaultOptionIds : group.optionIds;
+        selected = defaults.map((id) => byId.get(id)).filter(Boolean);
+      } else {
+        const preferred = byId.get(group.defaultOptionId);
+        selected = [preferred || candidates.find((option) => option.status !== 'blocked') || candidates[0]].filter(Boolean);
+      }
+      return {
+        ...group,
+        candidates,
+        selected,
+        status: selected.some((option) => option.status === 'blocked')
+          ? 'blocked'
+          : selected.some((option) => option.status === 'caution')
+            ? 'caution'
+            : selected.length
+              ? 'eligible'
+              : group.role === 'required'
+                ? 'blocked'
+                : 'empty',
+      };
+    });
+    const selectedItems = groups.flatMap((group) =>
+      group.selected.map((option) => ({ groupId: group.id, groupLabel: app.textFor(group.label, ctx.language), option })),
+    );
+    return {
+      ...pack,
+      templateId: template.id,
+      templateName: template.name,
+      groups,
+      selectedItems,
+      status: groups.some((group) => group.role === 'required' && group.status === 'blocked')
+        ? 'blocked'
+        : groups.some((group) => group.status === 'caution')
+          ? 'caution'
+          : 'eligible',
     };
   };
 
@@ -312,6 +421,12 @@
     if (template?.defaultMedication === option.id) {
       score += 10;
       hits.push({ effect: 'boost', message: 'The saved template explicitly favors this package.' });
+    } else {
+      const packGroup = app.getTemplateQuickPackMembership(template, option.id);
+      if (packGroup) {
+        score += packGroup.role === 'required' ? 8 : 5;
+        hits.push({ effect: 'boost', message: `Included in saved quick pack: ${app.textFor(packGroup.label, ctx.language)}.` });
+      }
     }
 
     if (regionData.preferred && ctx.policyModel === 'local') {
@@ -823,6 +938,64 @@
     };
   };
 
+  app.buildEmrBundlePayload = (selectedItems, ctx, template = ctx.templateSnapshot) => {
+    const itemPayloads = (selectedItems || [])
+      .map((item) => {
+        const option = item.option || item;
+        if (!option?.order) return null;
+        return {
+          groupId: item.groupId || '',
+          groupLabel: item.groupLabel || '',
+          payload: app.buildEmrPayload(option, ctx),
+        };
+      })
+      .filter(Boolean);
+    const medications = itemPayloads.map((item) => ({
+      groupId: item.groupId,
+      groupLabel: item.groupLabel,
+      ...item.payload.canonical,
+    }));
+    const textBlock = medications
+      .map((med, index) => [
+        `${index + 1}. ${med.groupLabel ? `${med.groupLabel}: ` : ''}${med.medicationDisplay}`,
+        `Sig: ${med.sig}`,
+        `Dispense: ${med.dispense.raw}`,
+        `Refills: ${med.refills}`,
+      ].join('\n'))
+      .join('\n\n');
+
+    return {
+      _tol: true,
+      schemaVersion: 3,
+      generatedAt: new Date().toISOString(),
+      mode: 'bundle-fill',
+      canonical: {
+        conditionKey: ctx.condition,
+        indication: app.currentConditionLabel(ctx),
+        templateId: template?.id || '',
+        templateName: template?.name || '',
+        region: ctx.region,
+        emrType: ctx.emrType,
+        medications,
+      },
+      adapter: {
+        type: ctx.emrType,
+        fields: {
+          medications,
+          textBlock,
+        },
+      },
+      adapters: {
+        generic: {
+          fields: {
+            medications,
+            textBlock,
+          },
+        },
+      },
+    };
+  };
+
   app.buildCopyPack = (selected, ctx) => {
     const templateName = ctx.templateSnapshot?.name || app.t('outputTemplateNone');
     const conditionName = app.currentConditionLabel(ctx);
@@ -853,6 +1026,33 @@
       chart: `Assessment: ${conditionName}\n${app.t('copyTemplate')}: ${templateName}\nWhy this package surfaced: ${chartReason}\nPros: ${selected.pros.slice(0, 2).join('; ')}\nCons: ${selected.cons.slice(0, 2).join('; ')}\n${app.t('copyNoteDemo')}`,
       pharmacy: `${app.t('copyIndication')}: ${conditionName}\nPackage: ${selected.order.medication}\nSig: ${sig}\nNotes: ${app.textFor(selected.order.pharmacy, ctx.language)}\n${app.t('copyNoteDemo')}`,
     };
+  };
+
+  app.buildBundleCopyPack = (selectedItems, ctx, template = ctx.templateSnapshot) => {
+    const rows = (selectedItems || []).map((item, index) => {
+      const option = item.option || item;
+      const sig = app.textFor(option.order?.sig, ctx.language);
+      return {
+        title: `${index + 1}. ${item.groupLabel ? `${item.groupLabel}: ` : ''}${option.order?.medication || option.label}`,
+        sig,
+        dispense: option.order?.dispense || '',
+        refills: option.order?.refills ?? '',
+        pharmacy: app.textFor(option.order?.pharmacy, ctx.language),
+      };
+    });
+    const rx = rows.map((row) =>
+      `${row.title}\nSig: ${row.sig}\nDispense: ${row.dispense}\nRefills: ${row.refills}`
+    ).join('\n\n');
+    const chart = [
+      `Assessment: ${app.currentConditionLabel(ctx)}`,
+      `${app.t('copyTemplate')}: ${template?.name || app.t('outputTemplateNone')}`,
+      `Quick pack: ${rows.length} medication${rows.length === 1 ? '' : 's'} grouped for review.`,
+      app.t('copyNoteDemo'),
+    ].join('\n');
+    const pharmacy = rows.map((row) =>
+      `${row.title}\nSig: ${row.sig}${row.pharmacy ? `\nNotes: ${row.pharmacy}` : ''}`
+    ).join('\n\n');
+    return { rx, chart, pharmacy };
   };
 
   app.getTourSteps = () => {

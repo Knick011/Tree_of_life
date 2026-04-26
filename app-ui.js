@@ -1123,6 +1123,19 @@
       h += `<span class="tag-sm">${escape(text(app.getRegionMeta(tpl.region)))}</span>`;
       h += `</div>`;
       if (tpl.notes) h += `<p class="tpl-notes">${escape(tpl.notes)}</p>`;
+      const pack = app.normalizeTemplateQuickPack?.(tpl);
+      if (pack?.groups?.length) {
+        h += `<div class="quick-pack-preview">`;
+        pack.groups.forEach((group) => {
+          const meds = group.optionIds
+            .map((id) => app.getOptionMeta(id))
+            .filter(Boolean)
+            .map((med) => text(med.labels))
+            .slice(0, 3);
+          h += `<div><strong>${escape(text(group.label))}</strong><span>${escape(meds.join(' / ') || 'No medication mapped')}</span></div>`;
+        });
+        h += `</div>`;
+      }
       h += `</div></div>`;
     }
 
@@ -1576,6 +1589,19 @@
     if (templateFit && templateFit.status !== 'eligible' && templateFit.status !== 'info') {
       const lvl = templateFit.status === 'blocked' ? 'danger' : 'caution';
       h += `<div class="check-item level-${templateFit.status}"><div><strong>${escape(templateFit.title)}</strong><p>${escape(templateFit.body)}</p></div></div>`;
+    }
+
+    const templatePack = ctx.templateSnapshot
+      ? app.resolveTemplateQuickPack?.(ctx.templateSnapshot, ctx)
+      : null;
+    if (templatePack?.mode === 'bundle' && templatePack.selectedItems.length > 1) {
+      h += `<div class="quick-pack-output">`;
+      h += `<div class="section-label">Template quick pack</div>`;
+      templatePack.groups.forEach((group) => {
+        const selectedLabels = group.selected.map((option) => option.label).join(' / ') || 'No mapped medication';
+        h += `<div class="quick-pack-row status-${group.status}"><strong>${escape(app.textFor(group.label, ctx.language))}</strong><span>${escape(selectedLabels)}</span></div>`;
+      });
+      h += `</div>`;
     }
 
     // Build ranked list (all options sorted by score, selected first)
