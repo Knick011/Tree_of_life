@@ -8,7 +8,7 @@
     data,
     catalog,
     state: structuredClone(config.state),
-    templates: structuredClone(data.DEFAULT_TEMPLATES),
+    templates: structuredClone(data.DEFAULT_TEMPLATES.filter((item) => item.starter || item.id === 'tpl-cystitis-adult-ca')),
     dom: {},
     selectedOptionId: null,
     scenarioIndex: 0,
@@ -232,14 +232,16 @@
     }
   };
 
-  app.createTemplateFromCurrentCase = () => {
-    const meds = app.getMedicationOptionsForCondition(app.state.condition);
-    const defaultMedication = app.selectedOptionId || meds[0]?.id || '';
+  app.createTemplateFromCurrentCase = (sourceState = app.state, selectedOptionId = app.selectedOptionId) => {
+    const source = sourceState || app.state;
+    const meds = app.getMedicationOptionsForCondition(source.condition);
+    const defaultMedication = selectedOptionId || meds[0]?.id || '';
     return {
       id: `tpl-custom-${Date.now()}`,
-      name: `${app.currentConditionLabel(app.state)} custom draft`,
-      condition: app.state.condition,
+      name: `${app.currentConditionLabel(source)} custom draft`,
+      condition: source.condition,
       defaultMedication,
+      starred: false,
       quickPack: {
         version: 1,
         mode: 'single',
@@ -254,13 +256,13 @@
           },
         ],
       },
-      ageMin: Math.max(0, app.state.age - 5),
-      ageMax: app.state.age + 15,
-      weightMin: Math.max(1, app.state.weight - 15),
-      weightMax: app.state.weight + 20,
-      emrType: app.state.emrType,
-      region: app.state.region,
-      policyModel: app.state.policyModel,
+      ageMin: Math.max(0, source.age - 5),
+      ageMax: source.age + 15,
+      weightMin: Math.max(1, source.weight - 15),
+      weightMax: source.weight + 20,
+      emrType: source.emrType,
+      region: source.region,
+      policyModel: source.policyModel,
       notes: 'Custom clinician-authored draft copied from the current mock case.',
     };
   };

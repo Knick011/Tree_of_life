@@ -73,9 +73,35 @@
 
   // ─── USER TEMPLATES (saved cases) ───────────────────────────────
   const USER_TEMPLATES_KEY = 'tol_user_templates_v1';
+  const TEMPLATE_PREFS_KEY = 'tol_template_prefs_v1';
 
   function getUserTemplates() {
     try { return JSON.parse(localStorage.getItem(USER_TEMPLATES_KEY) || '[]'); } catch { return []; }
+  }
+
+  function getTemplatePrefs() {
+    try { return JSON.parse(localStorage.getItem(TEMPLATE_PREFS_KEY) || '{}'); } catch { return {}; }
+  }
+
+  function isTemplateStarred(tpl) {
+    const pref = getTemplatePrefs()[tpl.id];
+    return typeof pref?.starred === 'boolean' ? pref.starred : !!tpl.starred;
+  }
+
+  function setTemplateStarred(id, starred) {
+    const prefs = getTemplatePrefs();
+    prefs[id] = { ...(prefs[id] || {}), starred };
+    try { localStorage.setItem(TEMPLATE_PREFS_KEY, JSON.stringify(prefs)); } catch {}
+  }
+
+  function sortTemplatesForUse(list) {
+    return [...list].sort((a, b) => {
+      const starredDelta = Number(isTemplateStarred(b)) - Number(isTemplateStarred(a));
+      if (starredDelta) return starredDelta;
+      const starterDelta = Number(!!b.starter) - Number(!!a.starter);
+      if (starterDelta) return starterDelta;
+      return a.name.localeCompare(b.name);
+    });
   }
 
   function saveUserTemplate(tpl) {
@@ -136,6 +162,7 @@
       document.body.appendChild(el);
       el.addEventListener('click', handleSaveTemplateClick);
       el.addEventListener('input', handleSaveTemplateInput);
+      el.addEventListener('change', handleSaveTemplateInput);
     }
     el.hidden = false;
     const draft = app._saveTemplateDraft || {};
@@ -149,6 +176,7 @@
     h += `<div class="custom-form-row"><label>Min weight (kg)</label><input type="number" min="0" data-save-tpl-field="weightMin" value="${draft.weightMin ?? ''}"/></div>`;
     h += `<div class="custom-form-row"><label>Max weight (kg)</label><input type="number" min="0" data-save-tpl-field="weightMax" value="${draft.weightMax ?? ''}"/></div>`;
     h += `</div>`;
+    h += `<label class="template-star-check"><input type="checkbox" data-save-tpl-field="starred" ${draft.starred ? 'checked' : ''}/> Star this template</label>`;
     h += `<div class="custom-form-row"><label>Notes (optional)</label><textarea data-save-tpl-field="notes" placeholder="When to use, escalation criteria...">${escape(draft.notes || '')}</textarea></div>`;
     if (app._saveTemplateError) h += `<div class="custom-form-error">${escape(app._saveTemplateError)}</div>`;
     h += `<div class="custom-form-actions">`;
@@ -158,12 +186,35 @@
     el.innerHTML = h;
   }
 
-  function openSaveTemplateModal() {
-    if (!app.processedSnapshot || !app.state.condition) {
-      showToast('Need a condition selected to save as template');
+  function rememberTemplateMedicationSource(ctx, selected) {
+    if (!ctx?.condition || !selected?.id) return null;
+    const source = {
+      snapshot: structuredClone(ctx),
+      selectedOptionId: selected.id,
+      selectedLabel: selected.label,
+    };
+    app._lastMedicationTemplateSource = source;
+    return source;
+  }
+
+  function getLiveTemplateMedicationSource() {
+    if (!app.processedSnapshot?.condition) return null;
+    const options = app.evaluateOptions(app.processedSnapshot);
+    const selected = selectBestOption(options, app.processedSnapshot);
+    return rememberTemplateMedicationSource(app.processedSnapshot, selected);
+  }
+
+  function getTemplateMedicationSource() {
+    return getLiveTemplateMedicationSource() || app._lastMedicationTemplateSource || null;
+  }
+
+  function openSaveTemplateModal({ fromSelectedMedication = false } = {}) {
+    const source = fromSelectedMedication ? getTemplateMedicationSource() : getLiveTemplateMedicationSource();
+    if (!source?.snapshot?.condition) {
+      showToast('Select a medication first');
       return;
     }
-    app._saveTemplateDraft = app.createTemplateFromCurrentCase();
+    app._saveTemplateDraft = app.createTemplateFromCurrentCase(source.snapshot, source.selectedOptionId);
     app._saveTemplateError = '';
     app._saveTemplateOpen = true;
     renderSaveTemplateModal();
@@ -173,6 +224,10 @@
     const field = e.target.dataset?.saveTplField;
     if (!field) return;
     if (!app._saveTemplateDraft) return;
+    if (e.target.type === 'checkbox') {
+      app._saveTemplateDraft[field] = !!e.target.checked;
+      return;
+    }
     const v = e.target.value;
     if (['ageMin', 'ageMax', 'weightMin', 'weightMax'].includes(field)) {
       app._saveTemplateDraft[field] = v === '' ? '' : Number(v);
@@ -1085,28 +1140,41 @@
   function renderTemplateSection() {
     const s = app.state;
     const searchVal = app._searchTemplate || '';
-    const filtered = app.templates.filter((t) => {
+    const source = getTemplateMedicationSource();
+    const filtered = sortTemplatesForUse(app.templates.filter((t) => {
       if (!isConditionAllowedForPatient(t.condition)) return false;
       if (!searchVal) return true;
       const q = searchVal.toLowerCase();
       return t.name.toLowerCase().includes(q) || (t.notes || '').toLowerCase().includes(q)
         || text(app.getConditionMeta(t.condition)).toLowerCase().includes(q);
-    });
+    }));
 
     let h = '';
+    h += `<div class="template-intro">`;
+    h += `<strong>Templates are clinic shortcuts for repeat prescribing.</strong>`;
+    h += `<p>Pick a medication in Guided mode, then save it with age, weight, market, EMR, and safety notes for faster reuse.</p>`;
+    h += `</div>`;
+    h += `<div class="template-create-panel">`;
+    h += `<button type="button" class="template-create-action" data-save-from-selected ${source ? '' : 'disabled'}>Add selected medication to new template</button>`;
+    h += `<span>${source ? `Ready: ${escape(source.selectedLabel)}` : 'Select a medication in the output panel first.'}</span>`;
+    h += `</div>`;
     h += `<div class="section-label">Doctor templates</div>`;
     h += `<input type="search" class="search-box" placeholder="Search templates..." data-search-field="templateId" value="${escape(searchVal)}" />`;
     h += `<div class="option-list" style="margin-top:6px">`;
     filtered.forEach((t) => {
       const condLabel = text(app.getConditionMeta(t.condition));
+      const starred = isTemplateStarred(t);
       h += `<div class="option-item ${s.templateId === t.id ? 'selected' : ''}" data-set-field="templateId" data-value="${t.id}">
         <div>
-          <strong>${escape(t.name)}</strong>
+          <strong>${escape(t.name)}${t.starter ? ' <span class="template-example-tag">Example</span>' : ''}</strong>
           <span>${escape(condLabel)} &middot; ${t.ageMin}-${t.ageMax}y &middot; ${t.weightMin}-${t.weightMax}kg</span>
         </div>
+        <button type="button" class="template-star-btn ${starred ? 'active' : ''}" data-toggle-template-star="${escape(t.id)}" aria-pressed="${starred ? 'true' : 'false'}" title="${starred ? 'Unstar template' : 'Star template'}"><span aria-hidden="true">${starred ? '&#9733;' : '&#9734;'}</span></button>
       </div>`;
     });
-    if (!filtered.length) h += `<div class="option-item"><span>No matches</span></div>`;
+    if (!filtered.length) {
+      h += `<div class="template-empty-state"><strong>No templates yet</strong><span>Select a medication, then save it as a reusable clinic shortcut.</span></div>`;
+    }
     h += `</div>`;
 
     // Show selected template details
@@ -1121,6 +1189,8 @@
       h += `<span class="tag-sm">${tpl.ageMin}-${tpl.ageMax}y</span>`;
       h += `<span class="tag-sm">${tpl.weightMin}-${tpl.weightMax}kg</span>`;
       h += `<span class="tag-sm">${escape(text(app.getRegionMeta(tpl.region)))}</span>`;
+      if (isTemplateStarred(tpl)) h += `<span class="tag-sm tag-star">Starred</span>`;
+      if (tpl.starter) h += `<span class="tag-sm">Example</span>`;
       h += `</div>`;
       if (tpl.notes) h += `<p class="tpl-notes">${escape(tpl.notes)}</p>`;
       const pack = app.normalizeTemplateQuickPack?.(tpl);
@@ -1562,6 +1632,7 @@
     const options = app.evaluateOptions(ctx);
     const checks = app.globalChecks(options, ctx, templateFit);
     const selected = selectBestOption(options, ctx);
+    rememberTemplateMedicationSource(ctx, selected);
 
     let h = '';
     h += renderRecentRxTray();
@@ -1614,7 +1685,7 @@
     if (selected) {
       const isCustom = !!selected._custom;
       const copyPack = app.buildCopyPack(selected, ctx);
-      h += `<div class="output-actions"><button type="button" class="link-action" data-save-as-template title="Save current case as template">+ Save as template</button></div>`;
+      h += `<div class="output-actions"><button type="button" class="template-save-primary" data-save-as-template title="Save current case as template">+ Save as template</button></div>`;
       h += `<div class="primary-card ${RANK_COLORS[0]}${isCustom ? ' is-custom' : ''}" data-option="${selected.id}" data-primary="1">`;
       h += `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">`;
       h += `<div><strong style="font-size:14px">${escape(selected.label)}</strong>${isCustom ? ' <span class="custom-badge">Custom</span>' : ''}<div style="color:var(--muted);font-size:12px">${escape(selected.dosePreview)} · ${escape(selected.price)}</div></div>`;
@@ -2483,6 +2554,7 @@
 
   function updateState(field, value) {
     if (field === 'workflowMode') {
+      if (value === 'template') getLiveTemplateMedicationSource();
       app.state.workflowMode = value;
       if (value === 'template') app.ensureTemplateSelection();
       if (value === 'lookup') { app._lookupSelectedMed = ''; app._searchLookup = ''; }
@@ -2716,6 +2788,15 @@
         return render();
       }
 
+      const starTemplate = e.target.closest('[data-toggle-template-star]');
+      if (starTemplate) {
+        e.stopPropagation();
+        const id = starTemplate.dataset.toggleTemplateStar;
+        const tpl = app.getTemplateById(id);
+        if (tpl) setTemplateStarred(id, !isTemplateStarred(tpl));
+        return render();
+      }
+
       const setBtn = e.target.closest('[data-set-field]');
       if (setBtn) return updateState(setBtn.dataset.setField, setBtn.dataset.value);
 
@@ -2749,6 +2830,12 @@
       const saveTpl = e.target.closest('[data-save-as-template]');
       if (saveTpl) {
         openSaveTemplateModal();
+        return;
+      }
+
+      const saveFromSelected = e.target.closest('[data-save-from-selected]');
+      if (saveFromSelected) {
+        openSaveTemplateModal({ fromSelectedMedication: true });
         return;
       }
 

@@ -1604,6 +1604,8 @@ window.TOLData = {
       name: 'Adult uncomplicated cystitis quick pack',
       condition: 'cystitis',
       defaultMedication: 'nitrofurantoin',
+      starter: true,
+      starred: true,
       ageMin: 18,
       ageMax: 70,
       weightMin: 45,
