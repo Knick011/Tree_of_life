@@ -33,7 +33,7 @@
     }
     if (safety.sulfaAllergy) {
       rules.push({
-        when: (ctx) => Array.isArray(ctx.allergies) && ctx.allergies.includes('sulfa'),
+        when: (ctx) => Array.isArray(ctx.allergies) && ctx.allergies.includes('sulfonamide'),
         effect: 'blocked',
         reason: { en: 'Custom drug flagged unsafe with sulfa allergy.' },
       });

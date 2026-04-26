@@ -348,6 +348,13 @@
     renderCustomDrugModal();
   }
 
+  function closeCustomDrugModal() {
+    app._customDrugOpen = false;
+    app._customDrugError = '';
+    app._customDrugDraft = null;
+    renderCustomDrugModal();
+  }
+
   function handleCustomDrugInput(e) {
     const field = e.target.dataset?.customField;
     const safety = e.target.dataset?.customSafety;
@@ -391,8 +398,7 @@
       return;
     }
     if (e.target.closest('[data-custom-close]') || e.target.closest('[data-custom-cancel]')) {
-      app._customDrugOpen = false;
-      renderCustomDrugModal();
+      closeCustomDrugModal();
       return;
     }
     if (e.target.closest('[data-custom-delete]')) {
@@ -400,6 +406,7 @@
       if (id && window.TOLCustomMeds) {
         window.TOLCustomMeds.remove(app.state.condition, id);
         app._customDrugOpen = false;
+        app._customDrugDraft = null;
         showToast('Custom drug removed');
         renderCustomDrugModal();
         render();
@@ -441,6 +448,7 @@
       window.TOLCustomMeds.save(condition, entry);
       app._customDrugOpen = false;
       app._customDrugError = '';
+      app._customDrugDraft = null;
       // Force this new option to be selected so doctor sees it pinned at top
       app.selectedOptionId = entry.id;
       showToast(draft._editingId ? 'Custom drug updated' : 'Custom drug added');
@@ -449,8 +457,7 @@
       return;
     }
     if (e.target === e.currentTarget) {
-      app._customDrugOpen = false;
-      renderCustomDrugModal();
+      closeCustomDrugModal();
     }
   }
 
@@ -643,6 +650,76 @@
     return excluded;
   }
 
+  const MALE_ONLY_CONDITIONS = new Set(['uti-male']);
+  const FEMALE_ONLY_CONDITIONS = new Set([
+    'bv',
+    'vulvovaginal-candidiasis',
+    'ocp-combined',
+    'menopause-hrt',
+    'abnormal-uterine-bleeding',
+    'dysmenorrhea',
+    'emergency-contraception',
+    'pelvic-inflammatory-disease',
+    'sti-chlamydia',
+    'sti-gonorrhea',
+    'vaginitis-trichomoniasis',
+    'hypertensive-disorders-of-pregnancy',
+    'nausea-vomiting-in-pregnancy',
+  ]);
+
+  function isConditionAllowedForPatient(conditionOrValue) {
+    const meta = typeof conditionOrValue === 'string'
+      ? app.getConditionMeta(conditionOrValue)
+      : conditionOrValue;
+    if (!meta) return true;
+
+    const excludedDomains = getExcludedDomains();
+    if (excludedDomains.has(meta.domain)) return false;
+    if (app.state.sex === 'female' && MALE_ONLY_CONDITIONS.has(meta.value)) return false;
+    if (app.state.sex === 'male' && (FEMALE_ONLY_CONDITIONS.has(meta.value) || meta.subtype === 'vaginal')) return false;
+    return true;
+  }
+
+  function getAllowedConditions(domain, subtype) {
+    return app.getConditionOptions(domain, subtype).filter(isConditionAllowedForPatient);
+  }
+
+  function getAllowedSubtypesForDomain(domain) {
+    return app.getSubtypeOptions(domain).filter((subtype) =>
+      getAllowedConditions(domain, subtype.value).length > 0
+    );
+  }
+
+  function ensurePatientCompatibleSelection() {
+    const excludedDomains = getExcludedDomains();
+    if (app.state.domain && excludedDomains.has(app.state.domain)) {
+      app.state.domain = '';
+      app.state.subtype = '';
+      app.state.condition = '';
+      app.state.symptoms = [];
+      app.selectedOptionId = null;
+    }
+
+    if (app.state.subtype && !getAllowedConditions(app.state.domain, app.state.subtype).length) {
+      app.state.subtype = '';
+      app.state.condition = '';
+      app.state.symptoms = [];
+      app.selectedOptionId = null;
+    }
+
+    if (app.state.condition && !isConditionAllowedForPatient(app.state.condition)) {
+      app.state.condition = '';
+      app.state.symptoms = [];
+      app.selectedOptionId = null;
+    }
+
+    const activeTemplate = app.getTemplateById(app.state.templateId);
+    if (activeTemplate && !isConditionAllowedForPatient(activeTemplate.condition)) {
+      const fallback = app.templates.find((tpl) => isConditionAllowedForPatient(tpl.condition));
+      app.state.templateId = fallback?.id || '';
+    }
+  }
+
   // Check if current domain selection conflicts with patient context
   function isDomainConflict() {
     const excluded = getExcludedDomains();
@@ -770,26 +847,29 @@
     h += `</div>`;
     h += `<div class="field"><input type="number" class="input-sm" min="0" max="200" value="${s.egfr}" data-number-field="egfr" /></div>`;
 
-    h += `<div class="section-label">Allergies</div>`;
+    h += `<details class="patient-fold"${s.allergies.length ? ' open' : ''}>`;
+    h += `<summary><span>Allergies / exclusions</span><strong>${s.allergies.length ? `${s.allergies.length} selected` : 'None'}</strong></summary>`;
     h += `<div class="chip-group">`;
     app.config.ALLERGY_OPTIONS.forEach((o) => {
       h += `<button type="button" class="chip ${s.allergies.includes(o.value) ? 'active' : ''}" data-toggle-list="allergies" data-value="${o.value}">${escape(text(o))}</button>`;
     });
-    h += `</div>`;
+    h += `</div></details>`;
 
-    h += `<div class="section-label">Current meds</div>`;
+    h += `<details class="patient-fold"${s.currentMeds.length ? ' open' : ''}>`;
+    h += `<summary><span>Current meds</span><strong>${s.currentMeds.length ? `${s.currentMeds.length} selected` : 'None'}</strong></summary>`;
     h += `<div class="chip-group">`;
     app.config.CURRENT_MED_OPTIONS.forEach((o) => {
       h += `<button type="button" class="chip ${s.currentMeds.includes(o.value) ? 'active' : ''}" data-toggle-list="currentMeds" data-value="${o.value}">${escape(text(o))}</button>`;
     });
-    h += `</div>`;
+    h += `</div></details>`;
 
-    h += `<div class="section-label">Hepatic</div>`;
+    h += `<details class="patient-fold"${s.hepaticRisk !== 'normal' ? ' open' : ''}>`;
+    h += `<summary><span>Hepatic</span><strong>${escape(text(app.config.HEPATIC_OPTIONS.find((o) => o.value === s.hepaticRisk) || { en: 'Normal' }))}</strong></summary>`;
     h += `<div class="chip-group">`;
     app.config.HEPATIC_OPTIONS.forEach((o) => {
       h += `<button type="button" class="chip ${s.hepaticRisk === o.value ? 'active' : ''}" data-set-field="hepaticRisk" data-value="${o.value}">${escape(text(o))}</button>`;
     });
-    h += `</div>`;
+    h += `</div></details>`;
 
     dom.patientPanel.innerHTML = h;
   }
@@ -820,20 +900,6 @@
 
     if (s.workflowMode !== 'lookup' && s.workflowMode !== 'scores') {
       h += renderSettingsSection();
-    }
-
-    // Current path breadcrumb
-    if (s.workflowMode === 'guided' && s.condition) {
-      const domainLabel = text(app.getDomainMeta(s.domain));
-      const subtypeLabel = text(app.getSubtypeMeta(s.subtype));
-      const condLabel = text(app.getConditionMeta(s.condition));
-      h += `<div class="path-breadcrumb">`;
-      h += `<span class="tag-sm tag-teal">${escape(domainLabel)}</span>`;
-      h += `<span class="path-sep">&rsaquo;</span>`;
-      h += `<span class="tag-sm tag-teal">${escape(subtypeLabel)}</span>`;
-      h += `<span class="path-sep">&rsaquo;</span>`;
-      h += `<span class="tag-sm tag-teal">${escape(condLabel)}</span>`;
-      h += `</div>`;
     }
 
     dom.clinicalPanel.innerHTML = h;
@@ -875,12 +941,13 @@
     // Symptoms (always show if condition is selected)
     const symptoms = app.getSymptomsForCondition(s.condition);
     if (symptoms.length) {
-      h += `<div class="section-label" style="margin-top:10px">Symptom clues <span class="label-hint">(optional, refines ranking)</span></div>`;
+      h += `<details class="guided-step-fold optional" ${s.symptoms.length ? 'open' : ''}>`;
+      h += `<summary><span>Symptom clues</span><strong>${s.symptoms.length ? `${s.symptoms.length} selected` : 'Optional'}</strong></summary>`;
       h += `<div class="chip-group">`;
       symptoms.forEach((sy) => {
         h += `<button type="button" class="chip ${s.symptoms.includes(sy.value) ? 'active' : ''}" data-toggle-list="symptoms" data-value="${sy.value}">${escape(text(sy))}</button>`;
       });
-      h += `</div>`;
+      h += `</div></details>`;
     }
 
     return h;
@@ -894,6 +961,7 @@
     // Search conditions (filtered by patient context)
     app.data.CONDITIONS.forEach((c) => {
       if (excluded.has(c.domain)) return;
+      if (!isConditionAllowedForPatient(c)) return;
       const label = text(c);
       const summary = text(c.summary);
       const domainLabel = text(app.getDomainMeta(c.domain));
@@ -916,7 +984,8 @@
       const label = text(st);
       if (label.toLowerCase().includes(q) && !results.some((r) => r.type === 'subtype' && r.value === st.value)) {
         const domainLabel = text(app.getDomainMeta(st.domain));
-        const conditions = app.getConditionOptions(st.domain, st.value);
+        const conditions = getAllowedConditions(st.domain, st.value);
+        if (!conditions.length) return;
         results.push({
           type: 'subtype',
           value: st.value,
@@ -960,36 +1029,43 @@
     const s = app.state;
     const excluded = getExcludedDomains();
     let h = '';
+    const selectedDomain = app.getDomainMeta(s.domain);
+    const selectedSubtype = app.getSubtypeMeta(s.subtype);
+    const selectedCondition = app.getConditionMeta(s.condition);
 
     // Step 1: Clinical area (domain) — filtered by patient context
-    h += `<div class="section-label" style="margin-top:8px">1. Clinical area</div>`;
+    h += `<details class="guided-step-fold" ${!s.domain ? 'open' : ''}>`;
+    h += `<summary><span>1. Clinical area</span><strong>${escape(selectedDomain ? text(selectedDomain) : 'Choose')}</strong></summary>`;
     h += `<div class="chip-group">`;
     app.config.DOMAINS.forEach((d) => {
       const isExcluded = excluded.has(d.value);
       if (isExcluded) return; // hide irrelevant domains entirely
+      if (!getAllowedSubtypesForDomain(d.value).length) return;
       h += `<button type="button" class="chip chip-lg ${s.domain === d.value ? 'active' : ''}" data-set-field="domain" data-value="${d.value}">${escape(text(d))}</button>`;
     });
-    h += `</div>`;
+    h += `</div></details>`;
 
     if (!s.domain) return h;
 
     // Step 2: Where / subtype (filtered by selected domain)
-    const subtypes = app.getSubtypeOptions(s.domain);
+    const subtypes = getAllowedSubtypesForDomain(s.domain);
     if (subtypes.length) {
-      h += `<div class="section-label" style="margin-top:8px">2. Location / type</div>`;
+      h += `<details class="guided-step-fold" ${!s.subtype ? 'open' : ''}>`;
+      h += `<summary><span>2. Location / type</span><strong>${escape(selectedSubtype ? text(selectedSubtype) : 'Choose')}</strong></summary>`;
       h += `<div class="chip-group">`;
       subtypes.forEach((st) => {
         h += `<button type="button" class="chip chip-lg ${s.subtype === st.value ? 'active' : ''}" data-set-field="subtype" data-value="${st.value}">${escape(text(st))}</button>`;
       });
-      h += `</div>`;
+      h += `</div></details>`;
     }
 
     if (!s.subtype) return h;
 
     // Step 3: Specific condition (filtered by domain + subtype)
-    const conditions = app.getConditionOptions(s.domain, s.subtype);
+    const conditions = getAllowedConditions(s.domain, s.subtype);
     if (conditions.length) {
-      h += `<div class="section-label" style="margin-top:8px">3. Condition</div>`;
+      h += `<details class="guided-step-fold" ${!s.condition ? 'open' : ''}>`;
+      h += `<summary><span>3. Condition</span><strong>${escape(selectedCondition ? text(selectedCondition) : 'Choose')}</strong></summary>`;
       h += `<div class="option-list">`;
       conditions.forEach((c) => {
         const summary = text(c.summary);
@@ -1000,7 +1076,7 @@
           </div>
         </div>`;
       });
-      h += `</div>`;
+      h += `</div></details>`;
     }
 
     return h;
@@ -1010,6 +1086,7 @@
     const s = app.state;
     const searchVal = app._searchTemplate || '';
     const filtered = app.templates.filter((t) => {
+      if (!isConditionAllowedForPatient(t.condition)) return false;
       if (!searchVal) return true;
       const q = searchVal.toLowerCase();
       return t.name.toLowerCase().includes(q) || (t.notes || '').toLowerCase().includes(q)
@@ -2373,6 +2450,7 @@
     if (!Array.isArray(app.state.exclusions)) app.state.exclusions = [];
     app.ensureGuidedSelections();
     app.ensureTemplateSelection();
+    ensurePatientCompatibleSelection();
   }
 
   // ─── STATE UPDATES ────────────────────────────────────────────────
@@ -2642,12 +2720,6 @@
         return render();
       }
 
-      const optionBtn = e.target.closest('[data-option]');
-      if (optionBtn) {
-        app.selectedOptionId = optionBtn.dataset.option;
-        return render();
-      }
-
       const saveTpl = e.target.closest('[data-save-as-template]');
       if (saveTpl) {
         openSaveTemplateModal();
@@ -2658,6 +2730,12 @@
       if (addMed) {
         openCustomDrugModal(addMed.dataset.editId || null);
         return;
+      }
+
+      const optionBtn = e.target.closest('[data-option]');
+      if (optionBtn) {
+        app.selectedOptionId = optionBtn.dataset.option;
+        return render();
       }
 
       const recentChip = e.target.closest('[data-recent-rx]');

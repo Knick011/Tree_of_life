@@ -40,7 +40,7 @@
       rules: [
         { effect: 'blocked', when: (ctx) => ctx.pregnancy === 'yes', reason: { en: 'ARBs are contraindicated in pregnancy — teratogenic.' } },
         { effect: 'blocked', when: (ctx) => ctx.allergies.includes('arb'), reason: { en: 'ARB allergy or prior angioedema.' } },
-        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('acei'), reason: { en: 'Avoid dual ACEi + ARB blockade — increased adverse events.' } },
+        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('ace-inhibitor'), reason: { en: 'Avoid dual ACEi + ARB blockade — increased adverse events.' } },
         { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('k-sparing-diuretic') || ctx.currentMeds.includes('spironolactone'), reason: { en: 'Hyperkalemia risk with K-sparing diuretic.' } },
         { effect: 'caution', when: (ctx) => ctx.egfr < 30, reason: { en: 'eGFR < 30 — start lower dose, monitor closely.' } },
       ],
@@ -79,7 +79,7 @@
       symptomBoosts: { stageTwo: 3, postMi: 5, heartFailure: 4, aceiCough: 6 },
       rules: [
         { effect: 'blocked', when: (ctx) => ctx.pregnancy === 'yes', reason: { en: 'ARBs are contraindicated in pregnancy.' } },
-        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('acei'), reason: { en: 'Avoid dual ACEi + ARB blockade.' } },
+        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('ace-inhibitor'), reason: { en: 'Avoid dual ACEi + ARB blockade.' } },
       ],
       renalDosing: {
         thresholds: [
@@ -116,7 +116,7 @@
       symptomBoosts: { heartFailure: 5, aceiCough: 6 },
       rules: [
         { effect: 'blocked', when: (ctx) => ctx.pregnancy === 'yes', reason: { en: 'ARBs are contraindicated in pregnancy.' } },
-        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('acei'), reason: { en: 'Avoid dual ACEi + ARB blockade.' } },
+        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('ace-inhibitor'), reason: { en: 'Avoid dual ACEi + ARB blockade.' } },
       ],
       renalDosing: {
         thresholds: [
@@ -154,7 +154,7 @@
       symptomBoosts: { aceiCough: 8, hfPreserved: 2 },
       rules: [
         { effect: 'blocked', when: (ctx) => ctx.pregnancy === 'yes', reason: { en: 'ARBs are contraindicated in pregnancy.' } },
-        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('acei'), reason: { en: 'Do not combine with ACEi for HF.' } },
+        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('ace-inhibitor'), reason: { en: 'Do not combine with ACEi for HF.' } },
       ],
       renalDosing: {
         thresholds: [
@@ -192,7 +192,7 @@
       symptomBoosts: { proteinuria: 8, diabetes: 5, hypertension: 4 },
       rules: [
         { effect: 'blocked', when: (ctx) => ctx.pregnancy === 'yes', reason: { en: 'ARBs are contraindicated in pregnancy.' } },
-        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('acei'), reason: { en: 'Avoid dual ACEi + ARB.' } },
+        { effect: 'caution', when: (ctx) => ctx.currentMeds.includes('ace-inhibitor'), reason: { en: 'Avoid dual ACEi + ARB.' } },
         { effect: 'caution', when: (ctx) => ctx.egfr < 30, reason: { en: 'eGFR < 30 — start very low. Specialist input recommended.' } },
       ],
       renalDosing: {
