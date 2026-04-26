@@ -50,6 +50,53 @@
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(recents)); } catch {}
   }
 
+  // ─── RECENT PRESCRIPTIONS (last 10) ─────────────────────────────
+  const RECENT_RX_KEY = 'tol_recent_rx_v1';
+  const MAX_RECENT_RX = 10;
+
+  function getRecentRx() {
+    try { return JSON.parse(localStorage.getItem(RECENT_RX_KEY) || '[]'); } catch { return []; }
+  }
+
+  function addRecentRx(entry) {
+    if (!entry?.condition || !entry?.optionId) return;
+    let recents = getRecentRx().filter(r => !(r.condition === entry.condition && r.optionId === entry.optionId));
+    recents.unshift({ ...entry, ts: Date.now() });
+    if (recents.length > MAX_RECENT_RX) recents = recents.slice(0, MAX_RECENT_RX);
+    try { localStorage.setItem(RECENT_RX_KEY, JSON.stringify(recents)); } catch {}
+  }
+
+  function clearRecentRxEntry(condition, optionId) {
+    let recents = getRecentRx().filter(r => !(r.condition === condition && r.optionId === optionId));
+    try { localStorage.setItem(RECENT_RX_KEY, JSON.stringify(recents)); } catch {}
+  }
+
+  // ─── USER TEMPLATES (saved cases) ───────────────────────────────
+  const USER_TEMPLATES_KEY = 'tol_user_templates_v1';
+
+  function getUserTemplates() {
+    try { return JSON.parse(localStorage.getItem(USER_TEMPLATES_KEY) || '[]'); } catch { return []; }
+  }
+
+  function saveUserTemplate(tpl) {
+    const list = getUserTemplates().filter(t => t.id !== tpl.id);
+    list.unshift(tpl);
+    try { localStorage.setItem(USER_TEMPLATES_KEY, JSON.stringify(list)); } catch {}
+    // Merge into in-memory templates so it appears in template mode
+    const existingIdx = app.templates.findIndex(t => t.id === tpl.id);
+    if (existingIdx >= 0) app.templates[existingIdx] = tpl;
+    else app.templates.unshift(tpl);
+  }
+
+  function loadUserTemplatesIntoMemory() {
+    if (app._userTemplatesLoaded) return;
+    app._userTemplatesLoaded = true;
+    const list = getUserTemplates();
+    list.forEach(t => {
+      if (!app.templates.some(x => x.id === t.id)) app.templates.unshift(t);
+    });
+  }
+
   // ─── TOAST NOTIFICATIONS ──────────────────────────────────────────
   let _toastTimer = null;
   function showToast(msg) {
@@ -59,6 +106,483 @@
     el.classList.add('visible');
     clearTimeout(_toastTimer);
     _toastTimer = setTimeout(() => el.classList.remove('visible'), 2000);
+  }
+
+  // ─── RECENT RX TRAY (renders above output, compact) ─────────────
+  function renderRecentRxTray() {
+    const recents = getRecentRx();
+    if (!recents.length) return '';
+    let h = `<details class="recent-rx-fold"><summary>Recent (${recents.length}) <button type="button" class="link-action" data-clear-recents>clear</button></summary>`;
+    h += `<div class="recent-rx-tray">`;
+    recents.slice(0, 8).forEach(r => {
+      const condMeta = app.getConditionMeta(r.condition);
+      const condLabel = condMeta ? text(condMeta) : r.condition;
+      h += `<button type="button" class="recent-rx-chip" data-recent-rx="${escape(r.condition)}|${escape(r.optionId)}" title="${escape(r.medication || '')}">`;
+      h += `<strong>${escape(r.medication || condLabel)}</strong><span style="color:var(--muted)">${escape(condLabel)}</span>`;
+      h += `</button>`;
+    });
+    h += `</div></details>`;
+    return h;
+  }
+
+  // ─── SAVE-AS-TEMPLATE MODAL ─────────────────────────────────────
+  function renderSaveTemplateModal() {
+    let el = document.getElementById('saveTemplateModal');
+    if (!app._saveTemplateOpen) { if (el) el.hidden = true; return; }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'saveTemplateModal';
+      el.className = 'save-template-overlay';
+      document.body.appendChild(el);
+      el.addEventListener('click', handleSaveTemplateClick);
+      el.addEventListener('input', handleSaveTemplateInput);
+    }
+    el.hidden = false;
+    const draft = app._saveTemplateDraft || {};
+    let h = `<div class="save-template-inner">`;
+    h += `<div class="save-template-head"><h2>Save as template</h2><button type="button" class="tour-close" data-save-tpl-close>&times;</button></div>`;
+    h += `<p style="color:var(--muted);font-size:12px;margin:0 0 10px">Save the current case as a reusable template. Doctor partner can fast-apply this on similar patients.</p>`;
+    h += `<div class="custom-form-row"><label>Template name</label><input type="text" data-save-tpl-field="name" value="${escape(draft.name || '')}" placeholder="e.g. Adult cystitis quick pack"/></div>`;
+    h += `<div class="custom-form-grid">`;
+    h += `<div class="custom-form-row"><label>Min age</label><input type="number" min="0" max="120" data-save-tpl-field="ageMin" value="${draft.ageMin ?? ''}"/></div>`;
+    h += `<div class="custom-form-row"><label>Max age</label><input type="number" min="0" max="120" data-save-tpl-field="ageMax" value="${draft.ageMax ?? ''}"/></div>`;
+    h += `<div class="custom-form-row"><label>Min weight (kg)</label><input type="number" min="0" data-save-tpl-field="weightMin" value="${draft.weightMin ?? ''}"/></div>`;
+    h += `<div class="custom-form-row"><label>Max weight (kg)</label><input type="number" min="0" data-save-tpl-field="weightMax" value="${draft.weightMax ?? ''}"/></div>`;
+    h += `</div>`;
+    h += `<div class="custom-form-row"><label>Notes (optional)</label><textarea data-save-tpl-field="notes" placeholder="When to use, escalation criteria...">${escape(draft.notes || '')}</textarea></div>`;
+    if (app._saveTemplateError) h += `<div class="custom-form-error">${escape(app._saveTemplateError)}</div>`;
+    h += `<div class="custom-form-actions">`;
+    h += `<button type="button" data-save-tpl-cancel>Cancel</button>`;
+    h += `<button type="button" class="primary" data-save-tpl-confirm>Save template</button>`;
+    h += `</div></div>`;
+    el.innerHTML = h;
+  }
+
+  function openSaveTemplateModal() {
+    if (!app.processedSnapshot || !app.state.condition) {
+      showToast('Need a condition selected to save as template');
+      return;
+    }
+    app._saveTemplateDraft = app.createTemplateFromCurrentCase();
+    app._saveTemplateError = '';
+    app._saveTemplateOpen = true;
+    renderSaveTemplateModal();
+  }
+
+  function handleSaveTemplateInput(e) {
+    const field = e.target.dataset?.saveTplField;
+    if (!field) return;
+    if (!app._saveTemplateDraft) return;
+    const v = e.target.value;
+    if (['ageMin', 'ageMax', 'weightMin', 'weightMax'].includes(field)) {
+      app._saveTemplateDraft[field] = v === '' ? '' : Number(v);
+    } else {
+      app._saveTemplateDraft[field] = v;
+    }
+  }
+
+  function handleSaveTemplateClick(e) {
+    if (e.target.closest('[data-save-tpl-close]') || e.target.closest('[data-save-tpl-cancel]')) {
+      app._saveTemplateOpen = false;
+      renderSaveTemplateModal();
+      return;
+    }
+    if (e.target.closest('[data-save-tpl-confirm]')) {
+      const draft = app._saveTemplateDraft || {};
+      if (!draft.name?.trim()) {
+        app._saveTemplateError = 'Template name is required.';
+        renderSaveTemplateModal();
+        return;
+      }
+      if (Number(draft.ageMax) < Number(draft.ageMin)) {
+        app._saveTemplateError = 'Max age cannot be less than min age.';
+        renderSaveTemplateModal();
+        return;
+      }
+      const tpl = {
+        ...draft,
+        id: draft.id || `tpl-user-${Date.now()}`,
+        ageMin: Number(draft.ageMin) || 0,
+        ageMax: Number(draft.ageMax) || 120,
+        weightMin: Number(draft.weightMin) || 0,
+        weightMax: Number(draft.weightMax) || 300,
+      };
+      saveUserTemplate(tpl);
+      app._saveTemplateOpen = false;
+      app._saveTemplateError = '';
+      showToast('Template saved');
+      renderSaveTemplateModal();
+      render();
+      return;
+    }
+    if (e.target === e.currentTarget) {
+      app._saveTemplateOpen = false;
+      renderSaveTemplateModal();
+    }
+  }
+
+  // ─── CUSTOM DRUG MODAL ──────────────────────────────────────────
+  function renderCustomDrugModal() {
+    let el = document.getElementById('customDrugModal');
+    if (!app._customDrugOpen) { if (el) el.hidden = true; return; }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'customDrugModal';
+      el.className = 'custom-modal-overlay';
+      document.body.appendChild(el);
+      el.addEventListener('click', handleCustomDrugClick);
+      el.addEventListener('input', handleCustomDrugInput);
+      el.addEventListener('change', handleCustomDrugInput);
+    }
+    el.hidden = false;
+    const draft = app._customDrugDraft || newCustomDrugDraft();
+    app._customDrugDraft = draft;
+    const tab = app._customDrugTab || 'quick';
+    const isEdit = !!draft._editingId;
+
+    let h = `<div class="custom-modal-inner">`;
+    h += `<div class="custom-modal-head"><h2>${isEdit ? 'Edit medication' : 'Add medication'}</h2><button type="button" class="tour-close" data-custom-close>&times;</button></div>`;
+    h += `<p style="color:var(--muted);font-size:12px;margin:0 0 10px">For condition: <strong>${escape(text(app.getConditionMeta(app.state.condition) || {en:'(none)'}))}</strong>. Pinned to top for this condition. <em>Auto patient-fit checks skipped unless safety rules added below.</em></p>`;
+    h += `<div class="custom-tabs">`;
+    h += `<button type="button" class="${tab === 'quick' ? 'active' : ''}" data-custom-tab="quick">Quick</button>`;
+    h += `<button type="button" class="${tab === 'full' ? 'active' : ''}" data-custom-tab="full">Full</button>`;
+    h += `<button type="button" class="${tab === 'safety' ? 'active' : ''}" data-custom-tab="safety">Safety rules</button>`;
+    h += `</div>`;
+
+    if (tab === 'quick' || tab === 'full') {
+      h += `<div class="custom-form-row"><label>Medication * <span class="label-hint">(name + strength + form)</span></label><input type="text" data-custom-field="medication" value="${escape(draft.medication || '')}" placeholder="e.g. Cefuroxime 500 mg tablet"/></div>`;
+      // Sig builder toggle
+      h += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--muted)">Sig (directions) *</label>`;
+      h += `<label class="sig-toggle"><input type="checkbox" data-custom-toggle="useSigBuilder" ${draft._useSigBuilder ? 'checked' : ''}/> Sig builder</label></div>`;
+      if (draft._useSigBuilder) {
+        h += renderSigBuilder(draft.sigParts || {}, 'custom');
+      } else {
+        h += `<div class="custom-form-row" style="margin-top:0"><textarea data-custom-field="sig" placeholder="e.g. Take 1 tablet by mouth twice daily for 7 days">${escape(draft.sig || '')}</textarea></div>`;
+      }
+      h += `<div class="custom-form-grid">`;
+      h += `<div class="custom-form-row"><label>Dispense *</label><input type="text" data-custom-field="dispense" value="${escape(draft.dispense || '')}" placeholder="e.g. 14 tablets"/></div>`;
+      h += `<div class="custom-form-row"><label>Refills *</label><input type="number" min="0" data-custom-field="refills" value="${draft.refills ?? ''}" placeholder="0"/></div>`;
+      h += `<div class="custom-form-row"><label>Duration</label><input type="text" data-custom-field="duration" value="${escape(draft.duration || '')}" placeholder="e.g. 7 days"/></div>`;
+      h += `<div class="custom-form-row"><label>Indication</label><input type="text" data-custom-field="indication" value="${escape(draft.indication || '')}" placeholder="(uses condition by default)"/></div>`;
+      h += `</div>`;
+
+      if (tab === 'full') {
+        h += `<div class="custom-form-grid">`;
+        h += `<div class="custom-form-row"><label>Route</label><select data-custom-field="route">`;
+        ['', 'PO', 'TOP', 'IM', 'IV', 'SL', 'IN', 'OPH', 'OTIC', 'VAG', 'PR', 'NEB'].forEach(r => {
+          h += `<option value="${r}" ${draft.route === r ? 'selected' : ''}>${escape(r || '— select —')}</option>`;
+        });
+        h += `</select></div>`;
+        h += `<div class="custom-form-row"><label>Frequency</label><select data-custom-field="frequency">`;
+        ['', 'OD', 'BID', 'TID', 'QID', 'QHS', 'PRN', 'STAT', 'ONCE'].forEach(f => {
+          h += `<option value="${f}" ${draft.frequency === f ? 'selected' : ''}>${escape(f || '— select —')}</option>`;
+        });
+        h += `</select></div>`;
+        h += `</div>`;
+        h += `<div class="custom-form-row"><label>Pharmacy note</label><textarea data-custom-field="pharmacy" placeholder="e.g. Counsel on photosensitivity">${escape(draft.pharmacy || '')}</textarea></div>`;
+        h += `<div class="custom-form-row"><label>Pros (one per line)</label><textarea data-custom-field="pros" placeholder="One pro per line">${escape((draft.pros || []).join('\n'))}</textarea></div>`;
+        h += `<div class="custom-form-row"><label>Cons (one per line)</label><textarea data-custom-field="cons" placeholder="One con per line">${escape((draft.cons || []).join('\n'))}</textarea></div>`;
+      }
+    } else if (tab === 'safety') {
+      h += `<p style="color:var(--muted);font-size:12px;margin:0 0 10px">Optional. If set, this drug will block/caution the same way catalog drugs do.</p>`;
+      h += `<div class="custom-form-row"><label><input type="checkbox" data-custom-safety="penicillinAllergy" ${draft.safety?.penicillinAllergy ? 'checked' : ''}/> Block if patient has penicillin allergy</label></div>`;
+      h += `<div class="custom-form-row"><label><input type="checkbox" data-custom-safety="sulfaAllergy" ${draft.safety?.sulfaAllergy ? 'checked' : ''}/> Block if patient has sulfa allergy</label></div>`;
+      h += `<div class="custom-form-row"><label><input type="checkbox" data-custom-safety="pregnancy" ${draft.safety?.pregnancy ? 'checked' : ''}/> Block in pregnancy</label></div>`;
+      h += `<div class="custom-form-row"><label>Caution if eGFR below</label><input type="number" min="0" max="200" data-custom-safety-num="egfrFloor" value="${draft.safety?.egfrFloor ?? ''}" placeholder="e.g. 30"/></div>`;
+      h += `<div class="custom-form-row"><label>Min age (years)</label><input type="number" min="0" max="120" data-custom-safety-num="ageMin" value="${draft.safety?.ageMin ?? ''}"/></div>`;
+      h += `<div class="custom-form-row"><label>Max age (years)</label><input type="number" min="0" max="120" data-custom-safety-num="ageMax" value="${draft.safety?.ageMax ?? ''}"/></div>`;
+    }
+
+    if (app._customDrugError) h += `<div class="custom-form-error">${escape(app._customDrugError)}</div>`;
+    h += `<div class="custom-form-actions">`;
+    if (isEdit) h += `<button type="button" data-custom-delete style="color:var(--danger)">Delete</button>`;
+    h += `<button type="button" data-custom-cancel>Cancel</button>`;
+    h += `<button type="button" class="primary" data-custom-save>${isEdit ? 'Save changes' : 'Add medication'}</button>`;
+    h += `</div></div>`;
+    el.innerHTML = h;
+  }
+
+  function newCustomDrugDraft() {
+    return {
+      medication: '', sig: '', dispense: '', refills: 0,
+      duration: '', indication: '', route: '', frequency: '',
+      pharmacy: '', pros: [], cons: [],
+      safety: {}, sigParts: {},
+      _useSigBuilder: false,
+    };
+  }
+
+  function openCustomDrugModal(editId) {
+    if (!app.state.condition) {
+      showToast('Choose a condition first');
+      return;
+    }
+    if (editId && window.TOLCustomMeds) {
+      const list = window.TOLCustomMeds.list(app.state.condition);
+      const found = list.find(m => m.id === editId);
+      if (found) {
+        app._customDrugDraft = {
+          _editingId: found.id,
+          medication: found.order?.medication || '',
+          sig: found.order?.sig?.en || '',
+          dispense: found.order?.dispense || '',
+          refills: found.order?.refills ?? 0,
+          duration: found.order?.duration || '',
+          indication: found.order?.indication || '',
+          route: found.order?.route || '',
+          frequency: found.order?.frequency || '',
+          pharmacy: found.order?.pharmacy?.en || '',
+          pros: found.pros?.en || [],
+          cons: found.cons?.en || [],
+          safety: found._safetyConfig || {},
+          sigParts: found._sigParts || {},
+          _useSigBuilder: !!found._sigParts && Object.keys(found._sigParts).length > 0,
+        };
+      }
+    } else {
+      app._customDrugDraft = newCustomDrugDraft();
+    }
+    app._customDrugTab = 'quick';
+    app._customDrugError = '';
+    app._customDrugOpen = true;
+    renderCustomDrugModal();
+  }
+
+  function handleCustomDrugInput(e) {
+    const field = e.target.dataset?.customField;
+    const safety = e.target.dataset?.customSafety;
+    const safetyNum = e.target.dataset?.customSafetyNum;
+    const toggle = e.target.dataset?.customToggle;
+    const sigPart = e.target.dataset?.sigPart;
+    const draft = app._customDrugDraft || newCustomDrugDraft();
+    app._customDrugDraft = draft;
+    if (field) {
+      if (field === 'pros' || field === 'cons') {
+        draft[field] = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+      } else if (field === 'refills') {
+        draft[field] = e.target.value === '' ? 0 : Number(e.target.value);
+      } else {
+        draft[field] = e.target.value;
+      }
+    } else if (safety) {
+      draft.safety = draft.safety || {};
+      draft.safety[safety] = e.target.checked;
+    } else if (safetyNum) {
+      draft.safety = draft.safety || {};
+      draft.safety[safetyNum] = e.target.value === '' ? null : Number(e.target.value);
+    } else if (toggle === 'useSigBuilder') {
+      draft._useSigBuilder = e.target.checked;
+      renderCustomDrugModal();
+    } else if (sigPart) {
+      draft.sigParts = draft.sigParts || {};
+      draft.sigParts[sigPart] = e.target.value;
+      draft.sig = composeSigFromParts(draft.sigParts);
+      // Update preview without re-render flicker (just update preview span)
+      const prev = document.querySelector('[data-sig-preview="custom"]');
+      if (prev) prev.textContent = draft.sig || '(start filling fields above)';
+    }
+  }
+
+  function handleCustomDrugClick(e) {
+    const tab = e.target.closest('[data-custom-tab]');
+    if (tab) {
+      app._customDrugTab = tab.dataset.customTab;
+      renderCustomDrugModal();
+      return;
+    }
+    if (e.target.closest('[data-custom-close]') || e.target.closest('[data-custom-cancel]')) {
+      app._customDrugOpen = false;
+      renderCustomDrugModal();
+      return;
+    }
+    if (e.target.closest('[data-custom-delete]')) {
+      const id = app._customDrugDraft?._editingId;
+      if (id && window.TOLCustomMeds) {
+        window.TOLCustomMeds.remove(app.state.condition, id);
+        app._customDrugOpen = false;
+        showToast('Custom drug removed');
+        renderCustomDrugModal();
+        render();
+      }
+      return;
+    }
+    if (e.target.closest('[data-custom-save]')) {
+      const draft = app._customDrugDraft || {};
+      if (!draft.medication?.trim() || !draft.sig?.trim() || !draft.dispense?.trim()) {
+        app._customDrugError = 'Medication, sig, and dispense are required.';
+        renderCustomDrugModal();
+        return;
+      }
+      const condition = app.state.condition;
+      if (!condition) {
+        app._customDrugError = 'No condition selected.';
+        renderCustomDrugModal();
+        return;
+      }
+      const id = draft._editingId || `custom-${Date.now()}`;
+      const entry = window.TOLCustomMeds.build({
+        id,
+        condition,
+        addedBy: 'admin123',
+        medication: draft.medication.trim(),
+        sig: draft.sig.trim(),
+        dispense: draft.dispense.trim(),
+        refills: Number(draft.refills) || 0,
+        duration: draft.duration?.trim() || '',
+        indication: draft.indication?.trim() || '',
+        route: draft.route || '',
+        frequency: draft.frequency || '',
+        pharmacy: draft.pharmacy?.trim() || '',
+        pros: draft.pros || [],
+        cons: draft.cons || [],
+        safety: draft.safety || {},
+        sigParts: draft._useSigBuilder ? (draft.sigParts || {}) : {},
+      });
+      window.TOLCustomMeds.save(condition, entry);
+      app._customDrugOpen = false;
+      app._customDrugError = '';
+      // Force this new option to be selected so doctor sees it pinned at top
+      app.selectedOptionId = entry.id;
+      showToast(draft._editingId ? 'Custom drug updated' : 'Custom drug added');
+      renderCustomDrugModal();
+      render();
+      return;
+    }
+    if (e.target === e.currentTarget) {
+      app._customDrugOpen = false;
+      renderCustomDrugModal();
+    }
+  }
+
+  // ─── SIG BUILDER ─────────────────────────────────────────────────
+  const SIG_DOSES = ['', '0.5', '1', '2', '3', '4', '5'];
+  const SIG_UNITS = ['tablet', 'capsule', 'mL', 'mg', 'puff', 'spray', 'drop', 'application'];
+  const SIG_ROUTES = [
+    { value: 'PO', label: 'by mouth (PO)' },
+    { value: 'TOP', label: 'topically' },
+    { value: 'IM', label: 'IM' },
+    { value: 'IV', label: 'IV' },
+    { value: 'SL', label: 'sublingually' },
+    { value: 'IN', label: 'intranasally' },
+    { value: 'OPH', label: 'in eye' },
+    { value: 'OTIC', label: 'in ear' },
+    { value: 'VAG', label: 'vaginally' },
+    { value: 'PR', label: 'rectally' },
+    { value: 'NEB', label: 'nebulized' },
+  ];
+  const SIG_FREQS = [
+    { value: 'OD', label: 'once daily' },
+    { value: 'BID', label: 'twice daily' },
+    { value: 'TID', label: 'three times daily' },
+    { value: 'QID', label: 'four times daily' },
+    { value: 'QHS', label: 'at bedtime' },
+    { value: 'Q4H', label: 'every 4 hours' },
+    { value: 'Q6H', label: 'every 6 hours' },
+    { value: 'Q8H', label: 'every 8 hours' },
+    { value: 'PRN', label: 'as needed (PRN)' },
+    { value: 'STAT', label: 'stat (single dose)' },
+  ];
+
+  function renderSigBuilder(parts, scope) {
+    const dose = parts.dose || '';
+    const unit = parts.unit || '';
+    const route = parts.route || '';
+    const freq = parts.freq || '';
+    const dur = parts.duration || '';
+    let h = `<div class="sig-builder">`;
+    h += `<div><label>Dose</label><input type="text" data-sig-part="dose" data-sig-scope="${scope}" value="${escape(dose)}" placeholder="e.g. 1"/></div>`;
+    h += `<div><label>Unit</label><select data-sig-part="unit" data-sig-scope="${scope}"><option value="">— select —</option>${SIG_UNITS.map(u => `<option value="${u}" ${unit === u ? 'selected' : ''}>${u}</option>`).join('')}</select></div>`;
+    h += `<div><label>Route</label><select data-sig-part="route" data-sig-scope="${scope}"><option value="">— select —</option>${SIG_ROUTES.map(r => `<option value="${r.value}" ${route === r.value ? 'selected' : ''}>${escape(r.label)}</option>`).join('')}</select></div>`;
+    h += `<div><label>Frequency</label><select data-sig-part="freq" data-sig-scope="${scope}"><option value="">— select —</option>${SIG_FREQS.map(f => `<option value="${f.value}" ${freq === f.value ? 'selected' : ''}>${escape(f.label)}</option>`).join('')}</select></div>`;
+    h += `<div style="grid-column:1 / -1"><label>Duration</label><input type="text" data-sig-part="duration" data-sig-scope="${scope}" value="${escape(dur)}" placeholder="e.g. 7 days"/></div>`;
+    const preview = composeSigFromParts(parts);
+    h += `<div class="sig-builder-preview" data-sig-preview="${scope}"><strong>Sig:</strong> ${escape(preview || '(start filling fields above)')}</div>`;
+    h += `</div>`;
+    return h;
+  }
+
+  function composeSigFromParts(parts) {
+    if (!parts) return '';
+    const { dose, unit, route, freq, duration } = parts;
+    if (!dose && !unit && !route && !freq && !duration) return '';
+    const routeMeta = SIG_ROUTES.find(r => r.value === route);
+    const freqMeta = SIG_FREQS.find(f => f.value === freq);
+    const parts1 = [];
+    if (dose && unit) parts1.push(`Take ${dose} ${unit}${Number(dose) > 1 && !unit.endsWith('s') ? 's' : ''}`);
+    else if (dose) parts1.push(`Take ${dose}`);
+    else if (unit) parts1.push(`Apply ${unit}`);
+    if (routeMeta) parts1.push(routeMeta.label);
+    if (freqMeta) parts1.push(freqMeta.label);
+    if (duration) parts1.push(`for ${duration}`);
+    return parts1.join(' ').trim();
+  }
+
+  // ─── FILL FAILURE OVERLAY (extension feedback) ───────────────────
+  function renderFillFailureModal() {
+    let el = document.getElementById('fillFailureModal');
+    if (!app._fillFailures || !app._fillFailures.length) { if (el) el.hidden = true; return; }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'fillFailureModal';
+      el.className = 'fill-failure-overlay';
+      document.body.appendChild(el);
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('[data-failure-close]') || e.target === el) {
+          app._fillFailures = null;
+          renderFillFailureModal();
+        }
+        const copy = e.target.closest('[data-failure-copy]');
+        if (copy) {
+          navigator.clipboard.writeText(copy.dataset.failureCopy).then(() => showToast('Copied'));
+        }
+      });
+    }
+    el.hidden = false;
+    let h = `<div class="fill-failure-inner">`;
+    h += `<div class="fill-failure-head"><h2>Fields not auto-filled</h2><button type="button" class="tour-close" data-failure-close>&times;</button></div>`;
+    h += `<p style="color:var(--muted);font-size:12px;margin:0 0 10px">Click any value to copy and paste it into the EMR manually.</p>`;
+    app._fillFailures.forEach(f => {
+      h += `<div class="custom-form-row" style="background:#fef3f2;padding:8px;border-radius:6px"><label>${escape(f.label || f.field)}</label><div style="display:flex;align-items:center;gap:6px"><code style="flex:1;background:var(--surface);padding:6px 8px;border-radius:4px;font-size:12px;border:1px solid var(--line)">${escape(f.value)}</code><button type="button" class="copy-sm" data-failure-copy="${escape(f.value)}">Copy</button></div></div>`;
+    });
+    h += `<div class="custom-form-actions"><button type="button" class="primary" data-failure-close>Got it</button></div>`;
+    h += `</div>`;
+    el.innerHTML = h;
+  }
+
+  // ─── KEYBOARD SHORTCUTS OVERLAY ─────────────────────────────────
+  function renderShortcutModal() {
+    let el = document.getElementById('shortcutModal');
+    if (!app._shortcutOpen) { if (el) el.hidden = true; return; }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'shortcutModal';
+      el.className = 'shortcut-overlay';
+      document.body.appendChild(el);
+      el.addEventListener('click', (e) => {
+        if (e.target === el || e.target.closest('[data-shortcut-close]')) {
+          app._shortcutOpen = false;
+          renderShortcutModal();
+        }
+      });
+    }
+    el.hidden = false;
+    el.innerHTML = `<div class="shortcut-inner">
+      <div class="shortcut-head"><h2>Keyboard shortcuts</h2><button type="button" class="tour-close" data-shortcut-close>&times;</button></div>
+      <div class="shortcut-grid">
+        <kbd>1</kbd>–<kbd>9</kbd><span>Select alternative N</span>
+        <kbd>C</kbd><span>Copy Rx</span>
+        <kbd>H</kbd><span>Copy chart note</span>
+        <kbd>P</kbd><span>Copy pharmacy note</span>
+        <kbd>A</kbd><span>Copy all (Rx + chart + pharmacy)</span>
+        <kbd>F</kbd><span>Copy structured EMR JSON (extension fill)</span>
+        <kbd>T</kbd><span>Save current case as template</span>
+        <kbd>+</kbd><span>Add custom medication</span>
+        <kbd>?</kbd><span>Show this help</span>
+        <kbd>Ctrl</kbd>+<kbd>K</kbd><span>Focus search</span>
+        <kbd>Ctrl</kbd>+<kbd>N</kbd><span>New case</span>
+        <kbd>Esc</kbd><span>Close modal / overlay</span>
+      </div>
+    </div>`;
   }
 
   function renderAiModal() {
@@ -950,6 +1474,7 @@
     const selected = selectBestOption(options, ctx);
 
     let h = '';
+    h += renderRecentRxTray();
 
     // Condition summary card
     if (ctx.workflowMode === 'guided' && ctx.condition) {
@@ -984,23 +1509,50 @@
 
     // Primary selection
     if (selected) {
+      const isCustom = !!selected._custom;
       const copyPack = app.buildCopyPack(selected, ctx);
-      h += `<div class="section-label" style="margin-top:6px">Recommended</div>`;
-      h += `<div class="primary-card ${RANK_COLORS[0]}">`;
-      h += `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px">`;
-      h += `<div><strong style="font-size:14px">${escape(selected.label)}</strong><div style="color:var(--muted);font-size:12px">${escape(selected.dosePreview)}</div></div>`;
-      h += `<div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${selected.status}">${selected.score} · ${escape(selected.status)}</span></div>`;
+      h += `<div class="output-actions"><button type="button" class="link-action" data-save-as-template title="Save current case as template">+ Save as template</button></div>`;
+      h += `<div class="primary-card ${RANK_COLORS[0]}${isCustom ? ' is-custom' : ''}" data-option="${selected.id}" data-primary="1">`;
+      h += `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">`;
+      h += `<div><strong style="font-size:14px">${escape(selected.label)}</strong>${isCustom ? ' <span class="custom-badge">Custom</span>' : ''}<div style="color:var(--muted);font-size:12px">${escape(selected.dosePreview)} · ${escape(selected.price)}</div></div>`;
+      h += `<div style="display:flex;align-items:center;gap:4px"><span class="selected-pill">Selected</span></div>`;
       h += `</div>`;
-      h += `<div style="display:flex;gap:4px;margin-bottom:2px"><span class="tag-sm">${escape(selected.price)}</span><span class="tag-sm">${escape(selected.regionData.formulary)}</span></div>`;
       h += `</div>`;
 
-      // Alternatives — directly below primary card
+      // Alternatives — directly below primary card. Click to make it the selected.
+      const exclusions = app.state.exclusions || [];
       if (ranked.length > 1) {
-        h += `<div class="section-label" style="margin-top:4px">Alternatives</div>`;
+        h += `<div class="section-label" style="margin-top:4px">Alternatives <span class="label-hint">(click to switch)</span></div>`;
         ranked.slice(1).forEach((o, i) => {
           const rankColor = RANK_COLORS[Math.min(i + 1, 2)];
-          h += `<div class="alt-row ${rankColor}" data-option="${o.id}"><div><strong>${escape(o.label)}</strong><span>${escape(o.dosePreview)}</span></div><div style="display:flex;align-items:center;gap:4px"><span class="score-badge score-${o.status}">${o.score} · ${escape(o.status)}</span></div></div>`;
+          const excluded = exclusions.includes(o.id);
+          const altIsCustom = !!o._custom;
+          h += `<div class="alt-row ${rankColor}${excluded ? ' is-excluded' : ''}${altIsCustom ? ' is-custom' : ''}" data-option="${o.id}" tabindex="0" role="button" aria-label="Select ${escape(o.label)}">`;
+          h += `<div><strong>${escape(o.label)}</strong>${altIsCustom ? ' <span class="custom-badge custom-badge-sm">Custom</span>' : ''}<span>${escape(o.dosePreview)} · ${escape(o.price)}</span></div>`;
+          h += `<div style="display:flex;align-items:center;gap:4px">`;
+          h += `<span class="score-badge score-${o.status}" title="Status: ${escape(o.status)}">${o.score}</span>`;
+          if (altIsCustom) {
+            h += `<button type="button" class="alt-exclude-btn" data-open-custom-drug data-edit-id="${o.id}" title="Edit custom drug" aria-label="Edit ${escape(o.label)}">✎</button>`;
+          }
+          h += `<button type="button" class="alt-exclude-btn" data-toggle-exclude="${o.id}" title="${excluded ? 'Restore' : 'Exclude'}" aria-label="${excluded ? 'Restore' : 'Exclude'} ${escape(o.label)}">${excluded ? '↺' : '×'}</button>`;
+          h += `</div></div>`;
         });
+      }
+      // Add custom medication button
+      if (ctx.condition) {
+        h += `<button type="button" class="add-med-btn" data-open-custom-drug>+ Add my own medication</button>`;
+      }
+
+      // Renal dose-adjustment banner — surfaces when the catalog entry has a
+      // renalDosing band that matched the patient's eGFR. Shows the adjusted
+      // dose alongside the standard so the doctor sees both at a glance.
+      if (selected.renalAdjustment) {
+        const ra = selected.renalAdjustment;
+        if (ra.stop) {
+          h += `<div class="renal-banner renal-banner-stop"><strong>Renal stop:</strong> ${escape(ra.note || '')}</div>`;
+        } else {
+          h += `<div class="renal-banner"><strong>Renal-adjusted (eGFR ${ctx.egfr}):</strong> ${escape(ra.dose || '')}${ra.note ? ` — ${escape(ra.note)}` : ''}</div>`;
+        }
       }
 
       // Rx block
@@ -1166,13 +1718,9 @@
     }
     h += `</div></details>`;
 
-    // Sponsored alternatives placeholder
-    h += `<div class="sponsored-section">`;
-    h += `<div class="sponsored-label">Sponsored alternatives</div>`;
-    h += `<p class="sponsored-disclaimer">These options are presented by pharmaceutical partners. TOL Scribe does not endorse or rank sponsored content.</p>`;
-    h += `<div class="sponsored-placeholder">No sponsored content available. This section is reserved for future pharmaceutical partner integrations.</div>`;
-    h += `</div>`;
-
+    // Sponsored alternatives placeholder removed in visual declutter pass —
+    // doctor partner feedback: simple does it. Reserve for V2 once we have real
+    // pharma partner content.
     dom.outputPanel.innerHTML = h;
   }
 
@@ -1307,7 +1855,8 @@
   }
 
   function selectBestOption(options, ctx) {
-    const isUsable = (o) => o.status !== 'blocked';
+    const exclusions = app.state.exclusions || [];
+    const isUsable = (o) => o.status !== 'blocked' && !exclusions.includes(o.id);
     const usableOptions = options.filter(isUsable);
 
     if (!usableOptions.length) {
@@ -1323,6 +1872,10 @@
       const currentSel = usableOptions.find((o) => o.id === app.selectedOptionId) || usableOptions[0];
       const refined = applyRefinePrefs(usableOptions, currentSel, prefs);
       if (refined.length) {
+        // Honour explicit user selection if still usable
+        if (app.selectedOptionId && usableOptions.some(o => o.id === app.selectedOptionId)) {
+          return usableOptions.find(o => o.id === app.selectedOptionId);
+        }
         app.selectedOptionId = refined[0].id;
         return usableOptions.find((o) => o.id === app.selectedOptionId) || usableOptions[0] || null;
       }
@@ -1343,7 +1896,15 @@
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  function isDemoMode() {
+    try { return new URLSearchParams(window.location.search).has('demo'); } catch { return false; }
+  }
+
   async function startAnimatedDemo() {
+    if (!isDemoMode()) {
+      showToast('Demo disabled — append ?demo=1 to URL');
+      return;
+    }
     // Reset to clean state
     Object.assign(app.state, structuredClone(app.config.state));
     app._searchGuided = '';
@@ -1760,6 +2321,7 @@
     const focusField = focused?.dataset?.searchField || focused?.dataset?.numberField || null;
     const cursorPos = focused?.selectionStart ?? null;
 
+    loadUserTemplatesIntoMemory();
     ensureState();
     autoProcess();
     if (dom.headerEmrSelect) dom.headerEmrSelect.value = app.state.emrType;
@@ -1769,6 +2331,10 @@
     // Show refine button only when output is live
     dom.refineBtn.classList.toggle('visible', !!app.processedSnapshot);
     renderRefineModal();
+    renderSaveTemplateModal();
+    renderCustomDrugModal();
+    renderFillFailureModal();
+    renderShortcutModal();
 
     if (focusField) {
       const el = document.querySelector(`[data-search-field="${focusField}"]`) ||
@@ -1804,6 +2370,7 @@
     app._refinePrefs ||= {};
     if (app._refineSubmitted === undefined) app._refineSubmitted = false;
     if (app._helpOpen === undefined) app._helpOpen = false;
+    if (!Array.isArray(app.state.exclusions)) app.state.exclusions = [];
     app.ensureGuidedSelections();
     app.ensureTemplateSelection();
   }
@@ -1974,6 +2541,21 @@
       }
       const labels = { rx: 'Rx copied', chart: 'Chart note copied', pharmacy: 'Pharmacy note copied', all: 'All sections copied', emr: 'EMR JSON copied' };
       showToast(labels[kind] || 'Copied');
+      // Add to recent Rx tray on any successful copy
+      const ctx = app.processedSnapshot;
+      if (ctx?.condition) {
+        const opts = app.evaluateOptions(ctx);
+        const sel = selectBestOption(opts, ctx);
+        if (sel) {
+          const med = app.getOptionMeta(sel.id);
+          addRecentRx({
+            condition: ctx.condition,
+            optionId: sel.id,
+            patientPresetId: ctx.patientPresetId || '',
+            medication: med ? text(med.labels) : sel.label,
+          });
+        }
+      }
     } catch { /* fallback: user can select text */ }
   }
 
@@ -2046,9 +2628,50 @@
       const copyBtn = e.target.closest('[data-copy-block]');
       if (copyBtn) return copyBlock(copyBtn.dataset.copyBlock);
 
+      const excludeBtn = e.target.closest('[data-toggle-exclude]');
+      if (excludeBtn) {
+        e.stopPropagation();
+        const id = excludeBtn.dataset.toggleExclude;
+        app.state.exclusions = app.state.exclusions || [];
+        if (app.state.exclusions.includes(id)) {
+          app.state.exclusions = app.state.exclusions.filter(x => x !== id);
+        } else {
+          app.state.exclusions = [...app.state.exclusions, id];
+          if (app.selectedOptionId === id) app.selectedOptionId = null;
+        }
+        return render();
+      }
+
       const optionBtn = e.target.closest('[data-option]');
       if (optionBtn) {
         app.selectedOptionId = optionBtn.dataset.option;
+        return render();
+      }
+
+      const saveTpl = e.target.closest('[data-save-as-template]');
+      if (saveTpl) {
+        openSaveTemplateModal();
+        return;
+      }
+
+      const addMed = e.target.closest('[data-open-custom-drug]');
+      if (addMed) {
+        openCustomDrugModal(addMed.dataset.editId || null);
+        return;
+      }
+
+      const recentChip = e.target.closest('[data-recent-rx]');
+      if (recentChip) {
+        const [cond, optId] = recentChip.dataset.recentRx.split('|');
+        app.applyConditionToState(cond);
+        app.selectedOptionId = optId;
+        app.state.workflowMode = 'guided';
+        return render();
+      }
+
+      const clearRecents = e.target.closest('[data-clear-recents]');
+      if (clearRecents) {
+        try { localStorage.removeItem(RECENT_RX_KEY); } catch {}
         return render();
       }
 
@@ -2371,8 +2994,57 @@
     }
 
     document.addEventListener('keydown', (e) => {
+      // Skip shortcut shortcuts when typing in an editable field (preserve normal typing)
+      const targetTag = (e.target.tagName || '').toUpperCase();
+      const isEditable = ['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag) || e.target.isContentEditable;
+
+      // 1-9 select alternative
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !isEditable && /^[1-9]$/.test(e.key)) {
+        const ctx = app.processedSnapshot;
+        if (ctx) {
+          const opts = app.evaluateOptions(ctx).filter(o => !(app.state.exclusions || []).includes(o.id));
+          const idx = Number(e.key) - 1;
+          if (opts[idx]) {
+            e.preventDefault();
+            app.selectedOptionId = opts[idx].id;
+            render();
+            return;
+          }
+        }
+      }
+
+      // Single-letter copy shortcuts
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !isEditable) {
+        if (e.key === 'c' || e.key === 'C') {
+          if (app.processedSnapshot) { e.preventDefault(); copyBlock('rx'); return; }
+        }
+        if (e.key === 'h' || e.key === 'H') {
+          if (app.processedSnapshot) { e.preventDefault(); copyBlock('chart'); return; }
+        }
+        if (e.key === 'p' || e.key === 'P') {
+          if (app.processedSnapshot) { e.preventDefault(); copyBlock('pharmacy'); return; }
+        }
+        if (e.key === 'a' || e.key === 'A') {
+          if (app.processedSnapshot) { e.preventDefault(); copyBlock('all'); return; }
+        }
+        if (e.key === 'f' || e.key === 'F') {
+          if (app.processedSnapshot) { e.preventDefault(); copyBlock('emr'); return; }
+        }
+        if (e.key === 't' || e.key === 'T') {
+          if (app.processedSnapshot && app.state.condition) { e.preventDefault(); openSaveTemplateModal(); return; }
+        }
+        if (e.key === '+' || e.key === '=') {
+          if (app.state.condition) { e.preventDefault(); openCustomDrugModal(); return; }
+        }
+        if (e.key === '?') { e.preventDefault(); app._shortcutOpen = true; renderShortcutModal(); return; }
+      }
+
       // Escape — close demo, refine modal, or tour
       if (e.key === 'Escape') {
+        if (app._shortcutOpen) { app._shortcutOpen = false; renderShortcutModal(); return; }
+        if (app._customDrugOpen) { app._customDrugOpen = false; renderCustomDrugModal(); return; }
+        if (app._saveTemplateOpen) { app._saveTemplateOpen = false; renderSaveTemplateModal(); return; }
+        if (app._fillFailures && app._fillFailures.length) { app._fillFailures = null; renderFillFailureModal(); return; }
         if (app._demoRunning) {
           app._demoRunning = false;
           document.getElementById('demoSpotlight').hidden = true;

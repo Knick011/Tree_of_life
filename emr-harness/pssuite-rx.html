@@ -12,9 +12,13 @@
     .form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 22px; }
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field.full { grid-column: 1 / -1; }
+    .field.search-field { position: relative; }
     label { font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: .04em; }
     input, select, textarea { font: inherit; border: 1px solid #cdd8df; border-radius: 10px; padding: 10px 12px; background: #fff; }
     textarea { min-height: 86px; resize: vertical; }
+    .suggestions { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 10; display: grid; gap: 6px; padding: 8px; border: 1px solid #d7e1e5; border-radius: 12px; background: #fff; box-shadow: 0 12px 30px rgba(15,23,42,.12); }
+    .suggestions[hidden] { display: none; }
+    .suggestions [role="option"] { padding: 8px 10px; border-radius: 8px; background: #f4f7f8; cursor: pointer; }
     .foot { padding: 0 22px 22px; color: #64748b; font-size: 13px; }
   </style>
 </head>
@@ -26,7 +30,11 @@
         <div style="margin-top:6px; opacity:.75; font-size:13px">Canadian ambulatory prescribing surface</div>
       </div>
       <div class="form">
-        <div class="field"><label for="txtDrugName">Medication</label><input id="txtDrugName" placeholder="Medication name" /></div>
+        <div class="field search-field">
+          <label for="txtDrugName">Medication</label>
+          <input id="txtDrugName" placeholder="Medication name" aria-controls="psDrugSuggestions" autocomplete="off" />
+          <div id="psDrugSuggestions" class="suggestions" role="listbox" hidden></div>
+        </div>
         <div class="field"><label for="txtQuantity">Quantity</label><input id="txtQuantity" name="quantity" placeholder="30 tablets" /></div>
         <div class="field full"><label for="txtSig">Sig</label><textarea id="txtSig" name="sig" placeholder="Take 1 tablet by mouth twice daily"></textarea></div>
         <div class="field"><label for="txtRefills">Refills</label><input id="txtRefills" name="refills" placeholder="1" /></div>
@@ -39,5 +47,62 @@
       <div class="foot">The TOL widget should appear here because this page exposes prescribing fields that match the PS Suite adapter.</div>
     </div>
   </div>
+
+  <script>
+    (() => {
+      const drugInput = document.getElementById('txtDrugName');
+      const suggestions = document.getElementById('psDrugSuggestions');
+      const drugs = [
+        'SULFAMETHOXAZOLE 800MG/TRIMETHOPRIM 160MG TABLET',
+        'NITROFURANTOIN 100MG CAPSULE',
+        'AMOXICILLIN 500MG CAPSULE',
+      ];
+
+      function closeSuggestions() {
+        suggestions.hidden = true;
+        suggestions.replaceChildren();
+      }
+
+      function renderSuggestions(query) {
+        const q = String(query || '').trim().toLowerCase();
+        const normalizedQuery = q.replace(/[/-]/g, ' ');
+        const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+        suggestions.replaceChildren();
+        if (!q) {
+          closeSuggestions();
+          return;
+        }
+
+        const matches = drugs.filter((drug) => {
+          const normalizedDrug = drug.toLowerCase().replace(/[/-]/g, ' ');
+          return normalizedDrug.includes(normalizedQuery) || normalizedDrug.includes(q) || queryTokens.every((token) => normalizedDrug.includes(token));
+        });
+        if (!matches.length) {
+          closeSuggestions();
+          return;
+        }
+
+        matches.forEach((drug) => {
+          const option = document.createElement('div');
+          option.setAttribute('role', 'option');
+          option.textContent = drug;
+          option.addEventListener('click', () => {
+            drugInput.value = drug;
+            drugInput.dispatchEvent(new Event('input', { bubbles: true }));
+            drugInput.dispatchEvent(new Event('change', { bubbles: true }));
+            closeSuggestions();
+          });
+          suggestions.appendChild(option);
+        });
+
+        suggestions.hidden = false;
+      }
+
+      drugInput.addEventListener('input', () => renderSuggestions(drugInput.value));
+      drugInput.addEventListener('blur', () => {
+        setTimeout(closeSuggestions, 160);
+      });
+    })();
+  </script>
 </body>
 </html>

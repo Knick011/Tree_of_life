@@ -11,13 +11,76 @@ const UI_IDS = {
   overlay: '__tol_inline_overlay',
   overlayTitle: '__tol_inline_overlay_title',
   overlayBody: '__tol_inline_overlay_body',
+  overlayCancel: '__tol_inline_overlay_cancel',
   readBtn: '__tol_inline_read',
   fillBtn: '__tol_inline_fill',
   hideBtn: '__tol_inline_hide',
 };
 
 const STORAGE_KEY = 'emrType';
+const DRUG_MAPPING_STORAGE_KEY = 'tolDrugMappingsV1';
 const emrModels = globalThis.TOLEmrModels;
+
+const SEARCH_OPTION_SELECTORS = [
+  '[role="listbox"] [role="option"]',
+  '[role="option"]',
+  'ul[id*="autocomplete" i] li',
+  '[id*="autocomplete" i] a[title]',
+  '[id*="autocomplete" i] li a[title]',
+  '.autocomplete-option',
+  '.autocomplete-item',
+  '.suggestion-item',
+  '.search-result',
+  '.dropdown-item',
+  '[data-option-index]',
+];
+
+const DRUG_FORM_TOKENS = [
+  'tablet',
+  'tablets',
+  'capsule',
+  'capsules',
+  'cream',
+  'ointment',
+  'suspension',
+  'solution',
+  'drops',
+  'patch',
+  'patches',
+  'spray',
+  'inhaler',
+  'injection',
+  'suppository',
+  'suppositories',
+];
+
+const DRUG_STOP_WORDS = new Set([
+  ...DRUG_FORM_TOKENS,
+  'mg',
+  'mcg',
+  'g',
+  'gram',
+  'grams',
+  'ml',
+  'oral',
+  'topical',
+  'intramuscular',
+  'intravenous',
+  'extended',
+  'release',
+  'delayed',
+  'strength',
+  'double',
+  'ds',
+]);
+
+const DRUG_PHRASE_NORMALIZERS = [
+  { pattern: /\btmp[\s/-]*smx\b/gi, replace: 'trimethoprim sulfamethoxazole' },
+  { pattern: /\bsmx[\s/-]*tmp\b/gi, replace: 'sulfamethoxazole trimethoprim' },
+  { pattern: /\bco[\s-]*trimoxazole\b/gi, replace: 'trimethoprim sulfamethoxazole' },
+  { pattern: /\bcotrimoxazole\b/gi, replace: 'trimethoprim sulfamethoxazole' },
+  { pattern: /\bdouble strength\b/gi, replace: 'ds' },
+];
 
 const FIELD_ALIASES = {
   medicationDisplay: 'medication',
@@ -183,15 +246,20 @@ const inlineState = {
   panelOpen: false,
   initialized: false,
   lastMessage: 'Waiting for a TOL draft.',
+  isFilling: false,
+  activeFillRun: 0,
+  overlayTimer: null,
+  drugMappings: {},
 };
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function waitFor(predicate, timeoutMs = 4000, intervalMs = 120) {
+async function waitFor(predicate, timeoutMs = 4000, intervalMs = 120, shouldContinue = null) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    if (shouldContinue && !shouldContinue()) return null;
     const result = predicate();
     if (result) return result;
     await sleep(intervalMs);
@@ -199,7 +267,43 @@ async function waitFor(predicate, timeoutMs = 4000, intervalMs = 120) {
   return null;
 }
 
-function findElement(selectors) {
+// Deep query: walks the document, every same-origin iframe's contentDocument,
+// and every shadowRoot. Used when a per-EMR adapter sets useDeepQuery: true,
+// or whenever findElement's top-level lookup fails.
+function queryDeep(selector, root) {
+  if (!selector) return null;
+  const start = root || document;
+  // Direct hit at this level.
+  try {
+    const direct = start.querySelector(selector);
+    if (direct) return direct;
+  } catch { /* invalid selector */ }
+
+  // Walk every element to peek into shadowRoots (open shadow DOM only — closed
+  // is not accessible by spec).
+  const elements = start.querySelectorAll('*');
+  for (const el of elements) {
+    if (el.shadowRoot) {
+      const fromShadow = queryDeep(selector, el.shadowRoot);
+      if (fromShadow) return fromShadow;
+    }
+  }
+
+  // Same-origin iframes only — cross-origin throws SecurityError on access.
+  const frames = start.querySelectorAll ? start.querySelectorAll('iframe') : [];
+  for (const frame of frames) {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc) continue;
+      const fromFrame = queryDeep(selector, doc);
+      if (fromFrame) return fromFrame;
+    } catch { /* cross-origin — skip */ }
+  }
+  return null;
+}
+
+function findElement(selectors, options) {
+  const useDeep = options?.useDeepQuery === true;
   for (const selector of selectors || []) {
     try {
       const element = document.querySelector(selector);
@@ -208,7 +312,57 @@ function findElement(selectors) {
       // Ignore invalid selectors.
     }
   }
+  if (useDeep) {
+    for (const selector of selectors || []) {
+      const element = queryDeep(selector);
+      if (element) return element;
+    }
+  }
   return null;
+}
+
+// Verify a fill attempt actually took. Reads the field back and returns true if
+// the value is non-empty and matches (loose substring) the intended value.
+function verifyFillResult(element, expectedValue, strategy) {
+  if (!element || expectedValue === '' || expectedValue == null) return false;
+  if (strategy === 'checkbox') {
+    return !!element.checked;
+  }
+  const actual = element.value ?? element.textContent ?? '';
+  if (!actual) return false;
+  if (strategy === 'select') {
+    return String(actual).trim().length > 0;
+  }
+  const a = String(actual).toLowerCase().replace(/\s+/g, ' ').trim();
+  const e = String(expectedValue).toLowerCase().replace(/\s+/g, ' ').trim();
+  // Accept loose match: actual contains a meaningful chunk of expected, or vice-versa.
+  if (a === e) return true;
+  if (a.length >= 2 && e.includes(a)) return true;
+  if (e.length >= 2 && a.includes(e)) return true;
+  return false;
+}
+
+// Walks each selector in the field's selectors[] list, attempting fill until one
+// verifies. Logs winning selector for telemetry. Returns { ok, element, selector }.
+function tryFillField(fieldDef, value, options) {
+  const selectors = fieldDef.selectors || [];
+  for (const selector of selectors) {
+    let element = null;
+    try { element = document.querySelector(selector); } catch { /* invalid selector */ }
+    if (!element && options?.useDeepQuery) {
+      element = queryDeep(selector);
+    }
+    if (!element) continue;
+    const localDef = { ...fieldDef, selectors: [selector] };
+    const ok = fillElement(localDef, value);
+    if (!ok) continue;
+    const verified = verifyFillResult(element, value, fieldDef.strategy);
+    if (verified) {
+      try { console.debug('[TOL] field filled via', selector); } catch {}
+      return { ok: true, element, selector };
+    }
+  }
+  return { ok: false, element: null, selector: null };
 }
 
 function dispatchFormEvents(element) {
@@ -259,7 +413,12 @@ function setSelectValue(element, value) {
   for (const option of Array.from(element.options)) {
     const optionValue = String(option.value || '').toLowerCase();
     const optionText = String(option.text || '').toLowerCase();
-    if (optionValue.includes(wanted) || optionText.includes(wanted)) {
+    if (
+      optionValue.includes(wanted) ||
+      optionText.includes(wanted) ||
+      wanted.includes(optionValue) ||
+      wanted.includes(optionText)
+    ) {
       element.value = option.value;
       dispatchFormEvents(element);
       return true;
@@ -287,10 +446,18 @@ function setCheckboxValue(element, value) {
 function typeSearchField(element, value) {
   if (!element || !value) return false;
   element.focus();
-  setElementValue(element, value);
-  ['keydown', 'keypress', 'keyup'].forEach((type) => {
-    element.dispatchEvent(new KeyboardEvent(type, { key: 'Enter', bubbles: true }));
-  });
+  const nextValue = String(value ?? '');
+  const proto =
+    element.tagName === 'TEXTAREA'
+      ? HTMLTextAreaElement.prototype
+      : element.tagName === 'SELECT'
+        ? HTMLSelectElement.prototype
+        : HTMLInputElement.prototype;
+  const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+  if (setter) setter.call(element, nextValue);
+  else element.value = nextValue;
+  element.dispatchEvent(new Event('input', { bubbles: true }));
+  element.dispatchEvent(new Event('change', { bubbles: true }));
   element.dispatchEvent(new Event('search', { bubbles: true }));
   return true;
 }
@@ -354,6 +521,239 @@ function normalizeLooseText(value) {
     .toLowerCase();
 }
 
+function normalizeDrugText(value) {
+  let text = String(value || '').toLowerCase();
+  DRUG_PHRASE_NORMALIZERS.forEach(({ pattern, replace }) => {
+    text = text.replace(pattern, replace);
+  });
+  return text
+    .replace(/[%(),]/g, ' ')
+    .replace(/[+]/g, ' ')
+    .replace(/[/-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractDrugStrengthTokens(value) {
+  const raw = String(value || '').toLowerCase();
+  const tokens = new Set();
+
+  raw.replace(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*(mg|mcg|g|ml|%)/g, (_, first, second, unit) => {
+    tokens.add(`${first}${unit}`);
+    tokens.add(`${second}${unit}`);
+    return _;
+  });
+
+  raw.replace(/(\d+(?:\.\d+)?)\s*(mg|mcg|g|ml|%)/g, (_, amount, unit) => {
+    tokens.add(`${amount}${unit}`);
+    return _;
+  });
+
+  return tokens;
+}
+
+function extractDrugForm(value) {
+  const normalized = normalizeDrugText(value);
+  return DRUG_FORM_TOKENS.find((token) => normalized.includes(token)) || '';
+}
+
+function extractDrugIngredients(value) {
+  const normalized = normalizeDrugText(value);
+  return new Set(
+    normalized
+      .split(' ')
+      .filter(Boolean)
+      .filter((token) => !DRUG_STOP_WORDS.has(token))
+      .filter((token) => !/^\d+(?:\.\d+)?$/.test(token))
+      .filter((token) => !/^\d+(?:\.\d+)?(mg|mcg|g|ml|%)$/.test(token)),
+  );
+}
+
+function getDrugProfile(value) {
+  const normalized = normalizeDrugText(value);
+  return {
+    raw: String(value || '').trim(),
+    normalized,
+    ingredients: extractDrugIngredients(normalized),
+    strengths: extractDrugStrengthTokens(normalized),
+    form: extractDrugForm(normalized),
+    isDoubleStrength: /\bds\b/.test(normalized),
+  };
+}
+
+function setToArray(input) {
+  return Array.from(input || []);
+}
+
+function getDrugMappingKey(value) {
+  const profile = getDrugProfile(value);
+  return [
+    setToArray(profile.ingredients).sort().join('+'),
+    setToArray(profile.strengths).sort().join('+'),
+    profile.form || '',
+    profile.isDoubleStrength ? 'ds' : '',
+  ].join('|');
+}
+
+function getStoredDrugMapping(emrType, value) {
+  const emrMappings = inlineState.drugMappings?.[emrType];
+  if (!emrMappings) return '';
+  return emrMappings[getDrugMappingKey(value)] || '';
+}
+
+async function rememberDrugMapping(emrType, requestedDrug, selectedLabel) {
+  if (!emrType || !requestedDrug || !selectedLabel || !ext?.storage?.local) return;
+  const key = getDrugMappingKey(requestedDrug);
+  if (!key) return;
+  if (!inlineState.drugMappings[emrType]) inlineState.drugMappings[emrType] = {};
+  inlineState.drugMappings[emrType][key] = selectedLabel;
+  await storageSet({ [DRUG_MAPPING_STORAGE_KEY]: inlineState.drugMappings });
+}
+
+function scoreDrugMatch(requestedDrug, candidateLabel, mappedLabel = '') {
+  const requested = getDrugProfile(requestedDrug);
+  const candidate = getDrugProfile(candidateLabel);
+  let score = 0;
+
+  if (mappedLabel && normalizeLooseText(candidateLabel) === normalizeLooseText(mappedLabel)) {
+    score += 120;
+  }
+
+  if (requested.normalized === candidate.normalized) score += 100;
+  if (candidate.normalized.includes(requested.normalized) || requested.normalized.includes(candidate.normalized)) score += 20;
+
+  const requestedIngredients = setToArray(requested.ingredients);
+  const candidateIngredients = candidate.ingredients;
+  requestedIngredients.forEach((ingredient) => {
+    if (candidateIngredients.has(ingredient)) score += 24;
+    else score -= 18;
+  });
+  setToArray(candidateIngredients).forEach((ingredient) => {
+    if (!requested.ingredients.has(ingredient)) score -= 4;
+  });
+
+  const requestedStrengths = setToArray(requested.strengths);
+  const candidateStrengths = candidate.strengths;
+  requestedStrengths.forEach((strength) => {
+    if (candidateStrengths.has(strength)) score += 20;
+    else score -= 14;
+  });
+
+  if (requested.form && candidate.form === requested.form) score += 10;
+  if (requested.isDoubleStrength && candidate.isDoubleStrength) score += 8;
+
+  return score;
+}
+
+function buildDrugSearchQueries(drugName, preferredLabel = '') {
+  const raw = String(drugName || '').trim();
+  const normalized = normalizeDrugText(raw);
+  const profile = getDrugProfile(raw);
+  const ingredientQuery = setToArray(profile.ingredients).sort().join(' ');
+  const strengthQuery = setToArray(profile.strengths).join(' ');
+  const compactStrengthQuery = strengthQuery.replace(/\s+/g, '');
+  const queries = [
+    preferredLabel,
+    raw,
+    normalized,
+    [ingredientQuery, strengthQuery, profile.form].filter(Boolean).join(' ').trim(),
+    [ingredientQuery, compactStrengthQuery, profile.form].filter(Boolean).join(' ').trim(),
+    ingredientQuery,
+    raw.split(/\s+/).slice(0, 3).join(' '),
+    raw.split(/\s+/).slice(0, 2).join(' '),
+    raw.split(/\s+/)[0],
+  ].filter(Boolean);
+
+  return [...new Set(queries.map((item) => item.trim()).filter(Boolean))];
+}
+
+function buildGenericDrugSearchQueries(drugName, preferredLabel = '') {
+  const raw = String(drugName || '').trim();
+  const profile = getDrugProfile(raw);
+  const ingredientQuery = setToArray(profile.ingredients).sort().join(' ');
+  const queries = [
+    preferredLabel,
+    raw,
+    ingredientQuery,
+    raw.split(/\s+/)[0],
+  ].filter(Boolean);
+  return [...new Set(queries.map((item) => item.trim()).filter(Boolean))];
+}
+
+function isVisibleElement(element) {
+  return !!element && element.getClientRects().length > 0 && !element.closest(`#${UI_IDS.root}`);
+}
+
+function getOptionLabel(element) {
+  return String(
+    element?.getAttribute?.('title') ||
+      element?.getAttribute?.('aria-label') ||
+      element?.textContent ||
+      '',
+  )
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function rankSearchOptions(fieldElement, requestedDrug, optionElements, mappedLabel = '') {
+  const fieldRect = fieldElement?.getBoundingClientRect?.() || null;
+  return optionElements
+    .map((element) => {
+      const label = getOptionLabel(element);
+      const rect = element.getBoundingClientRect();
+      let score = scoreDrugMatch(requestedDrug, label, mappedLabel);
+      if (fieldRect) {
+        const verticalDistance = Math.abs(rect.top - fieldRect.bottom);
+        const horizontalAligned = rect.left <= fieldRect.right + 120 && rect.right >= fieldRect.left - 120;
+        if (horizontalAligned) score += 6;
+        if (verticalDistance < 260) score += 6;
+      }
+      return { element, label, score };
+    })
+    .filter((item) => item.label)
+    .sort((a, b) => b.score - a.score);
+}
+
+function shouldAutoSelectMatch(rankedOptions) {
+  if (!rankedOptions.length) return false;
+  const [best, second] = rankedOptions;
+  if (best.score >= 90) return true;
+  if (best.score >= 70 && (!second || best.score - second.score >= 12)) return true;
+  return false;
+}
+
+function isTolScribeSurface() {
+  const href = location.href || '';
+  const path = location.pathname || '';
+  const title = document.title || '';
+  if (/knick011\.github\.io/i.test(location.host) && /\/tree_of_life\//i.test(path)) return true;
+  if (/127\.0\.0\.1|localhost/i.test(location.host) && !/\/emr-harness\//i.test(path)) {
+    if (document.getElementById('appShell') || document.getElementById('loginWall')) return true;
+  }
+  if (/TOL Scribe/i.test(title)) return true;
+  if (document.getElementById('headerEmrSelect') || document.getElementById('helpBtn')) return true;
+  return false;
+}
+
+function clearOverlayTimer() {
+  if (inlineState.overlayTimer) {
+    clearTimeout(inlineState.overlayTimer);
+    inlineState.overlayTimer = null;
+  }
+}
+
+function isActiveFillRun(runId) {
+  return inlineState.isFilling && inlineState.activeFillRun === runId;
+}
+
+function ensureActiveFillRun(runId) {
+  if (!isActiveFillRun(runId)) {
+    const cancelled = new Error('Fill cancelled.');
+    cancelled.code = 'TOL_FILL_CANCELLED';
+    throw cancelled;
+  }
+}
+
 function clickElement(element) {
   if (!element) return false;
   element.focus?.();
@@ -362,6 +762,77 @@ function clickElement(element) {
     element.dispatchEvent(new EventCtor(type, { bubbles: true, cancelable: true }));
   });
   return true;
+}
+
+function getGenericAutocompleteOptions(fieldElement) {
+  const ownedIds = [fieldElement?.getAttribute?.('aria-controls'), fieldElement?.getAttribute?.('aria-owns')].filter(Boolean);
+  const ownedOptions = ownedIds.flatMap((id) => {
+    const container = document.getElementById(id);
+    if (!container) return [];
+    return Array.from(container.querySelectorAll('[role="option"], li, a[title], .autocomplete-option, .autocomplete-item'));
+  });
+
+  const pool = ownedOptions.length
+    ? ownedOptions
+    : SEARCH_OPTION_SELECTORS.flatMap((selector) => {
+        try {
+          return Array.from(document.querySelectorAll(selector));
+        } catch {
+          return [];
+        }
+      });
+
+  return pool
+    .filter(isVisibleElement)
+    .filter((element) => getOptionLabel(element));
+}
+
+async function selectGenericMedicationOption(fieldElement, drugName, emrType, progress, runId) {
+  const mappedLabel = getStoredDrugMapping(emrType, drugName);
+  const queries = buildGenericDrugSearchQueries(drugName, mappedLabel);
+  let sawOptions = false;
+  let lastRanked = [];
+
+  for (const query of queries) {
+    ensureActiveFillRun(runId);
+    progress?.(`Searching ${EMR_DEFS[emrType]?.label || emrType} for ${query}`);
+    typeSearchField(fieldElement, query);
+
+    const options =
+      (await waitFor(() => {
+        const found = getGenericAutocompleteOptions(fieldElement);
+        return found.length ? found : null;
+      }, 900, 100, () => isActiveFillRun(runId))) || [];
+
+    if (!options.length) {
+      await sleep(120);
+      continue;
+    }
+
+    sawOptions = true;
+    lastRanked = rankSearchOptions(fieldElement, drugName, options, mappedLabel);
+    if (!lastRanked.length) continue;
+    if (!shouldAutoSelectMatch(lastRanked)) continue;
+
+    const selected = lastRanked[0];
+    clickElement(selected.element);
+    await sleep(220);
+    await rememberDrugMapping(emrType, drugName, selected.label);
+    return {
+      ok: true,
+      usedDropdown: true,
+      selectedLabel: selected.label,
+      candidates: lastRanked.slice(0, 3).map((item) => item.label),
+    };
+  }
+
+  return {
+    ok: !sawOptions,
+    usedDropdown: false,
+    selectedLabel: '',
+    manualSelectionRequired: sawOptions,
+    candidates: lastRanked.slice(0, 3).map((item) => item.label),
+  };
 }
 
 function getOscarRowIds() {
@@ -401,21 +872,14 @@ function getOscarAutocompleteOptions() {
 }
 
 function findBestOscarAutocompleteOption(drugName) {
-  const wanted = normalizeLooseText(drugName);
+  const mappedLabel = getStoredDrugMapping('oscar', drugName);
   const options = getOscarAutocompleteOptions();
   if (!options.length) return null;
 
-  let exact = options.find((option) => normalizeLooseText(option.getAttribute('title') || option.textContent) === wanted);
-  if (exact) return exact;
-
-  let contains = options.find((option) => normalizeLooseText(option.getAttribute('title') || option.textContent).includes(wanted));
-  if (contains) return contains;
-
-  const wantedTokens = wanted.split(' ').filter(Boolean);
-  return options.find((option) => {
-    const label = normalizeLooseText(option.getAttribute('title') || option.textContent);
-    return wantedTokens.every((token) => label.includes(token));
-  }) || options[0];
+  const ranked = rankSearchOptions(document.getElementById('searchString'), drugName, options, mappedLabel);
+  if (!ranked.length) return null;
+  if (!shouldAutoSelectMatch(ranked)) return null;
+  return ranked[0].element;
 }
 
 function findOscarMatchingRowId(drugName) {
@@ -437,10 +901,7 @@ function setOscarSearchValue(value) {
 }
 
 function buildOscarSearchQueries(drugName) {
-  const raw = String(drugName || '').trim();
-  const tokens = raw.split(/\s+/).filter(Boolean);
-  const queries = [raw, tokens.slice(0, 3).join(' '), tokens.slice(0, 2).join(' '), tokens[0]].filter(Boolean);
-  return [...new Set(queries)];
+  return buildDrugSearchQueries(drugName, getStoredDrugMapping('oscar', drugName));
 }
 
 function storageGet(key) {
@@ -453,6 +914,19 @@ function storageGet(key) {
   }
   return new Promise((resolve) => {
     ext.storage.local.get(key, (result) => resolve(result || {}));
+  });
+}
+
+function storageSet(data) {
+  if (!ext?.storage?.local?.set) return Promise.resolve();
+  try {
+    const result = ext.storage.local.set(data);
+    if (result && typeof result.then === 'function') return result;
+  } catch {
+    // Fall through to callback form.
+  }
+  return new Promise((resolve) => {
+    ext.storage.local.set(data, () => resolve());
   });
 }
 
@@ -545,6 +1019,7 @@ function detectEmr() {
 }
 
 function shouldExposeInlineEntry() {
+  if (isTolScribeSurface()) return false;
   const detected = inlineState.detected || detectEmr();
   if (detected.key !== 'generic') return true;
   return !!inlineState.panelOpen;
@@ -690,24 +1165,26 @@ function ensureInlineUi() {
         line-height: 1.4;
       }
       #${UI_IDS.overlay} {
-        position: fixed;
-        inset: 0;
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 320px;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(15, 23, 42, 0.28);
-        backdrop-filter: blur(2px);
+        align-items: flex-end;
+        justify-content: flex-end;
+        pointer-events: none;
         z-index: 2147483647;
       }
       #${UI_IDS.overlay}[hidden] {
         display: none !important;
       }
       .tol-overlay-card {
-        width: min(420px, calc(100vw - 32px));
-        padding: 20px 22px;
+        width: 100%;
+        padding: 18px 20px;
         border-radius: 18px;
         background: #fff;
         box-shadow: 0 28px 90px rgba(15, 23, 42, 0.3);
+        pointer-events: auto;
       }
       .tol-overlay-spinner {
         width: 38px;
@@ -728,6 +1205,22 @@ function ensureInlineUi() {
         color: #475569;
         font-size: 13px;
         line-height: 1.5;
+      }
+      .tol-overlay-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 14px;
+      }
+      .tol-overlay-actions button {
+        min-height: 34px;
+        padding: 0 12px;
+        border: 1px solid #d7dfe5;
+        border-radius: 10px;
+        background: #fff;
+        color: #17212b;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
       }
       @keyframes tol-spin {
         to { transform: rotate(360deg); }
@@ -859,9 +1352,24 @@ function ensureInlineUi() {
   const overlayBody = document.createElement('p');
   overlayBody.id = UI_IDS.overlayBody;
   overlayBody.textContent = 'TOL is matching the current page and filling the selected prescription fields.';
+  const overlayActions = document.createElement('div');
+  overlayActions.className = 'tol-overlay-actions';
+  const overlayCancel = document.createElement('button');
+  overlayCancel.id = UI_IDS.overlayCancel;
+  overlayCancel.type = 'button';
+  overlayCancel.textContent = 'Dismiss';
+  overlayCancel.addEventListener('click', () => {
+    inlineState.isFilling = false;
+    inlineState.activeFillRun += 1;
+    clearOverlayTimer();
+    setOverlayState(false);
+    updateInlineUi();
+  });
   overlayCard.appendChild(spinner);
   overlayCard.appendChild(overlayTitle);
   overlayCard.appendChild(overlayBody);
+  overlayActions.appendChild(overlayCancel);
+  overlayCard.appendChild(overlayActions);
   overlay.appendChild(overlayCard);
 
   root.appendChild(fab);
@@ -877,6 +1385,9 @@ function updateInlineUi() {
   const emr = document.getElementById(UI_IDS.emr);
   const status = document.getElementById(UI_IDS.status);
   const draft = document.getElementById(UI_IDS.draft);
+  const readBtn = document.getElementById(UI_IDS.readBtn);
+  const fillBtn = document.getElementById(UI_IDS.fillBtn);
+  const hideBtn = document.getElementById(UI_IDS.hideBtn);
 
   const detected = inlineState.detected || detectEmr();
   const preferred = inlineState.preferredEmr && inlineState.preferredEmr !== 'auto' ? inlineState.preferredEmr : inlineState.cachedNormalized?.defaultEmr || detected.key;
@@ -884,6 +1395,9 @@ function updateInlineUi() {
 
   fab.hidden = !shouldExposeInlineEntry() || inlineState.panelOpen;
   panel.hidden = !inlineState.panelOpen;
+  if (readBtn) readBtn.disabled = inlineState.isFilling;
+  if (fillBtn) fillBtn.disabled = inlineState.isFilling;
+  if (hideBtn) hideBtn.disabled = inlineState.isFilling;
 
   emr.textContent = `Detected page: ${detected.label} · Target draft: ${preferredLabel}`;
   status.textContent = inlineState.lastMessage;
@@ -912,9 +1426,13 @@ function setOverlayState(visible, title, body) {
   const overlay = document.getElementById(UI_IDS.overlay);
   const overlayTitle = document.getElementById(UI_IDS.overlayTitle);
   const overlayBody = document.getElementById(UI_IDS.overlayBody);
+  const overlayCancel = document.getElementById(UI_IDS.overlayCancel);
   overlay.hidden = !visible;
   if (title) overlayTitle.textContent = title;
   if (body) overlayBody.textContent = body;
+  if (overlayCancel) {
+    overlayCancel.textContent = inlineState.isFilling ? 'Cancel fill' : 'Dismiss';
+  }
 }
 
 function cachePayload(payload, normalized, preferredEmr = '') {
@@ -948,25 +1466,27 @@ async function loadClipboardIntoInlineState() {
   }
 }
 
-async function addOscarDrugRow(drugName, progress) {
+async function addOscarDrugRow(drugName, progress, runId) {
   if (!drugName || !document.getElementById('searchString') || !document.getElementById('rxText')) return null;
 
   for (const query of buildOscarSearchQueries(drugName)) {
+    ensureActiveFillRun(runId);
     progress?.(`Searching OSCAR for ${query}`);
     const initialIds = new Set(getOscarRowIds());
     setOscarSearchValue(query);
 
     const option =
-      (await waitFor(() => findBestOscarAutocompleteOption(drugName), 2200, 120)) ||
-      (await waitFor(() => findBestOscarAutocompleteOption(query), 1200, 120));
+      (await waitFor(() => findBestOscarAutocompleteOption(drugName), 2200, 120, () => isActiveFillRun(runId))) ||
+      (await waitFor(() => findBestOscarAutocompleteOption(query), 1200, 120, () => isActiveFillRun(runId)));
     if (!option) continue;
 
     clickElement(option);
+    await rememberDrugMapping('oscar', drugName, getOptionLabel(option));
 
     const newRowId = await waitFor(() => {
       const ids = getOscarRowIds();
       return ids.find((id) => !initialIds.has(id)) || null;
-    }, 4500, 120);
+    }, 4500, 120, () => isActiveFillRun(runId));
 
     if (newRowId) return newRowId;
     const matchedRowId = findOscarMatchingRowId(drugName) || findOscarMatchingRowId(query);
@@ -989,7 +1509,7 @@ function splitDuration(durationValue) {
   return { amount, unit };
 }
 
-async function fillOscarRow(rowId, adapterFields, progress) {
+async function fillOscarRow(rowId, adapterFields, progress, runId) {
   const fields = getOscarRowFields(rowId);
   const filled = [];
   const missing = [];
@@ -1001,6 +1521,7 @@ async function fillOscarRow(rowId, adapterFields, progress) {
   if (fields.row) highlightElement(fields.row);
 
   if (adapterFields.instructions) {
+    ensureActiveFillRun(runId);
     progress?.('Applying instructions');
     if (fields.instructions) {
       setElementValue(fields.instructions, adapterFields.instructions);
@@ -1013,6 +1534,7 @@ async function fillOscarRow(rowId, adapterFields, progress) {
   }
 
   if (adapterFields.specialInstruction || adapterFields.indication) {
+    ensureActiveFillRun(runId);
     progress?.('Applying indication');
     const indicationValue = adapterFields.specialInstruction || adapterFields.indication;
     if (fields.specialInstruction) {
@@ -1029,6 +1551,7 @@ async function fillOscarRow(rowId, adapterFields, progress) {
   }
 
   if (adapterFields.quantity) {
+    ensureActiveFillRun(runId);
     progress?.('Applying quantity');
     if (fields.quantity) {
       setElementValue(fields.quantity, adapterFields.quantity);
@@ -1040,6 +1563,7 @@ async function fillOscarRow(rowId, adapterFields, progress) {
   }
 
   if (adapterFields.repeats !== undefined && adapterFields.repeats !== null && adapterFields.repeats !== '') {
+    ensureActiveFillRun(runId);
     progress?.('Applying repeats');
     if (fields.repeats) {
       setElementValue(fields.repeats, adapterFields.repeats);
@@ -1051,6 +1575,7 @@ async function fillOscarRow(rowId, adapterFields, progress) {
   }
 
   if (adapterFields.route) {
+    ensureActiveFillRun(runId);
     progress?.('Applying route');
     if (fields.route) {
       if (setSelectValue(fields.route, adapterFields.route)) {
@@ -1065,6 +1590,7 @@ async function fillOscarRow(rowId, adapterFields, progress) {
   }
 
   if (adapterFields.frequency || adapterFields.frequencyCode) {
+    ensureActiveFillRun(runId);
     progress?.('Applying frequency');
     const frequencyValue = adapterFields.frequency || adapterFields.frequencyCode;
     if (fields.frequency) {
@@ -1080,6 +1606,7 @@ async function fillOscarRow(rowId, adapterFields, progress) {
   }
 
   if (adapterFields.duration) {
+    ensureActiveFillRun(runId);
     progress?.('Applying duration');
     const duration = splitDuration(adapterFields.duration);
     if (fields.duration) {
@@ -1097,6 +1624,7 @@ async function fillOscarRow(rowId, adapterFields, progress) {
   }
 
   if (adapterFields.noteToPharmacy || adapterFields.pharmacyNote) {
+    ensureActiveFillRun(runId);
     progress?.('Applying pharmacy note');
     const noteValue = adapterFields.noteToPharmacy || adapterFields.pharmacyNote;
     if (fields.comment) {
@@ -1111,7 +1639,7 @@ async function fillOscarRow(rowId, adapterFields, progress) {
   return { success: filled.length > 0, filled, missing, rowId };
 }
 
-async function fillOscarPrescription(message, progress) {
+async function fillOscarPrescription(message, progress, runId) {
   const adapterFields = getAdapterFields(message, 'oscar');
   const drugName = adapterFields.drugName || adapterFields.medication || adapterFields.medicationDisplay;
 
@@ -1126,21 +1654,24 @@ async function fillOscarPrescription(message, progress) {
   }
 
   progress?.('Creating OSCAR prescription row');
-  let rowId = await addOscarDrugRow(drugName, progress);
+  let rowId = await addOscarDrugRow(drugName, progress, runId);
   if (!rowId) rowId = findOscarMatchingRowId(drugName);
 
   if (!rowId) {
+    const rankedChoices = rankSearchOptions(document.getElementById('searchString'), drugName, getOscarAutocompleteOptions(), getStoredDrugMapping('oscar', drugName));
+    const candidateText = rankedChoices.length ? ` Top matches: ${rankedChoices.slice(0, 3).map((item) => item.label).join(' | ')}` : '';
     showToast('OSCAR row not found. Select the drug manually, then run Fill Fields again.', 'warn');
     return {
       success: false,
       filledCount: 0,
       missing: Object.keys(adapterFields),
       detectedEmr: 'oscar',
+      notes: candidateText ? [candidateText.trim()] : [],
       message: 'No OSCAR pending prescription row was created from the drug search.',
     };
   }
 
-  const result = await fillOscarRow(rowId, adapterFields, progress);
+  const result = await fillOscarRow(rowId, adapterFields, progress, runId);
   return {
     success: result.success,
     filledCount: result.filled.length,
@@ -1153,13 +1684,14 @@ async function fillOscarPrescription(message, progress) {
   };
 }
 
-async function fillGenericPrescription(message, requestedEmr, progress) {
+async function fillGenericPrescription(message, requestedEmr, progress, runId) {
   const detected = inlineState.detected || detectEmr();
   const emrDef = EMR_DEFS[requestedEmr] || EMR_DEFS.generic;
   const model = emrModels?.getModel?.(requestedEmr) || emrModels?.MODELS?.[requestedEmr] || emrModels?.MODELS?.generic;
   const adapterFields = getAdapterFields(message, requestedEmr);
   const filled = [];
   const missing = [];
+  const notes = [];
   const entries = Object.entries(adapterFields)
     .filter(([, value]) => value !== '' && value !== null && value !== undefined)
     .sort(([aKey], [bKey]) => {
@@ -1176,26 +1708,64 @@ async function fillGenericPrescription(message, requestedEmr, progress) {
   const presentLogicalFields = new Set(entries.map(([name]) => FIELD_ALIASES[name] || name));
   const missingRequired = (model?.requiredLogicalFields || []).filter((field) => !presentLogicalFields.has(field));
 
+  // Per-EMR deep-query opt-in. Default off for known-good EMRs to avoid surprising fills.
+  const useDeepQuery = emrDef.useDeepQuery === true;
+  const failureDetails = [];
+
   for (const [adapterField, value] of entries) {
+    ensureActiveFillRun(runId);
     const logicalField = FIELD_ALIASES[adapterField] || adapterField;
     const fieldDef = emrDef.fields[logicalField] || EMR_DEFS.generic.fields[logicalField];
     if (!fieldDef) continue;
-    const target = findElement(fieldDef.selectors);
+    const target = findElement(fieldDef.selectors, { useDeepQuery });
     if (!target) {
       missing.push(adapterField);
+      failureDetails.push({ field: adapterField, label: getFieldLabel(adapterField), value: String(value), reason: 'No matching field on page' });
       continue;
     }
 
     progress?.(`Filling ${getFieldLabel(adapterField)}`);
-    const ok = fillElement(fieldDef, value);
-    if (fieldDef.strategy === 'search') {
-      await sleep(220);
+    let ok = false;
+    let usedElement = target;
+
+    if (logicalField === 'medication' && fieldDef.strategy === 'search') {
+      const attempt = tryFillField(fieldDef, value, { useDeepQuery });
+      ok = attempt.ok;
+      usedElement = attempt.element || target;
+      const selectionResult = await selectGenericMedicationOption(usedElement, value, requestedEmr, progress, runId);
+      if (selectionResult.manualSelectionRequired) {
+        notes.push(`Medication search needs confirmation: ${selectionResult.candidates.join(' | ')}`);
+        missing.push(adapterField);
+        failureDetails.push({ field: adapterField, label: getFieldLabel(adapterField), value: String(value), reason: 'Search needs manual confirm' });
+        continue;
+      }
+      if (selectionResult.selectedLabel) {
+        notes.push(`Selected: ${selectionResult.selectedLabel}`);
+      }
+      ok = ok && selectionResult.ok;
+    } else {
+      const attempt = tryFillField(fieldDef, value, { useDeepQuery });
+      ok = attempt.ok;
+      usedElement = attempt.element || target;
+      if (!ok) {
+        // Last-ditch: try the original single-shot fill and verify after a delay
+        // (some EMRs accept value but defer their own validation).
+        const fallback = fillElement(fieldDef, value);
+        if (fallback) {
+          if (fieldDef.strategy === 'search') {
+            await sleep(220);
+          }
+          ok = verifyFillResult(target, value, fieldDef.strategy);
+        }
+      }
     }
+
     if (ok) {
-      highlightElement(target);
+      highlightElement(usedElement);
       filled.push(adapterField);
     } else {
       missing.push(adapterField);
+      failureDetails.push({ field: adapterField, label: getFieldLabel(adapterField), value: String(value), reason: 'Fill verification failed' });
     }
   }
 
@@ -1203,14 +1773,112 @@ async function fillGenericPrescription(message, requestedEmr, progress) {
     success: filled.length > 0 && missingRequired.length === 0,
     filledCount: filled.length,
     missing: [...missingRequired, ...missing],
+    failureDetails,
     detectedEmr: detected.key,
+    notes,
     message:
       missingRequired.length
         ? `The TOL draft is missing required ${emrDef.label} fields: ${missingRequired.join(', ')}.`
-        : filled.length > 0
-          ? `Filled ${filled.length} fields on ${emrDef.label}.`
+        : missing.includes('medication') && notes.length
+          ? `Medication search on ${emrDef.label} needs review before the rest of the draft can be trusted.`
+          : filled.length > 0
+            ? `Filled ${filled.length} fields on ${emrDef.label}.`
           : `No matching ${emrDef.label} fields were found on this page.`,
   };
+}
+
+function showFillFailurePanel(failures) {
+  const id = '__tol_fill_failure_panel';
+  const existing = document.getElementById(id);
+  if (existing) existing.remove();
+
+  const panel = document.createElement('div');
+  panel.id = id;
+  panel.style.cssText = [
+    'position:fixed', 'right:16px', 'bottom:80px', 'z-index:2147483646',
+    'background:#fff', 'border:1px solid #c0392b', 'border-radius:10px',
+    'padding:12px 14px', 'max-width:340px', 'box-shadow:0 18px 50px rgba(0,0,0,0.18)',
+    'font-family:Segoe UI, Arial, sans-serif', 'font-size:12px', 'color:#1a2332',
+  ].join(';');
+
+  const heading = document.createElement('div');
+  heading.style.cssText = 'font-weight:700;color:#92240e;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px';
+  const title = document.createElement('span');
+  title.textContent = `${failures.length} field${failures.length === 1 ? '' : 's'} need manual paste`;
+  const close = document.createElement('button');
+  close.textContent = '×';
+  close.setAttribute('aria-label', 'Close');
+  close.style.cssText = 'border:none;background:transparent;font-size:16px;cursor:pointer;color:#92240e;padding:0 4px;line-height:1';
+  close.addEventListener('click', () => panel.remove());
+  heading.appendChild(title);
+  heading.appendChild(close);
+  panel.appendChild(heading);
+
+  failures.forEach((f) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'margin-bottom:6px;padding:6px 8px;background:#fdf2f2;border-radius:6px';
+    const label = document.createElement('div');
+    label.style.cssText = 'font-weight:600;font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:0.04em';
+    label.textContent = f.label || f.field;
+    const valueRow = document.createElement('div');
+    valueRow.style.cssText = 'display:flex;gap:6px;align-items:center;margin-top:3px';
+    const valueText = document.createElement('code');
+    valueText.style.cssText = 'flex:1;background:#fff;padding:4px 6px;border-radius:4px;border:1px solid #e2e8f0;font-size:11px;overflow-wrap:anywhere';
+    valueText.textContent = f.value || '';
+    const btn = document.createElement('button');
+    btn.textContent = 'Copy';
+    btn.style.cssText = 'border:1px solid #cbd5e1;background:#fff;border-radius:4px;padding:3px 8px;cursor:pointer;font:inherit;font-size:11px';
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(f.value || '');
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+      } catch { btn.textContent = 'Failed'; }
+    });
+    valueRow.appendChild(valueText);
+    valueRow.appendChild(btn);
+    row.appendChild(label);
+    row.appendChild(valueRow);
+    panel.appendChild(row);
+  });
+
+  document.documentElement.appendChild(panel);
+  setTimeout(() => { if (panel.parentNode) panel.remove(); }, 30000);
+}
+
+function scheduleOverlayHide(runId, delayMs = 1400) {
+  clearOverlayTimer();
+  inlineState.overlayTimer = setTimeout(() => {
+    if (inlineState.activeFillRun !== runId) return;
+    setOverlayState(false);
+  }, delayMs);
+}
+
+async function applyRecordedFieldsToEmrDef(emrType) {
+  // Pulls clinician-recorded selectors for this host+emrType and prepends them
+  // to the per-field `selectors` array so they win over the built-in defaults.
+  // Recorded selectors are user-trusted, so we try them first.
+  if (!globalThis.TOLRecorder?.loadRecordedFieldsForHost) return;
+  try {
+    const recorded = await globalThis.TOLRecorder.loadRecordedFieldsForHost(location.host, emrType);
+    if (!recorded) return;
+    const def = EMR_DEFS[emrType] || EMR_DEFS.generic;
+    Object.entries(recorded).forEach(([logicalField, info]) => {
+      if (!info?.selector) return;
+      const existing = def.fields[logicalField];
+      if (existing) {
+        // Avoid duplicate if already first in list.
+        if (existing.selectors[0] !== info.selector) {
+          existing.selectors = [info.selector, ...existing.selectors];
+        }
+        if (info.strategy && existing.strategy !== info.strategy) {
+          existing.strategy = info.strategy;
+        }
+      } else {
+        def.fields[logicalField] = { selectors: [info.selector], strategy: info.strategy || 'input' };
+      }
+    });
+  } catch (e) { console.warn('[TOL] recorded selector load failed', e); }
 }
 
 async function fillPrescription(message) {
@@ -1220,16 +1888,22 @@ async function fillPrescription(message) {
       ? message.emrType
       : message?.normalized?.defaultEmr || inlineState.preferredEmr || detected.key;
   const effectiveEmr = requestedEmr === 'auto' ? detected.key : requestedEmr;
+  await applyRecordedFieldsToEmrDef(effectiveEmr);
 
   if (message?.payload) {
     cachePayload(message.payload, message.normalized || normalizePayload(message.payload, effectiveEmr), effectiveEmr);
   }
 
+  clearOverlayTimer();
+  const runId = inlineState.activeFillRun + 1;
+  inlineState.activeFillRun = runId;
+  inlineState.isFilling = true;
   setOverlayState(true, 'Preparing TOL draft', `Matching ${EMR_DEFS[effectiveEmr]?.label || effectiveEmr} on the current page.`);
   inlineState.lastMessage = `Filling ${EMR_DEFS[effectiveEmr]?.label || effectiveEmr}...`;
   updateInlineUi();
 
   const progress = (stepText) => {
+    ensureActiveFillRun(runId);
     setOverlayState(true, 'Filling prescription fields', stepText);
     inlineState.lastMessage = stepText;
     updateInlineUi();
@@ -1238,31 +1912,44 @@ async function fillPrescription(message) {
   try {
     const result =
       effectiveEmr === 'oscar'
-        ? await fillOscarPrescription({ ...message, emrType: effectiveEmr }, progress)
-        : await fillGenericPrescription({ ...message, emrType: effectiveEmr }, effectiveEmr, progress);
+        ? await fillOscarPrescription({ ...message, emrType: effectiveEmr }, progress, runId)
+        : await fillGenericPrescription({ ...message, emrType: effectiveEmr }, effectiveEmr, progress, runId);
 
+    ensureActiveFillRun(runId);
     if (result.success) {
-      inlineState.lastMessage = result.message;
+      inlineState.lastMessage = result.notes?.length ? `${result.message} ${result.notes.join(' · ')}` : result.message;
       updateInlineUi();
-      setOverlayState(true, 'Draft applied', result.missing?.length ? `Filled ${result.filledCount} fields. Missing: ${result.missing.join(', ')}` : result.message);
+      inlineState.isFilling = false;
+      setOverlayState(true, 'Draft applied', result.missing?.length ? `Filled ${result.filledCount} fields. Missing: ${result.missing.join(', ')}` : inlineState.lastMessage);
       showToast(`TOL filled ${result.filledCount} field${result.filledCount === 1 ? '' : 's'} on ${EMR_DEFS[effectiveEmr]?.label || effectiveEmr}`);
-      setTimeout(() => setOverlayState(false), 1100);
+      updateInlineUi();
+      scheduleOverlayHide(runId, 1200);
       return result;
     }
 
-    inlineState.lastMessage = result.message;
+    inlineState.lastMessage = result.notes?.length ? `${result.message} ${result.notes.join(' · ')}` : result.message;
     updateInlineUi();
-    setOverlayState(true, 'Fill needs review', result.message);
+    inlineState.isFilling = false;
+    setOverlayState(true, 'Fill needs review', inlineState.lastMessage);
     showToast(result.message, 'warn');
-    setTimeout(() => setOverlayState(false), 1600);
+    updateInlineUi();
+    scheduleOverlayHide(runId, 1600);
+    // Show inline failure panel listing what couldn't be filled, so the doctor
+    // can copy each value and paste manually rather than silently shipping a
+    // half-filled prescription.
+    if (result.failureDetails && result.failureDetails.length) {
+      showFillFailurePanel(result.failureDetails);
+    }
     return result;
   } catch (error) {
-    const messageText = error?.message || 'TOL could not fill fields on this page.';
+    const cancelled = error?.code === 'TOL_FILL_CANCELLED';
+    const messageText = cancelled ? 'Fill cancelled.' : error?.message || 'TOL could not fill fields on this page.';
     inlineState.lastMessage = messageText;
+    inlineState.isFilling = false;
     updateInlineUi();
-    setOverlayState(true, 'Fill failed', messageText);
-    showToast(messageText, 'warn');
-    setTimeout(() => setOverlayState(false), 1800);
+    setOverlayState(true, cancelled ? 'Fill cancelled' : 'Fill failed', messageText);
+    showToast(messageText, cancelled ? 'ok' : 'warn');
+    scheduleOverlayHide(runId, cancelled ? 700 : 1800);
     return {
       success: false,
       filledCount: 0,
@@ -1270,14 +1957,23 @@ async function fillPrescription(message) {
       detectedEmr: detected.key,
       message: messageText,
     };
+  } finally {
+    if (inlineState.activeFillRun === runId) {
+      inlineState.isFilling = false;
+      updateInlineUi();
+    }
   }
 }
 
 async function initInlineState() {
+  if (isTolScribeSurface()) {
+    return;
+  }
   inlineState.detected = detectEmr();
   try {
-    const stored = await storageGet(STORAGE_KEY);
+    const stored = await storageGet([STORAGE_KEY, DRUG_MAPPING_STORAGE_KEY]);
     if (stored?.[STORAGE_KEY]) inlineState.preferredEmr = stored[STORAGE_KEY];
+    inlineState.drugMappings = stored?.[DRUG_MAPPING_STORAGE_KEY] || {};
   } catch {
     // Ignore storage failures.
   }
@@ -1309,9 +2005,82 @@ async function initInlineState() {
 
   window.addEventListener('popstate', scheduleRefresh);
   window.addEventListener('hashchange', scheduleRefresh);
+
+  // Auto-fill: doctor partner feedback was that copy → switch tab → click extension
+  // → click Read Clipboard → click Fill is too many steps. Watch for user gestures
+  // (paste, focus on form) and try to auto-detect a TOL payload on the clipboard.
+  // navigator.clipboard.readText() requires user activation in most browsers, so
+  // we can only attempt during these events.
+  let autoTried = 0;
+  const tryAutoLoadClipboard = async (source) => {
+    if (inlineState.cachedPayload) return;
+    if (autoTried > 5) return; // budget so we don't spam clipboard reads
+    autoTried += 1;
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.includes('"_tol"')) return; // fast bail
+      let parsed = null;
+      try { parsed = JSON.parse(text); } catch { return; }
+      if (!parsed || parsed._tol !== true) return;
+      const normalized = normalizePayload(parsed, inlineState.preferredEmr === 'auto' ? '' : inlineState.preferredEmr);
+      if (!normalized) return;
+      cachePayload(parsed, normalized, normalized.defaultEmr);
+      inlineState.lastMessage = 'TOL draft auto-loaded from clipboard. Click Fill to apply.';
+      inlineState.panelOpen = true;
+      updateInlineUi();
+      showToast(`TOL draft ready (${source}). Click Fill or press Ctrl+Shift+Y.`);
+    } catch { /* clipboard not available — silent */ }
+  };
+
+  document.addEventListener('paste', (e) => {
+    // If the user pasted text into a form field, treat the pasted text as the
+    // primary signal and try to load it as a TOL payload.
+    try {
+      const text = e.clipboardData?.getData('text/plain');
+      if (!text || !text.includes('"_tol"')) return;
+      let parsed = null;
+      try { parsed = JSON.parse(text); } catch { return; }
+      if (!parsed || parsed._tol !== true) return;
+      const normalized = normalizePayload(parsed, inlineState.preferredEmr === 'auto' ? '' : inlineState.preferredEmr);
+      if (!normalized) return;
+      cachePayload(parsed, normalized, normalized.defaultEmr);
+      inlineState.lastMessage = 'TOL draft auto-loaded from paste. Click Fill to apply.';
+      inlineState.panelOpen = true;
+      updateInlineUi();
+      // Stop the JSON from actually being pasted into the EMR field.
+      e.preventDefault();
+      showToast('TOL draft auto-loaded. Click Fill to apply.');
+    } catch { /* ignore */ }
+  }, true);
+
+  // Try once shortly after page load (some browsers grant clipboard read after
+  // the user has interacted with the EMR tab).
+  setTimeout(() => tryAutoLoadClipboard('page-ready'), 1200);
+
+  // Re-try when the user focuses the page or any form field — these are user
+  // gestures and most likely to succeed.
+  window.addEventListener('focus', () => tryAutoLoadClipboard('window-focus'));
+  document.addEventListener('focusin', (e) => {
+    if (!e.target?.matches?.('input, textarea, [contenteditable]')) return;
+    tryAutoLoadClipboard('field-focus');
+  });
 }
 
 ext.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (isTolScribeSurface()) {
+    if (message.action === 'detectEmr') {
+      sendResponse({
+        emrType: 'generic',
+        emrLabel: 'Blocked on TOL Scribe',
+        title: document.title || '',
+        url: location.href,
+      });
+    } else {
+      sendResponse({ success: false, blocked: true });
+    }
+    return;
+  }
+
   if (message.action === 'detectEmr') {
     inlineState.detected = detectEmr();
     updateInlineUi();
@@ -1346,6 +2115,16 @@ ext.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'fillRx') {
     Promise.resolve(fillPrescription(message)).then((result) => sendResponse(result));
     return true;
+  }
+
+  if (message.type === 'TOL_RECORDER_START') {
+    if (globalThis.TOLRecorder?.start) {
+      globalThis.TOLRecorder.start(message.emrType || inlineState.preferredEmr || 'generic');
+      sendResponse({ ok: true });
+    } else {
+      sendResponse({ ok: false, error: 'Recorder unavailable' });
+    }
+    return;
   }
 });
 

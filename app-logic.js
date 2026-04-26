@@ -25,6 +25,9 @@
     if (typeof map === 'string') {
       return map;
     }
+    if (lang === 'fr' && !map?.fr && map?.en && app.config?.WARN_MISSING_FR) {
+      console.warn('[TOL] missing fr translation:', map.en);
+    }
     return map?.[lang] || map?.en || '';
   };
 
@@ -45,12 +48,33 @@
   app.getSubtypeMeta = (value) => app.config.SUBTYPES.find((item) => item.value === value);
   app.getConditionMeta = (value) => app.data.CONDITIONS.find((item) => item.value === value);
   app.getTemplateById = (id, source = app.templates) => source.find((item) => item.id === id) || null;
-  app.getOptionMeta = (id) => app.catalog.find((item) => item.id === id) || null;
+  app.getOptionMeta = (id) => {
+    const fromCatalog = app.catalog.find((item) => item.id === id);
+    if (fromCatalog) return fromCatalog;
+    if (window.TOLCustomMeds && id && id.startsWith('custom-')) {
+      // Search every condition's custom list (V1 — small number of entries)
+      try {
+        const allConds = (app.data?.CONDITIONS || []).map((c) => c.value);
+        for (const cond of allConds) {
+          const arr = window.TOLCustomMeds.list(cond);
+          const found = arr.find((m) => m.id === id);
+          if (found) return found;
+        }
+      } catch {}
+    }
+    return null;
+  };
   app.getSubtypeOptions = (domainValue) => app.config.SUBTYPES.filter((item) => item.domain === domainValue);
   app.getConditionOptions = (domainValue, subtypeValue) =>
     app.data.CONDITIONS.filter((item) => item.domain === domainValue && item.subtype === subtypeValue);
   app.getSymptomsForCondition = (conditionValue) => app.data.CONDITION_SYMPTOMS[conditionValue] || [];
-  app.getMedicationOptionsForCondition = (conditionValue) => app.catalog.filter((item) => item.condition === conditionValue);
+  app.getMedicationOptionsForCondition = (conditionValue) => {
+    const catalogMatches = app.catalog.filter((item) => item.condition === conditionValue);
+    const customMatches = (window.TOLCustomMeds && window.TOLCustomMeds.list)
+      ? window.TOLCustomMeds.list(conditionValue)
+      : [];
+    return [...customMatches, ...catalogMatches];
+  };
 
   // ─── Paediatric dose engine (BNFc age-banded) ────────────────────
   app.computePedsDose = (option, ctx) => {
@@ -239,8 +263,14 @@
       app.state.workflowMode === 'template'
         ? structuredClone(app.getTemplateById(app.state.templateId) || app.templateDraft || null)
         : null;
+    const prevConditionKey = app.processedSnapshot
+      ? `${app.processedSnapshot.condition}|${app.processedSnapshot.templateSnapshot?.id || ''}`
+      : '';
     app.processedSnapshot = structuredClone({ ...app.state, templateSnapshot: template });
-    app.selectedOptionId = null;
+    const newConditionKey = `${app.processedSnapshot.condition}|${app.processedSnapshot.templateSnapshot?.id || ''}`;
+    if (prevConditionKey !== newConditionKey) {
+      app.selectedOptionId = null;
+    }
   };
 
   app.evaluateOption = (option, ctx) => {
@@ -302,6 +332,49 @@
       hits.find((item) => item.effect === 'caution')?.message ||
       app.textFor(option.rationale, ctx.language);
 
+    // Renal dose adjustment — applied after rules so we can present a per-band
+    // adjusted dose alongside the base dose. Doctor partner flagged that the
+    // renal logic was substandard: a single eGFR caution wasn't enough.
+    let renalAdjustment = null;
+    if (option.renalDosing && Number(ctx.egfr) > 0) {
+      const eg = Number(ctx.egfr);
+      if (option.renalDosing.stopBelow !== undefined && eg < option.renalDosing.stopBelow) {
+        renalAdjustment = {
+          stop: true,
+          note: `eGFR ${eg} below safe threshold (${option.renalDosing.stopBelow}). Do not initiate; continue only if already established and stable.`,
+        };
+        if (status !== 'blocked') {
+          status = 'caution';
+          score -= 4;
+          hits.push({ effect: 'caution', message: renalAdjustment.note });
+        }
+      } else {
+        const band = (option.renalDosing.thresholds || []).find(
+          (t) => eg >= (t.minEgfr || 0) && eg < (t.maxEgfr || Infinity),
+        );
+        if (band) {
+          renalAdjustment = {
+            stop: false,
+            dose: band.dose,
+            sig: band.sig,
+            note: band.note,
+          };
+        }
+      }
+    }
+
+    // If a renal-adjusted sig is in play, swap the order's sig so the copy pack
+    // uses the safe dose. Keep the original under originalSig for display.
+    let effectiveOrder = option.order;
+    if (renalAdjustment && !renalAdjustment.stop && renalAdjustment.sig) {
+      effectiveOrder = {
+        ...option.order,
+        sig: { en: renalAdjustment.sig, fr: option.order?.sig?.fr || renalAdjustment.sig },
+        medication: option.order?.medication ? `${option.order.medication.split(' ')[0]} ${renalAdjustment.dose}` : option.order?.medication,
+        _renalAdjusted: true,
+      };
+    }
+
     return {
       id: option.id,
       label: app.textFor(option.labels, ctx.language),
@@ -312,8 +385,13 @@
       cons: option.cons[ctx.language] || option.cons.en,
       evidence: option.evidence[ctx.language] || option.evidence.en,
       regionData,
-      dosePreview: app.textFor(option.dose, ctx.language),
-      order: option.order,
+      dosePreview: renalAdjustment && !renalAdjustment.stop && renalAdjustment.dose
+        ? `${renalAdjustment.dose} (renal-adjusted, eGFR ${Number(ctx.egfr)})`
+        : app.textFor(option.dose, ctx.language),
+      order: effectiveOrder,
+      originalOrder: option.order,
+      renalAdjustment,
+      _custom: option._custom || false,
       hits,
       primaryReason,
       price: app.formatCurrency(regionData.price, ctx.region),
@@ -323,8 +401,7 @@
   };
 
   app.evaluateOptions = (ctx) =>
-    app.catalog
-      .filter((item) => item.condition === ctx.condition)
+    app.getMedicationOptionsForCondition(ctx.condition)
       .map((item) => app.evaluateOption(item, ctx))
       .sort((a, b) => {
         const priority = { eligible: 0, caution: 1, blocked: 2 };
@@ -439,6 +516,19 @@
         body: `${blockedCount} package${blockedCount === 1 ? '' : 's'} are blocked by the current patient or market fit.`,
       });
     }
+
+    // Drug–drug interactions: cross-reference selected option vs ctx.currentMeds
+    if (window.TOLInteractions && Array.isArray(ctx.currentMeds) && ctx.currentMeds.length) {
+      const selectedId = (typeof window !== 'undefined' && window.TOL?.selectedOptionId) || null;
+      const usable = options.filter((o) => o.status !== 'blocked');
+      const target = usable.find((o) => o.id === selectedId) || usable[0];
+      if (target) {
+        const meta = app.getOptionMeta(target.id);
+        const medText = meta?.order?.medication || target.label || '';
+        const interactionHits = window.TOLInteractions.check(medText, ctx.currentMeds);
+        interactionHits.forEach((hit) => checks.push(hit));
+      }
+    }
     return checks;
   };
 
@@ -513,7 +603,17 @@
   }
 
   function inferQuantityUnit(quantity) {
-    return String(quantity?.unit || '').trim();
+    const raw = String(quantity?.unit || '').trim();
+    if (!raw) return '';
+    const lower = raw.toLowerCase();
+    if (lower === 'capsules') return 'capsule';
+    if (lower === 'tablets') return 'tablet';
+    if (lower === 'patches') return 'patch';
+    if (lower === 'suppositories') return 'suppository';
+    if (lower.endsWith('s') && lower !== 'mgs' && lower !== 'mls') {
+      return raw.slice(0, -1);
+    }
+    return raw;
   }
 
   function buildPlatformFieldMap(canonical) {
@@ -521,6 +621,7 @@
       medication: canonical.medicationDisplay,
       sig: canonical.sig,
       quantity: canonical.dispense.raw,
+      quantityAmount: canonical.dispense.amount || canonical.dispense.raw,
       refills: canonical.refills,
       duration: canonical.duration,
       daysSupply: canonical.daysSupply,
@@ -616,6 +717,7 @@
       nextgen: {
         fields: {
           ...usStructured,
+          quantity: shared.quantityAmount,
           unitType: shared.unitType,
           daysSupply: shared.daysSupply,
           reasonForRx: shared.reasonForRx,
@@ -632,7 +734,7 @@
           medicationDisplay: shared.medication,
           medication: shared.medication,
           sig: shared.sig,
-          quantity: shared.quantity,
+          quantity: shared.quantityAmount,
           unitType: shared.unitType,
           refills: shared.refills,
           daysSupply: shared.daysSupply,

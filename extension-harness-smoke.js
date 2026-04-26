@@ -180,24 +180,57 @@ async function testControlPage(context) {
   await page.close();
 }
 
+async function testTolSiteHidden(context) {
+  const page = await context.newPage();
+  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(800);
+  const visibleFab = await page.locator('#__tol_inline_fab').isVisible().catch(() => false);
+  if (visibleFab) throw new Error('TOL widget should not appear on the TOL site.');
+  await page.close();
+}
+
 async function testPsSuiteFill(context) {
   const page = await context.newPage();
   await page.goto(`${BASE_URL}/emr-harness/pssuite-rx.html`, { waitUntil: 'domcontentloaded' });
   await page.locator('#__tol_inline_fab').waitFor({ state: 'visible', timeout: 5000 });
-  await writeClipboard(page, createPayload('pssuite'));
+  await writeClipboard(page, createPayload('pssuite', {
+    medicationDisplay: 'Trimethoprim-sulfamethoxazole DS 160/800 mg tablet',
+    dispense: { raw: '14 tablets', amount: '14', unit: 'tablets' },
+    unitType: 'tablet',
+  }));
   await openInlinePanel(page);
   await page.locator('#__tol_inline_read').click();
   await page.locator('#__tol_inline_fill').click();
-  await page.waitForTimeout(1200);
+  try {
+    await page.waitForFunction(() => (document.querySelector('#txtQuantity')?.value || '').length > 0, null, { timeout: 8000 });
+  } catch (error) {
+    const debug = await page.evaluate(() => ({
+      status: document.querySelector('#__tol_inline_status')?.textContent || '',
+      overlayTitle: document.querySelector('#__tol_inline_overlay_title')?.textContent || '',
+      overlayBody: document.querySelector('#__tol_inline_overlay_body')?.textContent || '',
+      medication: document.querySelector('#txtDrugName')?.value || '',
+      sig: document.querySelector('#txtSig')?.value || '',
+      quantity: document.querySelector('#txtQuantity')?.value || '',
+      refills: document.querySelector('#txtRefills')?.value || '',
+    }));
+    throw new Error(`PS Suite fill timed out: ${JSON.stringify(debug)}`);
+  }
 
   const values = await page.evaluate(() => ({
     medication: document.querySelector('#txtDrugName')?.value || '',
     sig: document.querySelector('#txtSig')?.value || '',
     quantity: document.querySelector('#txtQuantity')?.value || '',
     refills: document.querySelector('#txtRefills')?.value || '',
+    focusedEditable: (() => {
+      const input = document.querySelector('#txtQuantity');
+      input.focus();
+      input.value = '15 tablets';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      return document.activeElement === input && input.value === '15 tablets';
+    })(),
   }));
 
-  if (!values.medication || !values.sig || !values.quantity) {
+  if (!values.medication || !values.sig || !values.quantity || !values.focusedEditable) {
     throw new Error(`PS Suite fill failed: ${JSON.stringify(values)}`);
   }
   await page.close();
@@ -207,24 +240,34 @@ async function testOscarFill(context) {
   const page = await context.newPage();
   await page.goto(`${BASE_URL}/emr-harness/oscar-rx.html`, { waitUntil: 'domcontentloaded' });
   await page.locator('#__tol_inline_fab').waitFor({ state: 'visible', timeout: 5000 });
-  await writeClipboard(page, createPayload('oscar'));
+  await writeClipboard(page, createPayload('oscar', {
+    medicationDisplay: 'Trimethoprim-sulfamethoxazole DS 160/800 mg tablet',
+    dispense: { raw: '14 tablets', amount: '14', unit: 'tablets' },
+    unitType: 'tablet',
+  }));
   await openInlinePanel(page);
   await page.locator('#__tol_inline_read').click();
   await page.locator('#__tol_inline_fill').click();
-  await page.waitForTimeout(1600);
+  await page.waitForFunction(() => (document.querySelector('#rxText input[id^="quantity_"]')?.value || '').length > 0, null, { timeout: 8000 });
 
   const values = await page.evaluate(() => {
     const instruction = document.querySelector('#rxText textarea[id^="instructions_"]');
     const quantity = document.querySelector('#rxText input[id^="quantity_"]');
     const repeats = document.querySelector('#rxText input[id^="repeats_"]');
+    if (quantity) {
+      quantity.focus();
+      quantity.value = '15 tablets';
+      quantity.dispatchEvent(new Event('input', { bubbles: true }));
+    }
     return {
       instruction: instruction?.value || '',
       quantity: quantity?.value || '',
       repeats: repeats?.value || '',
+      editable: !!quantity && document.activeElement === quantity && quantity.value === '15 tablets',
     };
   });
 
-  if (!values.instruction || !values.quantity) {
+  if (!values.instruction || !values.quantity || !values.editable) {
     throw new Error(`OSCAR fill failed: ${JSON.stringify(values)}`);
   }
   await page.close();
@@ -238,7 +281,7 @@ async function testNextGenFill(context) {
   await openInlinePanel(page);
   await page.locator('#__tol_inline_read').click();
   await page.locator('#__tol_inline_fill').click();
-  await page.waitForTimeout(1200);
+  await page.waitForFunction(() => (document.querySelector('#quantity')?.value || '').length > 0, null, { timeout: 8000 });
 
   const values = await page.evaluate(() => ({
     medication: document.querySelector('#medication')?.value || '',
@@ -270,6 +313,7 @@ async function main() {
     });
 
     await testControlPage(context);
+    await testTolSiteHidden(context);
     await testPsSuiteFill(context);
     await testOscarFill(context);
     await testNextGenFill(context);

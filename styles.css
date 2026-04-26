@@ -726,11 +726,59 @@ select:focus,
   border-radius: var(--radius-sm);
   background: var(--surface);
   font-size: 12px;
-  transition: background 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+  cursor: pointer;
+  position: relative;
 }
 
 .alt-row:hover {
   background: var(--surface-alt);
+  border-color: var(--teal);
+}
+
+.alt-row:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+
+.alt-row.is-excluded {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.alt-row .alt-exclude-btn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 50%;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alt-row .alt-exclude-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.selected-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .alt-row + .alt-row {
@@ -2740,6 +2788,404 @@ select:focus,
 .alt-row.selected {
   background: var(--teal-light);
   border-color: var(--teal);
+}
+
+.custom-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #6d28d9;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-left: 4px;
+}
+
+.custom-badge.custom-badge-sm {
+  font-size: 9px;
+  padding: 0 5px;
+}
+
+.primary-card.is-custom {
+  border-left: 4px solid #6d28d9;
+}
+
+.alt-row.is-custom {
+  border-left: 3px solid #6d28d9;
+}
+
+.tag-sm.tag-warn {
+  background: rgba(212, 160, 23, 0.15);
+  color: #92670a;
+  border: 1px solid rgba(212, 160, 23, 0.4);
+}
+
+/* Custom drug modal */
+.custom-modal-overlay,
+.save-template-overlay,
+.fill-failure-overlay,
+.shortcut-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  padding: 16px;
+}
+
+.custom-modal-inner,
+.save-template-inner,
+.fill-failure-inner,
+.shortcut-inner {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 22px 70px rgba(15, 23, 42, .25);
+}
+
+.custom-modal-head,
+.save-template-head,
+.fill-failure-head,
+.shortcut-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.custom-modal-head h2,
+.save-template-head h2,
+.fill-failure-head h2,
+.shortcut-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.custom-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.custom-form-row label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.custom-form-row input,
+.custom-form-row textarea,
+.custom-form-row select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.custom-form-row textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+.custom-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.custom-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.custom-tabs button {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.custom-tabs button.active {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+  font-weight: 600;
+}
+
+.custom-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.custom-form-actions button {
+  flex: 1;
+  padding: 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.custom-form-actions button.primary {
+  background: var(--teal);
+  color: #fff;
+  border-color: var(--teal);
+  font-weight: 600;
+}
+
+.custom-form-error {
+  color: var(--danger);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.add-med-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed var(--teal);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--teal);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.add-med-btn:hover {
+  background: var(--teal-light);
+}
+
+/* Recent Rx tray */
+.recent-rx-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.recent-rx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.recent-rx-chip:hover {
+  background: var(--teal-light);
+  border-color: var(--teal);
+}
+
+.recent-rx-chip-clear {
+  margin-left: 2px;
+  color: var(--muted);
+}
+
+/* Sig builder */
+.sig-builder {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  margin-top: 6px;
+}
+
+.sig-builder label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sig-builder select,
+.sig-builder input {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  width: 100%;
+  font-size: 12px;
+}
+
+.sig-builder-preview {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 6px 8px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--line);
+}
+
+.sig-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* Fill failure panel inside extension overlay (in-page) */
+.tol-fill-failures {
+  border: 1px solid var(--danger, #c0392b);
+  border-radius: var(--radius-sm);
+  background: #fdf2f2;
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.tol-fill-failures strong {
+  display: block;
+  color: #92240e;
+  margin-bottom: 4px;
+}
+
+.tol-fill-failures button {
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+/* Compact link-style action button — used in place of full buttons where
+   real-estate is at a premium (declutter pass). */
+.link-action {
+  background: none;
+  border: none;
+  color: var(--teal);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin: 0;
+}
+
+.link-action:hover {
+  text-decoration: underline;
+}
+
+.output-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+/* Recent-rx fold — collapsed by default, takes one summary row when closed */
+.recent-rx-fold {
+  margin-top: 4px;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  padding: 0;
+}
+
+.recent-rx-fold summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 5px 8px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.recent-rx-fold summary::-webkit-details-marker { display: none; }
+.recent-rx-fold[open] summary { border-bottom: 1px solid var(--line-light); }
+.recent-rx-fold .recent-rx-tray { padding: 6px 8px; margin: 0; }
+
+/* Renal dose adjustment banner */
+.renal-banner {
+  margin-top: 6px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(13, 115, 119, 0.08);
+  border-left: 3px solid var(--teal);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.renal-banner strong {
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.renal-banner-stop {
+  background: rgba(192, 57, 43, 0.08);
+  border-left-color: var(--danger);
+}
+
+.renal-banner-stop strong {
+  color: var(--danger);
+}
+
+/* Keyboard shortcut overlay */
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px 12px;
+  font-size: 13px;
+}
+
+.shortcut-grid kbd {
+  font-family: ui-monospace, monospace;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .col-inner {

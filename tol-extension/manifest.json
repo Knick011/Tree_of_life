@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TOL Scribe EMR Filler",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "description": "Fills prescription fields in supported EMRs from TOL Scribe clipboard payloads.",
   "permissions": [
     "activeTab",
@@ -50,8 +50,12 @@
         "http://127.0.0.1:4173/*",
         "http://localhost:4173/*"
       ],
+      "exclude_matches": [
+        "https://knick011.github.io/Tree_of_life/*"
+      ],
       "js": [
         "emr-models.js",
+        "recorder.js",
         "content.js"
       ],
       "run_at": "document_idle"

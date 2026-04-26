@@ -50,15 +50,28 @@
       const choices = document.getElementById('autocomplete_choices');
       const rxText = document.getElementById('rxText');
       const drugs = [
+        'SULFAMETHOXAZOLE 800MG/TRIMETHOPRIM 160MG TABLET',
         'Nitrofurantoin 100 mg capsule',
         'Amoxicillin 500 mg capsule',
         'Trimethoprim 100 mg tablet',
         'Hydrocortisone 1% cream',
       ];
 
+      function normalizeDrugText(value) {
+        return String(value || '')
+          .toLowerCase()
+          .replace(/[/-]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
       function renderChoices(query) {
-        const q = String(query || '').trim().toLowerCase();
-        const matches = drugs.filter((drug) => drug.toLowerCase().includes(q));
+        const q = normalizeDrugText(query);
+        const queryTokens = q.split(' ').filter(Boolean);
+        const matches = drugs.filter((drug) => {
+          const normalizedDrug = normalizeDrugText(drug);
+          return normalizedDrug.includes(q) || queryTokens.every((token) => normalizedDrug.includes(token));
+        });
         choices.innerHTML = '';
         if (!q || !matches.length) {
           choices.hidden = true;

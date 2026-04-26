@@ -13,6 +13,7 @@ const fillBtn = document.getElementById('fillBtn');
 const readBtn = document.getElementById('readBtn');
 const loadBtn = document.getElementById('loadBtn');
 const openPanelBtn = document.getElementById('openPanelBtn');
+const teachBtn = document.getElementById('teachBtn');
 const emrSelect = document.getElementById('emrSelect');
 const payloadInput = document.getElementById('payloadInput');
 const emrModels = globalThis.TOLEmrModels;
@@ -419,6 +420,22 @@ loadBtn.addEventListener('click', () => {
 readBtn.addEventListener('click', readClipboard);
 fillBtn.addEventListener('click', fillActivePage);
 openPanelBtn.addEventListener('click', openInlinePanel);
+
+teachBtn.addEventListener('click', async () => {
+  try {
+    const tabs = await queryActiveTab();
+    const tab = tabs[0];
+    if (!tab?.id) {
+      setStatus('empty', { title: 'No active tab', body: 'Open the EMR tab and try again.' });
+      return;
+    }
+    await sendMessage(tab.id, { type: 'TOL_RECORDER_START', emrType: getSelectedEmr() });
+    setStatus('ready', { title: 'Recorder started', body: 'Switch to the EMR tab and click each prescription field.' });
+    window.close();
+  } catch {
+    setStatus('empty', { title: 'Could not start recorder', body: 'Refresh the EMR tab and try again.' });
+  }
+});
 
 emrSelect.addEventListener('change', async () => {
   await storageSet({ emrType: emrSelect.value });
