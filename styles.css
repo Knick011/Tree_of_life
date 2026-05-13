@@ -45,6 +45,11 @@ body.site-doc-page {
     linear-gradient(180deg, #f7f8fa 0%, #eef2f4 100%);
 }
 
+body.formulary-mode {
+  height: 100%;
+  overflow: hidden;
+}
+
 :focus-visible {
   outline: 2px solid var(--teal);
   outline-offset: 1px;
@@ -159,6 +164,38 @@ body.site-doc-page {
   display: grid;
   grid-template-columns: 280px 1fr 360px;
   height: calc(100vh - 48px);
+}
+
+.app-dashboard.is-formularies {
+  grid-template-columns: 1fr;
+}
+
+.app-dashboard.is-formularies .col-patient,
+.app-dashboard.is-formularies .col-output {
+  display: none;
+}
+
+.app-dashboard.is-formularies .col-clinical {
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  border-right: 0;
+  padding: 10px 14px;
+}
+
+.app-dashboard.is-formularies .col-inner {
+  height: 100%;
+  min-height: 0;
+}
+
+.app-dashboard.is-formularies #clinicalPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.app-dashboard.is-formularies .formulary-shell {
+  flex: 1 1 auto;
+  height: auto;
 }
 
 .col-patient,
@@ -3627,6 +3664,478 @@ select:focus,
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-top: 6px;
+}
+
+/* Formularies */
+
+.formulary-shell {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  overflow: hidden;
+}
+
+.formulary-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.formulary-title h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.formulary-title p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.formulary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 420px;
+}
+
+.formulary-search {
+  width: 260px;
+  min-height: 30px;
+  margin: 0;
+}
+
+.formulary-view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.formulary-view-toggle button {
+  height: 30px;
+  min-width: 74px;
+  padding: 0 12px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.formulary-view-toggle button:last-child {
+  border-right: 0;
+}
+
+.formulary-view-toggle button.active {
+  background: var(--teal);
+  color: #fff;
+}
+
+.formulary-body {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.formulary-body.view-listed {
+  display: block;
+}
+
+.formulary-body.view-grouped {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) minmax(300px, 0.72fr);
+  gap: 10px;
+}
+
+.formulary-body.view-listed.selected-condition {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+}
+
+.formulary-selected-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.formulary-body.view-listed.selected-condition .formulary-med-panel {
+  width: min(1060px, 100%);
+}
+
+.formulary-listed-board,
+.formulary-domain-rail,
+.formulary-grouped-conditions,
+.formulary-med-panel {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.formulary-listed-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  align-content: start;
+}
+
+.formulary-listed-column {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  min-width: 0;
+}
+
+.formulary-area-row {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 5px;
+  align-items: start;
+  padding: 2px 4px;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.formulary-area-name {
+  min-width: 0;
+}
+
+.formulary-area-name strong,
+.formulary-panel-head strong,
+.formulary-med-head strong {
+  display: block;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.formulary-area-name span,
+.formulary-domain-btn span,
+.formulary-condition-btn span,
+.formulary-condition-card span {
+  display: block;
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.formulary-area-name span {
+  display: none;
+}
+
+.formulary-condition-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.formulary-condition-btn,
+.formulary-condition-card,
+.formulary-domain-btn {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.formulary-condition-btn {
+  height: 17px;
+  max-width: 138px;
+  padding: 1px 5px;
+}
+
+.formulary-condition-btn strong {
+  display: block;
+  overflow: hidden;
+  font-size: 8.5px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formulary-condition-btn span {
+  display: none;
+}
+
+.formulary-condition-btn:hover,
+.formulary-condition-card:hover,
+.formulary-domain-btn:hover {
+  border-color: rgba(13, 115, 119, 0.35);
+}
+
+.formulary-condition-btn.active,
+.formulary-condition-card.active,
+.formulary-domain-btn.active {
+  border-color: var(--teal);
+  background: var(--teal-light);
+}
+
+.formulary-domain-rail {
+  display: grid;
+  grid-auto-rows: 24px;
+  gap: 2px;
+  align-content: start;
+}
+
+.formulary-domain-btn {
+  padding: 3px 6px;
+}
+
+.formulary-domain-btn strong {
+  display: block;
+  overflow: hidden;
+  font-size: 10px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formulary-domain-btn span {
+  display: none;
+}
+
+.formulary-grouped-conditions,
+.formulary-med-panel {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.formulary-med-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, auto) minmax(0, 1fr);
+  gap: 7px;
+  align-content: start;
+}
+
+.formulary-body.view-listed.selected-condition .formulary-med-panel {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.formulary-body.view-listed.selected-condition .formulary-med-head {
+  grid-column: 1 / -1;
+}
+
+.formulary-body.view-listed.selected-condition .formulary-med-list {
+  grid-column: 1;
+}
+
+.formulary-body.view-listed.selected-condition .lookup-detail {
+  grid-column: 2;
+}
+
+.formulary-panel-head {
+  margin-bottom: 8px;
+}
+
+.formulary-condition-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+  align-content: start;
+}
+
+.formulary-condition-card {
+  min-height: 52px;
+  padding: 7px 8px;
+}
+
+.formulary-condition-card strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.18;
+}
+
+.formulary-med-panel.empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.formulary-med-panel.empty strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.formulary-med-panel.empty p {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+.formulary-med-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.formulary-med-head p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.formulary-med-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+  gap: 4px;
+  align-content: start;
+}
+
+.formulary-body.view-grouped .formulary-med-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.formulary-shell .lookup-med-row {
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start;
+  padding: 5px 6px;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.formulary-shell .lookup-med-row + .lookup-med-row {
+  margin-top: 0;
+}
+
+.formulary-shell .lookup-med-row:hover,
+.formulary-shell .lookup-med-row.active {
+  background: var(--surface-alt);
+  border-color: rgba(13, 115, 119, 0.28);
+}
+
+.formulary-shell .lookup-med-row strong,
+.formulary-shell .lookup-med-row em {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formulary-shell .lookup-med-row > span:first-child {
+  min-width: 0;
+}
+
+.formulary-shell .lookup-med-row strong {
+  font-weight: 700;
+}
+
+.formulary-shell .lookup-med-row em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.formulary-shell .lookup-med-row .lookup-meta {
+  flex: 0 0 auto;
+}
+
+.formulary-shell .lookup-med-row .status-badge {
+  display: none;
+}
+
+.formulary-body.view-grouped .lookup-med-row {
+  min-height: 25px;
+  padding: 4px 5px;
+  align-items: center;
+}
+
+.formulary-body.view-grouped .lookup-med-row em,
+.formulary-body.view-grouped .lookup-med-row .lookup-meta {
+  display: none;
+}
+
+.formulary-shell .lookup-detail {
+  min-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+}
+
+.formulary-shell .lookup-detail > strong {
+  display: block;
+  font-size: 14px;
+}
+
+.formulary-shell .lookup-detail > p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.formulary-shell .lookup-detail-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.formulary-shell .lookup-detail-grid ul {
+  margin: 2px 0 0;
+  padding-left: 12px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.formulary-body.view-grouped .lookup-detail-grid,
+.formulary-body.view-grouped .formulary-price-row {
+  display: none;
+}
+
+.formulary-shell .rx-block {
+  min-height: 0;
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.formulary-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.formulary-empty {
+  padding: 14px 16px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.formulary-empty strong,
+.formulary-empty span {
+  display: block;
+}
+
+.formulary-empty span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 /* ─── Refine FAB + modal ────────────────────────── */

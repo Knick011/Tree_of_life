@@ -206,7 +206,7 @@ window.TOLConfig = {
   WORKFLOW_MODES: [
     { value: 'guided', en: 'Guided prescribing', fr: 'Prescription guidee' },
     { value: 'template', en: 'Saved template / fast apply', fr: 'Modele enregistre / application rapide' },
-    { value: 'lookup', en: 'Lookup / formulary browser', fr: 'Consultation / navigateur formulaire' },
+    { value: 'lookup', en: 'Formularies', fr: 'Formulaires' },
     { value: 'scores', en: 'Clinical decision support', fr: 'Aide a la decision clinique' },
   ],
   HEPATIC_OPTIONS: [
@@ -330,7 +330,7 @@ window.TOLConfig = {
     { value: 'ppi', en: 'PPI', fr: 'IPP' },
   ],
   state: {
-    workflowMode: 'guided',
+    workflowMode: 'lookup',
     region: 'CA',
     subRegion: 'ON',
     emrType: 'pssuite',

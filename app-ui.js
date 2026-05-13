@@ -937,9 +937,9 @@
 
     // Mode toggle
     h += `<div class="mode-toggle">`;
+    h += `<button type="button" class="${s.workflowMode === 'lookup' ? 'active' : ''}" data-set-field="workflowMode" data-value="lookup">Formularies</button>`;
     h += `<button type="button" class="${s.workflowMode === 'guided' ? 'active' : ''}" data-set-field="workflowMode" data-value="guided">Guided</button>`;
     h += `<button type="button" class="${s.workflowMode === 'template' ? 'active' : ''}" data-set-field="workflowMode" data-value="template">Template</button>`;
-    h += `<button type="button" class="${s.workflowMode === 'lookup' ? 'active' : ''}" data-set-field="workflowMode" data-value="lookup">Lookup</button>`;
     h += `<button type="button" class="${s.workflowMode === 'scores' ? 'active' : ''}" data-set-field="workflowMode" data-value="scores">Scores</button>`;
     h += `</div>`;
 
@@ -1212,100 +1212,195 @@
     return h;
   }
 
-  function renderLookupSection() {
-    const searchVal = app._searchLookup || '';
+  function getFormularyGroups(searchVal = '') {
+    const q = searchVal.toLowerCase().trim();
+    const byCondition = new Map();
+    app.catalog.forEach((med) => {
+      if (!med.condition) return;
+      if (!byCondition.has(med.condition)) byCondition.set(med.condition, []);
+      byCondition.get(med.condition).push(med);
+    });
+
+    const groups = app.config.DOMAINS
+      .map((domain) => {
+        const conditions = app.data.CONDITIONS
+          .filter((condition) => condition.domain === domain.value && byCondition.has(condition.value))
+          .map((condition) => {
+            const meds = byCondition.get(condition.value) || [];
+            const subtype = app.getSubtypeMeta(condition.subtype);
+            const haystack = [
+              text(domain),
+              text(subtype),
+              text(condition),
+              text(condition.summary),
+              meds.map((med) => `${text(med.labels)} ${text(med.type)} ${text(med.dose)}`).join(' '),
+            ].join(' ').toLowerCase();
+            return {
+              meta: condition,
+              meds,
+              subtype,
+              visible: !q || haystack.includes(q),
+            };
+          })
+          .filter((item) => item.visible)
+          .sort((a, b) => text(a.meta).localeCompare(text(b.meta)));
+        return {
+          domain,
+          conditions,
+          medCount: conditions.reduce((sum, item) => sum + item.meds.length, 0),
+        };
+      })
+      .filter((group) => group.conditions.length);
+
+    return groups;
+  }
+
+  function getFormularySelectedCondition(groups) {
+    const allConditions = groups.flatMap((group) => group.conditions);
+    return allConditions.find((item) => item.meta.value === app.state.condition) || null;
+  }
+
+  function renderFormularyConditionButton(item, group, className = 'formulary-condition-btn') {
+    const active = app.state.condition === item.meta.value;
+    return `<button type="button" class="${className} ${active ? 'active' : ''}" data-formulary-condition="${item.meta.value}" data-formulary-domain="${group.domain.value}" title="${escape(text(item.meta))}">
+      <strong>${escape(text(item.meta))}</strong>
+      <span>${item.meds.length} med${item.meds.length !== 1 ? 's' : ''}</span>
+    </button>`;
+  }
+
+  function renderFormularyMedicationPanel(selectedCondition) {
     const region = app.state.region || 'CA';
-    let h = '';
-
-    h += `<div class="section-label">Formulary browser</div>`;
-    h += `<input type="search" class="search-box" placeholder="Search any medication or condition..." data-search-field="lookupSearch" value="${escape(searchVal)}" />`;
-
-    // Group all medications by condition
-    const conditionGroups = {};
-    app.data.CONDITIONS.forEach((c) => {
-      const meds = app.catalog.filter((m) => m.condition === c.value);
-      if (meds.length) conditionGroups[c.value] = { meta: c, meds };
-    });
-
-    const q = searchVal.toLowerCase();
-
-    h += `<div style="margin-top:8px">`;
-    Object.values(conditionGroups).forEach((group) => {
-      const condLabel = text(group.meta);
-      const domainLabel = text(app.getDomainMeta(group.meta.domain));
-      const subtypeLabel = text(app.getSubtypeMeta(group.meta.subtype));
-
-      // Filter meds by search
-      const matchedMeds = group.meds.filter((m) => {
-        if (!q) return true;
-        const label = text(m.labels);
-        const condText = condLabel;
-        return `${label} ${condText} ${domainLabel} ${subtypeLabel}`.toLowerCase().includes(q);
-      });
-
-      if (!matchedMeds.length) return;
-
-      h += `<div class="lookup-group">`;
-      h += `<div class="lookup-group-head">`;
-      h += `<strong>${escape(condLabel)}</strong>`;
-      h += `<span class="tag-sm tag-teal">${escape(domainLabel)}</span>`;
-      h += `<span class="tag-sm">${matchedMeds.length} med${matchedMeds.length !== 1 ? 's' : ''}</span>`;
-      h += `</div>`;
-
-      matchedMeds.forEach((m) => {
-        const regionData = m.regionData[region];
-        const price = regionData?.available ? app.formatCurrency(regionData.price, region) : 'n/a';
-        const status = !regionData?.available ? 'blocked' : regionData.preferred ? 'eligible' : 'caution';
-
-        h += `<div class="lookup-med-row" data-lookup-med="${m.id}" data-lookup-condition="${group.meta.value}">`;
-        h += `<div><strong>${escape(text(m.labels))}</strong><span style="color:var(--muted);font-size:11px;display:block">${escape(text(m.dose))}</span></div>`;
-        h += `<div class="lookup-meta">`;
-        h += `<span class="tag-sm">${escape(price)}</span>`;
-        h += `<span class="status-badge status-${status}">${escape(status)}</span>`;
-        h += `</div>`;
-        h += `</div>`;
-      });
-
-      h += `</div>`;
-    });
-
-    if (q && !Object.values(conditionGroups).some((g) => g.meds.some((m) => `${text(m.labels)} ${text(g.meta)}`.toLowerCase().includes(q)))) {
-      h += `<div class="option-item"><span>No matches for "${escape(searchVal)}"</span></div>`;
+    if (!selectedCondition) {
+      return `<section class="formulary-med-panel empty">
+        <div class="section-label">Medication list</div>
+        <strong>Select a condition</strong>
+        <p>Choose any condition to review available medications, pricing, pros and cons, and the Rx preview.</p>
+      </section>`;
     }
 
+    const medList = selectedCondition.meds;
+    const selectedMed = app.getOptionMeta(app._lookupSelectedMed) || medList[0] || null;
+    let h = `<section class="formulary-med-panel">`;
+    h += `<div class="formulary-med-head">`;
+    h += `<div><span class="section-label">Medication list</span><strong>${escape(text(selectedCondition.meta))}</strong><p>${escape(text(selectedCondition.meta.summary))}</p></div>`;
+    h += `<span class="tag-sm tag-teal">${medList.length} med${medList.length !== 1 ? 's' : ''}</span>`;
+    h += `</div>`;
+    h += `<div class="formulary-med-list">`;
+    medList.forEach((m) => {
+      const regionData = m.regionData[region];
+      const price = regionData?.available ? app.formatCurrency(regionData.price, region) : 'n/a';
+      const status = !regionData?.available ? 'blocked' : regionData.preferred ? 'eligible' : 'caution';
+      h += `<button type="button" class="lookup-med-row ${selectedMed?.id === m.id ? 'active' : ''}" data-lookup-med="${m.id}" data-lookup-condition="${selectedCondition.meta.value}">`;
+      h += `<span><strong>${escape(text(m.labels))}</strong><em>${escape(text(m.dose))}</em></span>`;
+      h += `<span class="lookup-meta"><span class="tag-sm">${escape(price)}</span><span class="status-badge status-${status}">${escape(status)}</span></span>`;
+      h += `</button>`;
+    });
     h += `</div>`;
 
-    // Detail panel for selected lookup med
-    if (app._lookupSelectedMed) {
-      const med = app.getOptionMeta(app._lookupSelectedMed);
-      if (med) {
-        const regionData = med.regionData[region];
-        h += `<div class="lookup-detail">`;
-        h += `<strong style="font-size:14px">${escape(text(med.labels))}</strong>`;
-        h += `<div style="color:var(--muted);font-size:12px;margin-top:2px">${escape(text(med.type))}</div>`;
-        h += `<div style="color:var(--muted);font-size:12px;margin-top:2px">${escape(text(med.dose))}</div>`;
-        h += `<div class="lookup-detail-grid">`;
-        h += `<div><strong style="font-size:10px;color:var(--muted);text-transform:uppercase">PROS</strong><ul style="margin:2px 0 0;padding-left:12px;font-size:11px;color:var(--muted)">${(med.pros.en || []).slice(0, 3).map((p) => `<li>${escape(p)}</li>`).join('')}</ul></div>`;
-        h += `<div><strong style="font-size:10px;color:var(--muted);text-transform:uppercase">CONS</strong><ul style="margin:2px 0 0;padding-left:12px;font-size:11px;color:var(--muted)">${(med.cons.en || []).slice(0, 3).map((c) => `<li>${escape(c)}</li>`).join('')}</ul></div>`;
+    if (selectedMed) {
+      h += `<div class="lookup-detail">`;
+      h += `<strong>${escape(text(selectedMed.labels))}</strong>`;
+      h += `<p>${escape(text(selectedMed.type))} · ${escape(text(selectedMed.dose))}</p>`;
+      h += `<div class="lookup-detail-grid">`;
+      h += `<div><span>Pros</span><ul>${(selectedMed.pros.en || []).slice(0, 3).map((p) => `<li>${escape(p)}</li>`).join('')}</ul></div>`;
+      h += `<div><span>Cons</span><ul>${(selectedMed.cons.en || []).slice(0, 3).map((c) => `<li>${escape(c)}</li>`).join('')}</ul></div>`;
+      h += `</div>`;
+      h += `<div class="rx-block-head"><strong>Rx preview</strong></div>`;
+      h += `<div class="rx-block">${escape(`${selectedMed.order.medication}\n${text(selectedMed.order.sig)}\nDisp: ${selectedMed.order.dispense}\nDuration: ${selectedMed.order.duration}`)}</div>`;
+      h += `<div class="formulary-price-row">`;
+      app.config.REGIONS.forEach((r) => {
+        const rd = selectedMed.regionData[r.value];
+        if (rd?.available) h += `<span class="tag-sm ${r.value === region ? 'tag-teal' : ''}">${escape(text(r))}: ${escape(app.formatCurrency(rd.price, r.value))}</span>`;
+      });
+      h += `</div>`;
+      h += `</div>`;
+    }
+    h += `</section>`;
+    return h;
+  }
+
+  function renderLookupSection() {
+    const searchVal = app._searchLookup || '';
+    const view = app._formularyView || 'listed';
+    const groups = getFormularyGroups(searchVal);
+    const selectedCondition = getFormularySelectedCondition(groups);
+    const selectedDomainValue =
+      app._lookupSelectedDomain ||
+      selectedCondition?.meta.domain ||
+      groups[0]?.domain.value ||
+      '';
+    const selectedDomainGroup = groups.find((group) => group.domain.value === selectedDomainValue) || groups[0] || null;
+
+    let h = `<section class="formulary-shell">`;
+    h += `<div class="formulary-top">`;
+    h += `<div class="formulary-title"><span class="section-label">Home</span><h2>Formularies</h2><p>Browse conditions by clinical area, then open the medication options for the selected condition.</p></div>`;
+    h += `<div class="formulary-actions">`;
+    h += `<input type="search" class="search-box formulary-search" placeholder="Search condition or medication..." data-search-field="lookupSearch" value="${escape(searchVal)}" />`;
+    h += `<div class="formulary-view-toggle" aria-label="Formulary layout">`;
+    h += `<button type="button" class="${view === 'listed' ? 'active' : ''}" data-formulary-view="listed">Listed</button>`;
+    h += `<button type="button" class="${view === 'grouped' ? 'active' : ''}" data-formulary-view="grouped">Grouped</button>`;
+    h += `</div></div></div>`;
+
+    if (!groups.length) {
+      h += `<div class="formulary-empty"><strong>No matches</strong><span>Try another condition, medication, or clinical area.</span></div></section>`;
+      return h;
+    }
+
+    if (view === 'grouped') {
+      h += `<div class="formulary-body view-grouped">`;
+      h += `<aside class="formulary-domain-rail">`;
+      groups.forEach((group) => {
+        const active = selectedDomainGroup?.domain.value === group.domain.value;
+        h += `<button type="button" class="formulary-domain-btn ${active ? 'active' : ''}" data-formulary-domain="${group.domain.value}">
+          <strong>${escape(text(group.domain))}</strong><span>${group.conditions.length} conditions</span>
+        </button>`;
+      });
+      h += `</aside>`;
+      h += `<section class="formulary-grouped-conditions">`;
+      h += `<div class="formulary-panel-head"><span class="section-label">Clinical area</span><strong>${escape(text(selectedDomainGroup.domain))}</strong></div>`;
+      h += `<div class="formulary-condition-grid">`;
+      selectedDomainGroup.conditions.forEach((item) => {
+        h += renderFormularyConditionButton(item, selectedDomainGroup, 'formulary-condition-card');
+      });
+      h += `</div></section>`;
+      h += renderFormularyMedicationPanel(selectedCondition);
+      h += `</div>`;
+    } else {
+      if (selectedCondition) {
+        h += `<div class="formulary-body view-listed selected-condition">`;
+        h += `<div class="formulary-selected-toolbar"><button type="button" class="ghost-button ghost-button-secondary" data-formulary-back>All conditions</button><span>${escape(text(app.getDomainMeta(selectedCondition.meta.domain)))} / ${escape(text(selectedCondition.meta))}</span></div>`;
+        h += renderFormularyMedicationPanel(selectedCondition);
         h += `</div>`;
-        // Copy pack for this med
-        h += `<div style="margin-top:6px">`;
-        h += `<div class="rx-block-head"><strong>Rx preview</strong></div>`;
-        h += `<div class="rx-block">${escape(`${med.order.medication}\n${text(med.order.sig)}\nDisp: ${med.order.dispense}\nDuration: ${med.order.duration}`)}</div>`;
-        h += `</div>`;
-        // Market prices
-        h += `<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">`;
-        app.config.REGIONS.forEach((r) => {
-          const rd = med.regionData[r.value];
-          if (rd?.available) {
-            h += `<span class="tag-sm ${r.value === region ? 'tag-teal' : ''}">${escape(text(r))}: ${escape(app.formatCurrency(rd.price, r.value))}</span>`;
-          }
+      } else {
+        h += `<div class="formulary-body view-listed">`;
+        h += `<section class="formulary-listed-board">`;
+        const listedColumns = [[], []];
+        const listedWeights = [0, 0];
+        groups.forEach((group) => {
+          const weight = group.conditions.length + 2;
+          const targetIndex = listedWeights.indexOf(Math.min(...listedWeights));
+          listedColumns[targetIndex].push(group);
+          listedWeights[targetIndex] += weight;
         });
-        h += `</div>`;
+        listedColumns.forEach((column) => {
+          h += `<div class="formulary-listed-column">`;
+          column.forEach((group) => {
+            h += `<div class="formulary-area-row">`;
+            h += `<div class="formulary-area-name"><strong>${escape(text(group.domain))}</strong><span>${group.conditions.length} conditions</span></div>`;
+            h += `<div class="formulary-condition-cloud">`;
+            group.conditions.forEach((item) => {
+              h += renderFormularyConditionButton(item, group);
+            });
+            h += `</div></div>`;
+          });
+          h += `</div>`;
+        });
+        h += `</section>`;
         h += `</div>`;
       }
     }
 
+    h += `</section>`;
     return h;
   }
 
@@ -2287,16 +2382,16 @@
     },
     {
       id: 'lookup',
-      title: 'Formulary Browser',
-      desc: 'Browse all 500+ medications grouped by condition.',
+      title: 'Formularies',
+      desc: 'Browse all 500+ medications by clinical area and condition.',
       icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
       setup: () => {
         applyPatientPreset('adult-f');
       },
       steps: [
-        { sel: '[data-set-field="workflowMode"][data-value="lookup"]', text: 'Switch to Lookup mode', wait: 1500 },
+        { sel: '[data-set-field="workflowMode"][data-value="lookup"]', text: 'Open Formularies', wait: 1500 },
         { sel: '[data-search-field="lookupSearch"]', text: 'Search any medication or condition', noClick: true, wait: 2000 },
-        { sel: '.lookup-group', text: 'Medications grouped by condition with pricing', noClick: true, wait: 2500 },
+        { sel: '.formulary-area-row', text: 'Conditions are grouped by clinical area', noClick: true, wait: 2500 },
       ],
     },
     {
@@ -2498,6 +2593,8 @@
     loadUserTemplatesIntoMemory();
     ensureState();
     autoProcess();
+    document.body.classList.toggle('formulary-mode', app.state.workflowMode === 'lookup');
+    document.querySelector('.app-dashboard')?.classList.toggle('is-formularies', app.state.workflowMode === 'lookup');
     if (dom.headerEmrSelect) dom.headerEmrSelect.value = app.state.emrType;
     renderPatientPanel();
     renderClinicalPanel();
@@ -2538,6 +2635,8 @@
     app._searchGuided ||= '';
     app._searchTemplate ||= '';
     app._searchLookup ||= '';
+    app._formularyView ||= 'listed';
+    app._lookupSelectedDomain ||= '';
     if (app._childBucket === undefined) app._childBucket = null;
     app._lookupSelectedMed ||= '';
     if (app._refineOpen === undefined) app._refineOpen = false;
@@ -2557,7 +2656,11 @@
       if (value === 'template') getLiveTemplateMedicationSource();
       app.state.workflowMode = value;
       if (value === 'template') app.ensureTemplateSelection();
-      if (value === 'lookup') { app._lookupSelectedMed = ''; app._searchLookup = ''; }
+      if (value === 'lookup') {
+        app._lookupSelectedMed = '';
+        app._searchLookup = '';
+        app._formularyView ||= 'listed';
+      }
     } else if (field === 'domain') {
       app.state.domain = value;
       app.ensureGuidedSelections();
@@ -2797,6 +2900,41 @@
         return render();
       }
 
+      const formularyView = e.target.closest('[data-formulary-view]');
+      if (formularyView) {
+        app._formularyView = formularyView.dataset.formularyView || 'listed';
+        return render();
+      }
+
+      const formularyBack = e.target.closest('[data-formulary-back]');
+      if (formularyBack) {
+        app.state.condition = '';
+        app.state.subtype = '';
+        app._lookupSelectedMed = '';
+        return render();
+      }
+
+      const formularyDomain = e.target.closest('[data-formulary-domain]:not([data-formulary-condition])');
+      if (formularyDomain) {
+        app._lookupSelectedDomain = formularyDomain.dataset.formularyDomain;
+        app.state.domain = app._lookupSelectedDomain;
+        app.state.subtype = '';
+        app.state.condition = '';
+        app._lookupSelectedMed = '';
+        return render();
+      }
+
+      const formularyCondition = e.target.closest('[data-formulary-condition]');
+      if (formularyCondition) {
+        const conditionValue = formularyCondition.dataset.formularyCondition;
+        app._lookupSelectedDomain = formularyCondition.dataset.formularyDomain || app.getConditionMeta(conditionValue)?.domain || '';
+        app.applyConditionToState(conditionValue);
+        const firstMed = app.catalog.find((med) => med.condition === conditionValue);
+        app._lookupSelectedMed = firstMed?.id || '';
+        addRecentCondition(conditionValue);
+        return render();
+      }
+
       const setBtn = e.target.closest('[data-set-field]');
       if (setBtn) return updateState(setBtn.dataset.setField, setBtn.dataset.value);
 
@@ -2869,6 +3007,10 @@
       const lookupMed = e.target.closest('[data-lookup-med]');
       if (lookupMed) {
         app._lookupSelectedMed = app._lookupSelectedMed === lookupMed.dataset.lookupMed ? '' : lookupMed.dataset.lookupMed;
+        if (lookupMed.dataset.lookupCondition) {
+          app._lookupSelectedDomain = app.getConditionMeta(lookupMed.dataset.lookupCondition)?.domain || app._lookupSelectedDomain;
+          app.applyConditionToState(lookupMed.dataset.lookupCondition);
+        }
         return render();
       }
 
