@@ -1260,11 +1260,72 @@
     return allConditions.find((item) => item.meta.value === app.state.condition) || null;
   }
 
+  function getFormularyIconName(domainValue) {
+    const icons = {
+      infection: 'pill',
+      sti: 'shield',
+      'mental-health': 'brain',
+      cardiovascular: 'heart',
+      endocrine: 'activity',
+      gi: 'capsule',
+      msk: 'bone',
+      dermatology: 'droplet',
+      'womens-health': 'venus',
+      ent: 'eye',
+      'resp-chronic': 'lungs',
+      allergy: 'shield',
+      neurology: 'brain',
+      hematology: 'droplet',
+      renal: 'kidney',
+      rheumatology: 'bone',
+      urology: 'kidney',
+      geriatrics: 'cross',
+      obstetrics: 'venus',
+      pediatrics: 'cross',
+    };
+    return icons[domainValue] || 'pill';
+  }
+
+  function renderFormularyIcon(iconName, className = 'formulary-icon') {
+    const paths = {
+      activity: '<path d="M4 12h4l2-5 4 10 2-5h4"/>',
+      bone: '<path d="M7 8a3 3 0 1 1 4-4l9 9a3 3 0 1 1-4 4l-9-9Z"/><path d="M5 15a3 3 0 1 0 4 4l7-7"/>',
+      brain: '<path d="M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0 0 6v1a3 3 0 0 0 3 3"/><path d="M15 4a3 3 0 0 1 3 3v1a3 3 0 0 1 0 6v1a3 3 0 0 1-3 3"/><path d="M9 4v16M15 4v16"/>',
+      capsule: '<path d="M10 21 3 14a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8 9 7 7"/>',
+      cross: '<path d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6Z"/>',
+      droplet: '<path d="M12 3s6 6.3 6 11a6 6 0 0 1-12 0c0-4.7 6-11 6-11Z"/>',
+      eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+      heart: '<path d="M20.8 8.6a5 5 0 0 0-8.1-3.9L12 5.4l-.7-.7a5 5 0 1 0-7.1 7.1L12 19.6l7.8-7.8a5 5 0 0 0 1-3.2Z"/>',
+      kidney: '<path d="M9 4c-3 1-5 4-5 8 0 4.5 2.2 8 5 8 2 0 3-1.5 3-4.5V10c0-3.5-1-5-3-6Z"/><path d="M15 4c3 1 5 4 5 8 0 4.5-2.2 8-5 8-2 0-3-1.5-3-4.5V10c0-3.5 1-5 3-6Z"/>',
+      lungs: '<path d="M12 4v7"/><path d="M12 11c-3-4-6-5-8-3v9c0 2 2 3 4 2 2-.8 3-3 3-6"/><path d="M12 11c3-4 6-5 8-3v9c0 2-2 3-4 2-2-.8-3-3-3-6"/>',
+      pill: '<path d="M10 21 3 14a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8 9 7 7"/>',
+      shield: '<path d="M12 3 5 6v5c0 5 3.3 8.5 7 10 3.7-1.5 7-5 7-10V6Z"/>',
+      venus: '<circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 18h6"/>',
+    };
+    const icon = paths[iconName] || paths.pill;
+    return `<span class="${className}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icon}</svg></span>`;
+  }
+
+  function distributeFormularyGroups(groups, columnCount = 6) {
+    const columns = Array.from({ length: columnCount }, () => []);
+    const weights = Array.from({ length: columnCount }, () => 0);
+    [...groups]
+      .sort((a, b) => b.conditions.length - a.conditions.length)
+      .forEach((group) => {
+        const weight = group.conditions.length + 1.4;
+        const targetIndex = weights.indexOf(Math.min(...weights));
+        columns[targetIndex].push(group);
+        weights[targetIndex] += weight;
+      });
+    return columns;
+  }
+
   function renderFormularyConditionButton(item, group, className = 'formulary-condition-btn') {
     const active = app.state.condition === item.meta.value;
+    const iconName = getFormularyIconName(group.domain.value);
     return `<button type="button" class="${className} ${active ? 'active' : ''}" data-formulary-condition="${item.meta.value}" data-formulary-domain="${group.domain.value}" title="${escape(text(item.meta))}">
-      <strong>${escape(text(item.meta))}</strong>
-      <span>${item.meds.length} med${item.meds.length !== 1 ? 's' : ''}</span>
+      ${renderFormularyIcon(iconName)}
+      <span class="formulary-condition-text"><strong>${escape(text(item.meta))}</strong><span>${item.meds.length} med${item.meds.length !== 1 ? 's' : ''}</span></span>
     </button>`;
   }
 
@@ -1327,9 +1388,10 @@
     const selectedDomainValue =
       app._lookupSelectedDomain ||
       selectedCondition?.meta.domain ||
-      groups[0]?.domain.value ||
       '';
-    const selectedDomainGroup = groups.find((group) => group.domain.value === selectedDomainValue) || groups[0] || null;
+    const selectedDomainGroup = selectedDomainValue
+      ? groups.find((group) => group.domain.value === selectedDomainValue) || null
+      : null;
 
     let h = `<section class="formulary-shell">`;
     h += `<div class="formulary-top">`;
@@ -1347,51 +1409,53 @@
     }
 
     if (view === 'grouped') {
-      h += `<div class="formulary-body view-grouped">`;
-      h += `<aside class="formulary-domain-rail">`;
-      groups.forEach((group) => {
-        const active = selectedDomainGroup?.domain.value === group.domain.value;
-        h += `<button type="button" class="formulary-domain-btn ${active ? 'active' : ''}" data-formulary-domain="${group.domain.value}">
-          <strong>${escape(text(group.domain))}</strong><span>${group.conditions.length} conditions</span>
-        </button>`;
-      });
-      h += `</aside>`;
-      h += `<section class="formulary-grouped-conditions">`;
-      h += `<div class="formulary-panel-head"><span class="section-label">Clinical area</span><strong>${escape(text(selectedDomainGroup.domain))}</strong></div>`;
-      h += `<div class="formulary-condition-grid">`;
-      selectedDomainGroup.conditions.forEach((item) => {
-        h += renderFormularyConditionButton(item, selectedDomainGroup, 'formulary-condition-card');
-      });
-      h += `</div></section>`;
-      h += renderFormularyMedicationPanel(selectedCondition);
-      h += `</div>`;
+      if (!selectedDomainGroup) {
+        h += `<div class="formulary-body view-grouped domain-picker">`;
+        h += `<section class="formulary-domain-board">`;
+        groups.forEach((group) => {
+          const iconName = getFormularyIconName(group.domain.value);
+          h += `<button type="button" class="formulary-domain-card" data-formulary-domain="${group.domain.value}" title="${escape(text(group.domain))}">
+            ${renderFormularyIcon(iconName, 'formulary-domain-icon')}
+            <span><strong>${escape(text(group.domain))}</strong><em>${group.conditions.length} conditions / ${group.medCount} meds</em></span>
+          </button>`;
+        });
+        h += `</section></div>`;
+      } else if (!selectedCondition) {
+        h += `<div class="formulary-body view-grouped condition-picker">`;
+        h += `<div class="formulary-selected-toolbar"><button type="button" class="ghost-button ghost-button-secondary" data-formulary-back="domains">All clinical areas</button><span>${escape(text(selectedDomainGroup.domain))}</span></div>`;
+        h += `<section class="formulary-grouped-conditions full">`;
+        h += `<div class="formulary-condition-grid">`;
+        selectedDomainGroup.conditions.forEach((item) => {
+          h += renderFormularyConditionButton(item, selectedDomainGroup, 'formulary-condition-card');
+        });
+        h += `</div></section></div>`;
+      } else {
+        h += `<div class="formulary-body view-grouped selected-condition">`;
+        h += `<div class="formulary-selected-toolbar"><button type="button" class="ghost-button ghost-button-secondary" data-formulary-back="conditions">Back to ${escape(text(selectedDomainGroup.domain))}</button><span>${escape(text(selectedCondition.meta))}</span></div>`;
+        h += renderFormularyMedicationPanel(selectedCondition);
+        h += `</div>`;
+      }
     } else {
       if (selectedCondition) {
         h += `<div class="formulary-body view-listed selected-condition">`;
-        h += `<div class="formulary-selected-toolbar"><button type="button" class="ghost-button ghost-button-secondary" data-formulary-back>All conditions</button><span>${escape(text(app.getDomainMeta(selectedCondition.meta.domain)))} / ${escape(text(selectedCondition.meta))}</span></div>`;
+        h += `<div class="formulary-selected-toolbar"><button type="button" class="ghost-button ghost-button-secondary" data-formulary-back="listed">All conditions</button><span>${escape(text(app.getDomainMeta(selectedCondition.meta.domain)))} / ${escape(text(selectedCondition.meta))}</span></div>`;
         h += renderFormularyMedicationPanel(selectedCondition);
         h += `</div>`;
       } else {
         h += `<div class="formulary-body view-listed">`;
         h += `<section class="formulary-listed-board">`;
-        const listedColumns = [[], []];
-        const listedWeights = [0, 0];
-        groups.forEach((group) => {
-          const weight = group.conditions.length + 2;
-          const targetIndex = listedWeights.indexOf(Math.min(...listedWeights));
-          listedColumns[targetIndex].push(group);
-          listedWeights[targetIndex] += weight;
-        });
+        const listedColumns = distributeFormularyGroups(groups, 7);
         listedColumns.forEach((column) => {
           h += `<div class="formulary-listed-column">`;
           column.forEach((group) => {
-            h += `<div class="formulary-area-row">`;
-            h += `<div class="formulary-area-name"><strong>${escape(text(group.domain))}</strong><span>${group.conditions.length} conditions</span></div>`;
-            h += `<div class="formulary-condition-cloud">`;
+            const iconName = getFormularyIconName(group.domain.value);
+            h += `<section class="formulary-listed-group">`;
+            h += `<div class="formulary-listed-heading">${renderFormularyIcon(iconName, 'formulary-heading-icon')}<strong>${escape(text(group.domain))}</strong><span>${group.conditions.length}</span></div>`;
+            h += `<div class="formulary-row-stack">`;
             group.conditions.forEach((item) => {
               h += renderFormularyConditionButton(item, group);
             });
-            h += `</div></div>`;
+            h += `</div></section>`;
           });
           h += `</div>`;
         });
@@ -2391,7 +2455,7 @@
       steps: [
         { sel: '[data-set-field="workflowMode"][data-value="lookup"]', text: 'Open Formularies', wait: 1500 },
         { sel: '[data-search-field="lookupSearch"]', text: 'Search any medication or condition', noClick: true, wait: 2000 },
-        { sel: '.formulary-area-row', text: 'Conditions are grouped by clinical area', noClick: true, wait: 2500 },
+        { sel: '.formulary-listed-group', text: 'Conditions are grouped by clinical area', noClick: true, wait: 2500 },
       ],
     },
     {
@@ -2903,14 +2967,24 @@
       const formularyView = e.target.closest('[data-formulary-view]');
       if (formularyView) {
         app._formularyView = formularyView.dataset.formularyView || 'listed';
+        if (app._formularyView === 'grouped') {
+          app._lookupSelectedDomain = '';
+          app.state.condition = '';
+          app.state.subtype = '';
+          app._lookupSelectedMed = '';
+        }
         return render();
       }
 
       const formularyBack = e.target.closest('[data-formulary-back]');
       if (formularyBack) {
+        const target = formularyBack.dataset.formularyBack || 'listed';
         app.state.condition = '';
         app.state.subtype = '';
         app._lookupSelectedMed = '';
+        if (target === 'domains') {
+          app._lookupSelectedDomain = '';
+        }
         return render();
       }
 

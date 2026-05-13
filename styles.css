@@ -3681,7 +3681,12 @@ select:focus,
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
+}
+
+.formulary-title {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .formulary-title h2 {
@@ -3701,16 +3706,19 @@ select:focus,
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  min-width: 420px;
+  min-width: 356px;
+  flex: 0 0 390px;
 }
 
 .formulary-search {
-  width: 260px;
+  width: 220px;
+  flex: 1 1 220px;
   min-height: 30px;
   margin: 0;
 }
 
 .formulary-view-toggle {
+  flex: 0 0 auto;
   display: inline-flex;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -3720,7 +3728,7 @@ select:focus,
 
 .formulary-view-toggle button {
   height: 30px;
-  min-width: 74px;
+  min-width: 64px;
   padding: 0 12px;
   border: 0;
   border-right: 1px solid var(--line);
@@ -3751,12 +3759,12 @@ select:focus,
 }
 
 .formulary-body.view-grouped {
-  display: grid;
-  grid-template-columns: 190px minmax(0, 1fr) minmax(300px, 0.72fr);
-  gap: 10px;
+  display: block;
 }
 
-.formulary-body.view-listed.selected-condition {
+.formulary-body.view-listed.selected-condition,
+.formulary-body.view-grouped.condition-picker,
+.formulary-body.view-grouped.selected-condition {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 8px;
@@ -3770,12 +3778,22 @@ select:focus,
   font-size: 12px;
 }
 
-.formulary-body.view-listed.selected-condition .formulary-med-panel {
+.formulary-selected-toolbar .ghost-button {
+  min-height: 28px;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.formulary-body.view-listed.selected-condition .formulary-med-panel,
+.formulary-body.view-grouped.selected-condition .formulary-med-panel {
   width: min(1060px, 100%);
 }
 
 .formulary-listed-board,
 .formulary-domain-rail,
+.formulary-domain-board,
 .formulary-grouped-conditions,
 .formulary-med-panel {
   min-height: 0;
@@ -3784,16 +3802,52 @@ select:focus,
 
 .formulary-listed-board {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px;
-  align-content: start;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  height: 100%;
+  align-content: stretch;
 }
 
 .formulary-listed-column {
   display: grid;
-  gap: 2px;
+  gap: 5px;
   align-content: start;
   min-width: 0;
+  overflow: hidden;
+}
+
+.formulary-listed-group {
+  min-width: 0;
+}
+
+.formulary-listed-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 16px;
+  margin-bottom: 1px;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.formulary-listed-heading strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formulary-listed-heading span:last-child {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.formulary-row-stack {
+  display: grid;
+  gap: 1px;
 }
 
 .formulary-area-row {
@@ -3842,7 +3896,8 @@ select:focus,
 
 .formulary-condition-btn,
 .formulary-condition-card,
-.formulary-domain-btn {
+.formulary-domain-btn,
+.formulary-domain-card {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -3854,35 +3909,118 @@ select:focus,
 }
 
 .formulary-condition-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
   height: 17px;
-  max-width: 138px;
+  max-width: none;
   padding: 1px 5px;
+  background: #f8fbff;
+  border-color: #b9cff0;
 }
 
-.formulary-condition-btn strong {
+.formulary-condition-text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.formulary-condition-btn strong,
+.formulary-condition-card strong {
   display: block;
   overflow: hidden;
-  font-size: 8.5px;
+  font-size: 9px;
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.formulary-condition-btn span {
+.formulary-condition-btn .formulary-condition-text > span {
   display: none;
+}
+
+.formulary-icon,
+.formulary-heading-icon,
+.formulary-domain-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #bf1f2f;
+}
+
+.formulary-icon svg,
+.formulary-heading-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.formulary-domain-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  color: var(--teal);
+  background: var(--teal-light);
+}
+
+.formulary-domain-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .formulary-condition-btn:hover,
 .formulary-condition-card:hover,
-.formulary-domain-btn:hover {
+.formulary-domain-btn:hover,
+.formulary-domain-card:hover {
   border-color: rgba(13, 115, 119, 0.35);
+  background: #eef8f8;
 }
 
 .formulary-condition-btn.active,
 .formulary-condition-card.active,
-.formulary-domain-btn.active {
+.formulary-domain-btn.active,
+.formulary-domain-card.active {
   border-color: var(--teal);
   background: var(--teal-light);
+}
+
+.formulary-domain-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+
+.formulary-domain-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 66px;
+  padding: 10px;
+}
+
+.formulary-domain-card span {
+  min-width: 0;
+}
+
+.formulary-domain-card strong,
+.formulary-domain-card em {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formulary-domain-card strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.formulary-domain-card em {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
 }
 
 .formulary-domain-rail {
@@ -3929,15 +4067,23 @@ select:focus,
   grid-template-rows: auto minmax(0, 1fr);
 }
 
-.formulary-body.view-listed.selected-condition .formulary-med-head {
+.formulary-body.view-grouped.selected-condition .formulary-med-panel {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.formulary-body.view-listed.selected-condition .formulary-med-head,
+.formulary-body.view-grouped.selected-condition .formulary-med-head {
   grid-column: 1 / -1;
 }
 
-.formulary-body.view-listed.selected-condition .formulary-med-list {
+.formulary-body.view-listed.selected-condition .formulary-med-list,
+.formulary-body.view-grouped.selected-condition .formulary-med-list {
   grid-column: 1;
 }
 
-.formulary-body.view-listed.selected-condition .lookup-detail {
+.formulary-body.view-listed.selected-condition .lookup-detail,
+.formulary-body.view-grouped.selected-condition .lookup-detail {
   grid-column: 2;
 }
 
@@ -3947,18 +4093,20 @@ select:focus,
 
 .formulary-condition-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
   align-content: start;
 }
 
 .formulary-condition-card {
-  min-height: 52px;
-  padding: 7px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 8px 9px;
 }
 
 .formulary-condition-card strong {
-  display: block;
   font-size: 12px;
   line-height: 1.18;
 }
@@ -4002,7 +4150,7 @@ select:focus,
   align-content: start;
 }
 
-.formulary-body.view-grouped .formulary-med-list {
+.formulary-body.view-grouped:not(.selected-condition) .formulary-med-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 3px;
 }
@@ -4057,14 +4205,14 @@ select:focus,
   display: none;
 }
 
-.formulary-body.view-grouped .lookup-med-row {
+.formulary-body.view-grouped:not(.selected-condition) .lookup-med-row {
   min-height: 25px;
   padding: 4px 5px;
   align-items: center;
 }
 
-.formulary-body.view-grouped .lookup-med-row em,
-.formulary-body.view-grouped .lookup-med-row .lookup-meta {
+.formulary-body.view-grouped:not(.selected-condition) .lookup-med-row em,
+.formulary-body.view-grouped:not(.selected-condition) .lookup-med-row .lookup-meta {
   display: none;
 }
 
@@ -4101,8 +4249,8 @@ select:focus,
   line-height: 1.25;
 }
 
-.formulary-body.view-grouped .lookup-detail-grid,
-.formulary-body.view-grouped .formulary-price-row {
+.formulary-body.view-grouped:not(.selected-condition) .lookup-detail-grid,
+.formulary-body.view-grouped:not(.selected-condition) .formulary-price-row {
   display: none;
 }
 
