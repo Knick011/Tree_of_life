@@ -273,6 +273,42 @@ async function testOscarFill(context) {
   await page.close();
 }
 
+async function testOscarCandidateChoice(context) {
+  const page = await context.newPage();
+  await page.goto(`${BASE_URL}/emr-harness/oscar-rx.html`, { waitUntil: 'domcontentloaded' });
+  await page.locator('#__tol_inline_fab').waitFor({ state: 'visible', timeout: 5000 });
+  await writeClipboard(page, createPayload('oscar', {
+    medicationDisplay: 'Dexamethasone 0.6 mg tablet',
+    dispense: { raw: '5 tablets', amount: '5', unit: 'tablets' },
+    unitType: 'tablet',
+    sig: 'Take 1 tablet by mouth once daily',
+    frequencyCode: 'OD',
+    duration: '5 days',
+  }));
+  await openInlinePanel(page);
+  await page.locator('#__tol_inline_read').click();
+  await page.locator('#__tol_inline_fill').click();
+  await page.locator('.tol-inline-candidate-btn').first().waitFor({ state: 'visible', timeout: 10000 });
+  const candidateText = await page.locator('.tol-inline-candidate-btn').first().textContent();
+  if (!/DEXAMETHASONE/i.test(candidateText || '')) {
+    throw new Error(`Expected clickable dexamethasone candidate, got: ${candidateText}`);
+  }
+  await page.locator('.tol-inline-candidate-btn').first().click();
+  await page.waitForFunction(() => (document.querySelector('#rxText input[id^="quantity_"]')?.value || '') === '5 tablets', null, { timeout: 10000 });
+
+  const values = await page.evaluate(() => ({
+    drug: document.querySelector('#rxText input[id^="drugName_"]')?.value || '',
+    instruction: document.querySelector('#rxText textarea[id^="instructions_"]')?.value || '',
+    quantity: document.querySelector('#rxText input[id^="quantity_"]')?.value || '',
+    candidatesVisible: !!document.querySelector('.tol-inline-candidate-btn'),
+  }));
+
+  if (!/DEXAMETHASONE/i.test(values.drug) || !values.instruction || values.quantity !== '5 tablets' || values.candidatesVisible) {
+    throw new Error(`OSCAR candidate choice fill failed: ${JSON.stringify(values)}`);
+  }
+  await page.close();
+}
+
 async function testNextGenFill(context) {
   const page = await context.newPage();
   await page.goto(`${BASE_URL}/emr-harness/nextgen-rx.html`, { waitUntil: 'domcontentloaded' });
@@ -316,6 +352,7 @@ async function main() {
     await testTolSiteHidden(context);
     await testPsSuiteFill(context);
     await testOscarFill(context);
+    await testOscarCandidateChoice(context);
     await testNextGenFill(context);
 
     console.log('TOL extension harness smoke test passed.');

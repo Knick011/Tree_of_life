@@ -6147,6 +6147,44 @@ select:focus,
   line-height: 1.6;
 }
 
+.site-doc-download {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid rgba(13, 115, 119, 0.22);
+  border-radius: 14px;
+  background: var(--teal-light);
+}
+
+.site-doc-download h2 {
+  margin-bottom: 6px;
+}
+
+.site-doc-download p {
+  margin-bottom: 0;
+}
+
+.site-doc-cta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.site-doc-cta:hover {
+  background: #096368;
+}
+
 .site-doc-code {
   margin: 0;
   padding: 14px 16px;

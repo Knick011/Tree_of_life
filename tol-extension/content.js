@@ -12,6 +12,7 @@ const UI_IDS = {
   overlayTitle: '__tol_inline_overlay_title',
   overlayBody: '__tol_inline_overlay_body',
   overlayCancel: '__tol_inline_overlay_cancel',
+  candidates: '__tol_inline_candidates',
   readBtn: '__tol_inline_read',
   fillBtn: '__tol_inline_fill',
   hideBtn: '__tol_inline_hide',
@@ -250,6 +251,7 @@ const inlineState = {
   activeFillRun: 0,
   overlayTimer: null,
   drugMappings: {},
+  oscarCandidateChoice: null,
 };
 
 function sleep(ms) {
@@ -793,6 +795,33 @@ function shouldAutoSelectMatch(rankedOptions) {
   return false;
 }
 
+function summarizeRankedCandidates(rankedOptions, limit = 5) {
+  const seen = new Set();
+  const candidates = [];
+  rankedOptions.forEach((item) => {
+    const label = String(item.label || '').trim();
+    const key = normalizeLooseText(label);
+    if (!label || seen.has(key)) return;
+    seen.add(key);
+    candidates.push({ label, score: item.score });
+  });
+  return candidates.slice(0, limit);
+}
+
+function mergeCandidateLists(existing = [], next = [], limit = 5) {
+  const byKey = new Map();
+  [...existing, ...next].forEach((item) => {
+    const label = String(item.label || '').trim();
+    const key = normalizeLooseText(label);
+    if (!label || !key) return;
+    const current = byKey.get(key);
+    if (!current || Number(item.score || 0) > Number(current.score || 0)) {
+      byKey.set(key, { label, score: Number(item.score || 0) });
+    }
+  });
+  return Array.from(byKey.values()).sort((a, b) => b.score - a.score).slice(0, limit);
+}
+
 function isTolScribeSurface() {
   const href = location.href || '';
   const path = location.pathname || '';
@@ -1198,6 +1227,46 @@ function ensureInlineUi() {
         font-size: 12px;
         line-height: 1.5;
       }
+      .tol-inline-candidates {
+        display: grid;
+        gap: 7px;
+        margin-bottom: 12px;
+        padding: 10px;
+        border-radius: 12px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+      }
+      .tol-inline-candidates[hidden] {
+        display: none !important;
+      }
+      .tol-inline-candidates strong {
+        display: block;
+        color: #9a3412;
+        font-size: 12px;
+      }
+      .tol-inline-candidates p {
+        margin: 0;
+        color: #7c2d12;
+        font-size: 11px;
+        line-height: 1.4;
+      }
+      .tol-inline-candidate-btn {
+        min-height: 34px;
+        padding: 7px 9px;
+        border: 1px solid #fdba74;
+        border-radius: 9px;
+        background: #fff;
+        color: #17212b;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: left;
+      }
+      .tol-inline-candidate-btn:hover {
+        border-color: #0d7377;
+        background: #f0fdfa;
+      }
       .tol-inline-draft {
         margin-bottom: 12px;
         padding: 10px 12px;
@@ -1362,6 +1431,19 @@ function ensureInlineUi() {
   status.id = UI_IDS.status;
   status.className = 'tol-inline-status';
 
+  const candidates = document.createElement('div');
+  candidates.id = UI_IDS.candidates;
+  candidates.className = 'tol-inline-candidates';
+  candidates.hidden = true;
+  candidates.addEventListener('click', async (e) => {
+    const btn = e.target.closest?.('[data-tol-oscar-candidate-index]');
+    if (!btn) return;
+    const index = Number(btn.dataset.tolOscarCandidateIndex);
+    const candidate = inlineState.oscarCandidateChoice?.candidates?.[index];
+    if (!candidate?.label) return;
+    await continueOscarFillWithCandidate(candidate.label);
+  });
+
   const draft = document.createElement('div');
   draft.id = UI_IDS.draft;
   draft.className = 'tol-inline-draft';
@@ -1416,6 +1498,7 @@ function ensureInlineUi() {
 
   body.appendChild(meta);
   body.appendChild(status);
+  body.appendChild(candidates);
   body.appendChild(draft);
   body.appendChild(actions);
   body.appendChild(footer);
@@ -1467,6 +1550,7 @@ function updateInlineUi() {
   const panel = document.getElementById(UI_IDS.panel);
   const emr = document.getElementById(UI_IDS.emr);
   const status = document.getElementById(UI_IDS.status);
+  const candidates = document.getElementById(UI_IDS.candidates);
   const draft = document.getElementById(UI_IDS.draft);
   const readBtn = document.getElementById(UI_IDS.readBtn);
   const fillBtn = document.getElementById(UI_IDS.fillBtn);
@@ -1484,6 +1568,30 @@ function updateInlineUi() {
 
   emr.textContent = `Detected page: ${detected.label} · Target draft: ${preferredLabel}`;
   status.textContent = inlineState.lastMessage;
+
+  if (candidates) {
+    candidates.replaceChildren();
+    const choice = inlineState.oscarCandidateChoice;
+    const options = choice?.candidates || [];
+    candidates.hidden = !options.length;
+    if (options.length) {
+      const heading = document.createElement('strong');
+      heading.textContent = 'Choose the matching Juno drug';
+      const note = document.createElement('p');
+      note.textContent = `TOL searched for ${choice.requestedDrug}. Click the intended Juno option to create the row and continue filling.`;
+      candidates.appendChild(heading);
+      candidates.appendChild(note);
+      options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tol-inline-candidate-btn';
+        btn.dataset.tolOscarCandidateIndex = String(index);
+        btn.textContent = option.label;
+        btn.disabled = inlineState.isFilling;
+        candidates.appendChild(btn);
+      });
+    }
+  }
 
   if (inlineState.cachedNormalized) {
     draft.replaceChildren();
@@ -1521,6 +1629,7 @@ function setOverlayState(visible, title, body) {
 function cachePayload(payload, normalized, preferredEmr = '') {
   inlineState.cachedPayload = payload || null;
   inlineState.cachedNormalized = normalized || null;
+  inlineState.oscarCandidateChoice = null;
   if (preferredEmr) inlineState.preferredEmr = preferredEmr;
   updateInlineUi();
 }
@@ -1550,7 +1659,12 @@ async function loadClipboardIntoInlineState() {
 }
 
 async function addOscarDrugRow(drugName, progress, runId) {
-  if (!drugName || !document.getElementById('searchString') || !document.getElementById('rxText')) return null;
+  if (!drugName || !document.getElementById('searchString') || !document.getElementById('rxText')) {
+    return { rowId: null, candidates: [], needsManualSelection: false };
+  }
+
+  const searchField = document.getElementById('searchString');
+  let bestCandidates = [];
 
   for (const query of buildOscarSearchQueries(drugName)) {
     ensureActiveFillRun(runId);
@@ -1558,11 +1672,22 @@ async function addOscarDrugRow(drugName, progress, runId) {
     const initialIds = new Set(getOscarRowIds());
     await setOscarSearchValue(query, runId);
 
-    const option =
-      (await waitFor(() => findBestOscarAutocompleteOption(drugName), 2200, 120, () => isActiveFillRun(runId))) ||
-      (await waitFor(() => findBestOscarAutocompleteOption(query), 1200, 120, () => isActiveFillRun(runId)));
-    if (!option) continue;
+    const rankedOptions = await waitFor(() => {
+      const options = getOscarAutocompleteOptions();
+      if (!options.length) return null;
+      const ranked = rankSearchOptions(searchField, drugName, options, getStoredDrugMapping('oscar', drugName));
+      return ranked.length ? ranked : null;
+    }, 2200, 120, () => isActiveFillRun(runId));
 
+    if (!rankedOptions?.length) continue;
+
+    bestCandidates = mergeCandidateLists(bestCandidates, summarizeRankedCandidates(rankedOptions));
+
+    if (!shouldAutoSelectMatch(rankedOptions)) {
+      return { rowId: null, candidates: bestCandidates, needsManualSelection: true };
+    }
+
+    const option = rankedOptions[0].element;
     clickElement(option);
     await rememberDrugMapping('oscar', drugName, getOptionLabel(option));
 
@@ -1571,12 +1696,16 @@ async function addOscarDrugRow(drugName, progress, runId) {
       return ids.find((id) => !initialIds.has(id)) || null;
     }, 4500, 120, () => isActiveFillRun(runId));
 
-    if (newRowId) return newRowId;
+    if (newRowId) return { rowId: newRowId, candidates: [], needsManualSelection: false };
     const matchedRowId = findOscarMatchingRowId(drugName) || findOscarMatchingRowId(query);
-    if (matchedRowId) return matchedRowId;
+    if (matchedRowId) return { rowId: matchedRowId, candidates: [], needsManualSelection: false };
   }
 
-  return findOscarMatchingRowId(drugName) || getLatestOscarRowId();
+  return {
+    rowId: findOscarMatchingRowId(drugName) || getLatestOscarRowId(),
+    candidates: bestCandidates,
+    needsManualSelection: bestCandidates.length > 0,
+  };
 }
 
 function splitDuration(durationValue) {
@@ -1737,20 +1866,29 @@ async function fillOscarPrescription(message, progress, runId) {
   }
 
   progress?.('Creating OSCAR prescription row');
-  let rowId = await addOscarDrugRow(drugName, progress, runId);
+  const searchResult = await addOscarDrugRow(drugName, progress, runId);
+  let rowId = searchResult.rowId;
   if (!rowId) rowId = findOscarMatchingRowId(drugName);
 
   if (!rowId) {
-    const rankedChoices = rankSearchOptions(document.getElementById('searchString'), drugName, getOscarAutocompleteOptions(), getStoredDrugMapping('oscar', drugName));
-    const candidateText = rankedChoices.length ? ` Top matches: ${rankedChoices.slice(0, 3).map((item) => item.label).join(' | ')}` : '';
-    showToast('OSCAR row not found. Select the drug manually, then run Fill Fields again.', 'warn');
+    const rankedChoices = searchResult.candidates?.length
+      ? searchResult.candidates
+      : summarizeRankedCandidates(rankSearchOptions(document.getElementById('searchString'), drugName, getOscarAutocompleteOptions(), getStoredDrugMapping('oscar', drugName)));
+    const hasCandidates = rankedChoices.length > 0;
+    showToast(hasCandidates ? 'Choose a Juno drug match to continue filling.' : 'OSCAR row not found. Select the drug manually, then run Fill Fields again.', 'warn');
     return {
       success: false,
       filledCount: 0,
       missing: Object.keys(adapterFields),
       detectedEmr: 'oscar',
-      notes: candidateText ? [candidateText.trim()] : [],
-      message: 'No OSCAR pending prescription row was created from the drug search.',
+      candidateOptions: hasCandidates ? {
+        emrType: 'oscar',
+        requestedDrug: drugName,
+        candidates: rankedChoices.slice(0, 5),
+      } : null,
+      message: hasCandidates
+        ? 'Juno returned close drug matches. Choose one below to create the pending row and continue filling.'
+        : 'No OSCAR pending prescription row was created from the drug search.',
     };
   }
 
@@ -1765,6 +1903,119 @@ async function fillOscarPrescription(message, progress, runId) {
       ? `Prepared OSCAR pending prescription row ${rowId}.`
       : `OSCAR row ${rowId} was found, but no fields were filled.`,
   };
+}
+
+async function createOscarRowFromCandidate(candidateLabel, requestedDrug, progress, runId) {
+  const searchField = document.getElementById('searchString');
+  if (!searchField || !document.getElementById('rxText')) return null;
+
+  const initialIds = new Set(getOscarRowIds());
+  progress?.(`Selecting ${candidateLabel}`);
+  await typeSearchFieldLikeUser(searchField, candidateLabel, runId);
+
+  const option = await waitFor(() => {
+    const options = getOscarAutocompleteOptions();
+    if (!options.length) return null;
+    const exact = options.find((element) => normalizeLooseText(getOptionLabel(element)) === normalizeLooseText(candidateLabel));
+    if (exact) return exact;
+    const ranked = rankSearchOptions(searchField, candidateLabel, options, candidateLabel);
+    return ranked.length ? ranked[0].element : null;
+  }, 2500, 120, () => isActiveFillRun(runId));
+
+  if (!option) return null;
+
+  const selectedLabel = getOptionLabel(option) || candidateLabel;
+  clickElement(option);
+  await rememberDrugMapping('oscar', requestedDrug, selectedLabel);
+
+  const newRowId = await waitFor(() => {
+    const ids = getOscarRowIds();
+    return ids.find((id) => !initialIds.has(id)) || null;
+  }, 4500, 120, () => isActiveFillRun(runId));
+
+  return newRowId || findOscarMatchingRowId(selectedLabel) || getLatestOscarRowId();
+}
+
+async function continueOscarFillWithCandidate(candidateLabel) {
+  if (!inlineState.cachedPayload) {
+    inlineState.lastMessage = 'No TOL draft is loaded. Click Read clipboard first.';
+    updateInlineUi();
+    showToast('No TOL draft loaded.', 'warn');
+    return;
+  }
+
+  const normalized = inlineState.cachedNormalized || normalizePayload(inlineState.cachedPayload, 'oscar');
+  const message = {
+    payload: inlineState.cachedPayload,
+    normalized,
+    emrType: 'oscar',
+  };
+  const adapterFields = getAdapterFields(message, 'oscar');
+  const requestedDrug = inlineState.oscarCandidateChoice?.requestedDrug ||
+    adapterFields.drugName ||
+    adapterFields.medication ||
+    adapterFields.medicationDisplay ||
+    candidateLabel;
+
+  clearOverlayTimer();
+  const runId = inlineState.activeFillRun + 1;
+  inlineState.activeFillRun = runId;
+  inlineState.isFilling = true;
+  inlineState.lastMessage = `Selecting ${candidateLabel}...`;
+  updateInlineUi();
+  setOverlayState(true, 'Creating Juno prescription row', `Selecting ${candidateLabel} and applying the TOL draft.`);
+
+  const progress = (stepText) => {
+    ensureActiveFillRun(runId);
+    setOverlayState(true, 'Filling prescription fields', stepText);
+    inlineState.lastMessage = stepText;
+    updateInlineUi();
+  };
+
+  try {
+    const rowId = await createOscarRowFromCandidate(candidateLabel, requestedDrug, progress, runId);
+    if (!rowId) {
+      inlineState.lastMessage = 'The selected Juno match did not create a pending prescription row.';
+      inlineState.isFilling = false;
+      updateInlineUi();
+      setOverlayState(true, 'Fill needs review', inlineState.lastMessage);
+      showToast(inlineState.lastMessage, 'warn');
+      scheduleOverlayHide(runId, 1600);
+      return;
+    }
+
+    const result = await fillOscarRow(rowId, adapterFields, progress, runId);
+    ensureActiveFillRun(runId);
+    inlineState.isFilling = false;
+    if (result.success) {
+      inlineState.oscarCandidateChoice = null;
+      inlineState.lastMessage = `Prepared OSCAR pending prescription row ${rowId}.`;
+      updateInlineUi();
+      setOverlayState(true, 'Draft applied', `Filled ${result.filled.length} fields after selecting ${candidateLabel}.`);
+      showToast(`TOL filled ${result.filled.length} fields on OSCAR / Juno`);
+      scheduleOverlayHide(runId, 1200);
+    } else {
+      inlineState.lastMessage = `Juno row ${rowId} was created, but no fields were filled.`;
+      updateInlineUi();
+      setOverlayState(true, 'Fill needs review', inlineState.lastMessage);
+      showToast(inlineState.lastMessage, 'warn');
+      scheduleOverlayHide(runId, 1600);
+    }
+  } catch (error) {
+    const cancelled = error?.code === 'TOL_FILL_CANCELLED';
+    const messageText = cancelled ? 'Fill cancelled.' : error?.message || 'The selected Juno match could not be filled.';
+    inlineState.lastMessage = messageText;
+    inlineState.isFilling = false;
+    updateInlineUi();
+    setOverlayState(true, cancelled ? 'Fill cancelled' : 'Fill failed', messageText);
+    showToast(messageText, cancelled ? 'ok' : 'warn');
+    scheduleOverlayHide(runId, cancelled ? 700 : 1800);
+  } finally {
+    if (inlineState.activeFillRun === runId) {
+      inlineState.isFilling = false;
+      updateInlineUi();
+    }
+  }
 }
 
 async function fillGenericPrescription(message, requestedEmr, progress, runId) {
@@ -1981,6 +2232,7 @@ async function fillPrescription(message) {
   const runId = inlineState.activeFillRun + 1;
   inlineState.activeFillRun = runId;
   inlineState.isFilling = true;
+  inlineState.oscarCandidateChoice = null;
   setOverlayState(true, 'Preparing TOL draft', `Matching ${EMR_DEFS[effectiveEmr]?.label || effectiveEmr} on the current page.`);
   inlineState.lastMessage = `Filling ${EMR_DEFS[effectiveEmr]?.label || effectiveEmr}...`;
   updateInlineUi();
@@ -2000,6 +2252,7 @@ async function fillPrescription(message) {
 
     ensureActiveFillRun(runId);
     if (result.success) {
+      inlineState.oscarCandidateChoice = null;
       inlineState.lastMessage = result.notes?.length ? `${result.message} ${result.notes.join(' · ')}` : result.message;
       updateInlineUi();
       inlineState.isFilling = false;
@@ -2010,6 +2263,7 @@ async function fillPrescription(message) {
       return result;
     }
 
+    inlineState.oscarCandidateChoice = result.candidateOptions || null;
     inlineState.lastMessage = result.notes?.length ? `${result.message} ${result.notes.join(' · ')}` : result.message;
     updateInlineUi();
     inlineState.isFilling = false;
