@@ -70,6 +70,28 @@
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
 
+    <!-- Extension install prompt -->
+    <div id="extensionInstallPrompt" class="extension-install-overlay" role="dialog" aria-modal="true" aria-labelledby="extensionInstallTitle" hidden>
+      <div class="extension-install-modal">
+        <button id="extensionInstallClose" class="extension-install-close" type="button" aria-label="Close extension install prompt">&times;</button>
+        <div class="extension-install-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        </div>
+        <div class="extension-install-copy">
+          <p class="extension-install-kicker">Recommended setup</p>
+          <h2 id="extensionInstallTitle">Install the EMR filler extension</h2>
+          <p>
+            TOL Scribe works best with the free browser extension. It moves the reviewed prescription draft
+            into supported EMRs so the clinician can finish review and signing inside the chart.
+          </p>
+        </div>
+        <div class="extension-install-actions">
+          <a id="extensionInstallStoreBtn" class="extension-install-primary" href="https://chromewebstore.google.com/detail/tol-scribe-emr-filler/cgnhahjlgfcfipapbfdchenbfdabnfph" target="_blank" rel="noopener">Install free extension</a>
+          <button id="extensionInstallLater" class="extension-install-secondary" type="button">Continue without it</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 3-column dashboard -->
     <main class="app-dashboard">
       <!-- Left column: Patient -->
@@ -140,6 +162,9 @@
     const SESSION_KEY = 'tol_session';
     const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
     const CREDS = { user: 'admin123', pass: 'password123' };
+    const EXTENSION_ID = 'cgnhahjlgfcfipapbfdchenbfdabnfph';
+    const EXTENSION_PROMPT_SESSION_KEY = 'tol_extension_prompt_dismissed';
+    const EXTENSION_PING_TIMEOUT = 900;
 
     const wall = document.getElementById('loginWall');
     const shell = document.getElementById('appShell');
@@ -148,6 +173,11 @@
     const logoutBtn = document.getElementById('logoutBtn');
     const userInput = document.getElementById('loginUser');
     const passInput = document.getElementById('loginPass');
+    const extensionPrompt = document.getElementById('extensionInstallPrompt');
+    const extensionCloseBtn = document.getElementById('extensionInstallClose');
+    const extensionLaterBtn = document.getElementById('extensionInstallLater');
+    const extensionStoreBtn = document.getElementById('extensionInstallStoreBtn');
+    let extensionCheckToken = 0;
 
     function readSession() {
       try {
@@ -182,6 +212,67 @@
       return true;
     }
 
+    function pingExtension() {
+      return new Promise((resolve) => {
+        const runtime = window.chrome?.runtime;
+        if (!runtime?.sendMessage) {
+          resolve(false);
+          return;
+        }
+
+        let settled = false;
+        const finish = (value) => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+
+        const timer = setTimeout(() => finish(false), EXTENSION_PING_TIMEOUT);
+        try {
+          runtime.sendMessage(
+            EXTENSION_ID,
+            { source: 'tol-scribe-web', action: 'ping' },
+            (response) => {
+              clearTimeout(timer);
+              finish(!runtime.lastError && response?.installed === true);
+            },
+          );
+        } catch {
+          clearTimeout(timer);
+          finish(false);
+        }
+      });
+    }
+
+    function hideExtensionPrompt({ remember = false } = {}) {
+      if (remember) {
+        sessionStorage.setItem(EXTENSION_PROMPT_SESSION_KEY, '1');
+      }
+      extensionPrompt.hidden = true;
+      document.body.classList.remove('extension-install-open');
+    }
+
+    function showExtensionPrompt() {
+      if (sessionStorage.getItem(EXTENSION_PROMPT_SESSION_KEY) === '1') return;
+      extensionPrompt.hidden = false;
+      document.body.classList.add('extension-install-open');
+      extensionStoreBtn.focus();
+    }
+
+    async function maybePromptForExtension() {
+      const token = ++extensionCheckToken;
+      const installed = await pingExtension();
+      if (token !== extensionCheckToken || shell.hidden) return;
+
+      if (installed) {
+        hideExtensionPrompt();
+        sessionStorage.removeItem(EXTENSION_PROMPT_SESSION_KEY);
+        return;
+      }
+
+      showExtensionPrompt();
+    }
+
     function ensureUiReady() {
       if (window.TOLUI?.init) {
         window.TOLUI.init();
@@ -198,7 +289,10 @@
 
       if (isAuthenticated) {
         ensureUiReady();
+        window.setTimeout(maybePromptForExtension, 250);
       } else {
+        extensionCheckToken += 1;
+        hideExtensionPrompt();
         if (resetForm) {
           form.reset();
         }
@@ -235,6 +329,24 @@
     logoutBtn.addEventListener('click', () => {
       clearSession();
       setAuthenticated(false, { resetForm: true });
+    });
+
+    extensionCloseBtn.addEventListener('click', () => {
+      hideExtensionPrompt({ remember: true });
+    });
+
+    extensionLaterBtn.addEventListener('click', () => {
+      hideExtensionPrompt({ remember: true });
+    });
+
+    extensionStoreBtn.addEventListener('click', () => {
+      hideExtensionPrompt({ remember: true });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !extensionPrompt.hidden) {
+        hideExtensionPrompt({ remember: true });
+      }
     });
 
     window.addEventListener('storage', (e) => {

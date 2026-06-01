@@ -5958,6 +5958,158 @@ select:focus,
   color: var(--muted);
 }
 
+.extension-install-open {
+  overflow: hidden;
+}
+
+.extension-install-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 8500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(3px);
+}
+
+.extension-install-overlay[hidden] {
+  display: none;
+}
+
+.extension-install-modal {
+  position: relative;
+  width: min(460px, 100%);
+  padding: 26px;
+  background: var(--surface);
+  border: 1px solid rgba(13, 115, 119, 0.18);
+  border-radius: 10px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.26);
+  color: var(--ink);
+}
+
+.extension-install-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.extension-install-close:hover {
+  color: var(--ink);
+  border-color: rgba(13, 115, 119, 0.3);
+}
+
+.extension-install-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: rgba(13, 115, 119, 0.1);
+  color: var(--teal);
+}
+
+.extension-install-kicker {
+  margin: 0 0 6px;
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.extension-install-copy h2 {
+  margin: 0 34px 10px 0;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.extension-install-copy p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.extension-install-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.extension-install-primary,
+.extension-install-secondary {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.extension-install-primary {
+  border: 1px solid var(--teal);
+  background: var(--teal);
+  color: #fff;
+}
+
+.extension-install-primary:hover {
+  background: #0a5f62;
+  border-color: #0a5f62;
+}
+
+.extension-install-secondary {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+}
+
+.extension-install-secondary:hover {
+  border-color: rgba(13, 115, 119, 0.28);
+  color: var(--ink);
+}
+
+@media (max-width: 560px) {
+  .extension-install-overlay {
+    align-items: flex-end;
+    padding: 14px;
+  }
+
+  .extension-install-modal {
+    padding: 22px;
+  }
+
+  .extension-install-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .extension-install-primary,
+  .extension-install-secondary {
+    width: 100%;
+  }
+}
+
 .site-doc-shell {
   min-height: 100vh;
   padding: 28px 20px 40px;

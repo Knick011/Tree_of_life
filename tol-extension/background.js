@@ -4,6 +4,19 @@ ext.runtime.onInstalled.addListener(() => {
   console.log('TOL Scribe EMR Filler installed');
 });
 
+ext.runtime.onMessageExternal?.addListener((message, sender, sendResponse) => {
+  if (message?.source !== 'tol-scribe-web' || message?.action !== 'ping') {
+    return false;
+  }
+
+  sendResponse({
+    installed: true,
+    name: 'TOL Scribe EMR Filler',
+    version: ext.runtime.getManifest?.().version ?? null,
+  });
+  return false;
+});
+
 function queryActiveTab() {
   return new Promise((resolve) => {
     ext.tabs.query({ active: true, currentWindow: true }, (tabs) => resolve(tabs || []));
