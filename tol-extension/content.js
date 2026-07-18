@@ -892,14 +892,16 @@ function isLikelyAutocompleteField(element) {
   if (!element) return false;
   const role = String(element.getAttribute?.('role') || '').toLowerCase();
   const type = String(element.getAttribute?.('type') || '').toLowerCase();
-  const autocomplete = String(element.getAttribute?.('autocomplete') || '').toLowerCase();
+  // Note: autocomplete="off" is deliberately NOT a signal here — plain EMR
+  // inputs set it just to suppress browser autofill. Real drug-search widgets
+  // declare aria wiring or type=search, or reveal options while we type
+  // (tracked separately via sawOptions).
   return !!(
     element.getAttribute?.('aria-controls') ||
     element.getAttribute?.('aria-owns') ||
     role === 'combobox' ||
     role === 'searchbox' ||
-    type === 'search' ||
-    autocomplete === 'off'
+    type === 'search'
   );
 }
 
@@ -1130,11 +1132,31 @@ function detectEmr() {
   return { key: 'generic', label: EMR_DEFS.generic.label };
 }
 
+// Cached probe: "does this unknown page look like a prescription form?"
+// Runs the inference engine at most every 4s, and only when a draft is
+// actually loaded, so ordinary browsing pays nothing.
+let inferenceProbe = { at: 0, count: 0 };
+function probeInferableFieldCount() {
+  const now = Date.now();
+  if (now - inferenceProbe.at > 4000) {
+    let count = 0;
+    try {
+      count = globalThis.TOLInference?.countInferableFields?.(document) || 0;
+    } catch { /* inference unavailable */ }
+    inferenceProbe = { at: now, count };
+  }
+  return inferenceProbe.count;
+}
+
 function shouldExposeInlineEntry() {
   if (isTolScribeSurface()) return false;
   const detected = inlineState.detected || detectEmr();
   if (detected.key !== 'generic') return true;
-  return !!inlineState.panelOpen;
+  if (inlineState.panelOpen) return true;
+  // Unknown EMR: offer the fill panel when a TOL draft is loaded and the page
+  // has enough label-recognizable prescription fields to be worth trying.
+  if (inlineState.cachedPayload && probeInferableFieldCount() >= 3) return true;
+  return false;
 }
 
 function ensureInlineUi() {
@@ -2072,6 +2094,46 @@ async function fillGenericPrescription(message, requestedEmr, progress, runId) {
   const useDeepQuery = emrDef.useDeepQuery === true;
   const failureDetails = [];
 
+  // Semantic inference runs once per fill and covers every field the
+  // selector-based adapters can't locate — this is what lets the extension
+  // work on EMRs it has never seen (label-driven pages, French labels,
+  // meaningless ids). Computed lazily so known EMRs pay nothing.
+  let inferredFields = null;
+  const getInferredFields = () => {
+    if (inferredFields === null) {
+      try {
+        inferredFields = globalThis.TOLInference?.inferFields?.(document) || {};
+      } catch (e) {
+        console.warn('[TOL] field inference failed', e);
+        inferredFields = {};
+      }
+    }
+    return inferredFields;
+  };
+
+  const tryInferredFill = (logicalField, value) => {
+    const inferred = getInferredFields()[logicalField];
+    if (!inferred || !inferred.element || !isVisibleElement(inferred.element)) return null;
+    const localDef = { selectors: [], strategy: inferred.strategy };
+    const ok = (() => {
+      switch (inferred.strategy) {
+        case 'select':
+          return setSelectValue(inferred.element, value);
+        case 'checkbox':
+          return setCheckboxValue(inferred.element, value);
+        case 'append':
+          return appendElementValue(inferred.element, value);
+        case 'search':
+          return typeSearchField(inferred.element, value);
+        default:
+          return setElementValue(inferred.element, value);
+      }
+    })();
+    if (!ok) return null;
+    if (!verifyFillResult(inferred.element, value, inferred.strategy)) return null;
+    return inferred.element;
+  };
+
   for (const [adapterField, value] of entries) {
     ensureActiveFillRun(runId);
     const logicalField = FIELD_ALIASES[adapterField] || adapterField;
@@ -2079,6 +2141,41 @@ async function fillGenericPrescription(message, requestedEmr, progress, runId) {
     if (!fieldDef) continue;
     const target = findElement(fieldDef.selectors, { useDeepQuery });
     if (!target) {
+      // Selector miss — fall back to label-driven inference before giving up.
+      progress?.(`Locating ${getFieldLabel(adapterField)} by its label`);
+
+      // Medication gets the full search treatment on the inferred box so
+      // autocomplete-driven EMRs still create the proper drug entry.
+      if (logicalField === 'medication') {
+        const inferredMed = getInferredFields().medication;
+        if (inferredMed?.element && isVisibleElement(inferredMed.element)) {
+          const typed = typeSearchField(inferredMed.element, value);
+          if (typed) {
+            const selectionResult = await selectGenericMedicationOption(inferredMed.element, value, requestedEmr, progress, runId);
+            if (selectionResult.manualSelectionRequired) {
+              notes.push(`Medication search needs confirmation: ${selectionResult.candidates.join(' | ')}`);
+              missing.push(adapterField);
+              failureDetails.push({ field: adapterField, label: getFieldLabel(adapterField), value: String(value), reason: 'Search needs manual confirm' });
+              continue;
+            }
+            if (selectionResult.selectedLabel) notes.push(`Selected: ${selectionResult.selectedLabel}`);
+            if (selectionResult.ok || verifyFillResult(inferredMed.element, value, 'search')) {
+              highlightElement(inferredMed.element);
+              filled.push(adapterField);
+              notes.push(`${getFieldLabel(adapterField)} matched by label`);
+              continue;
+            }
+          }
+        }
+      }
+
+      const inferredElement = tryInferredFill(logicalField, value);
+      if (inferredElement) {
+        highlightElement(inferredElement);
+        filled.push(adapterField);
+        notes.push(`${getFieldLabel(adapterField)} matched by label`);
+        continue;
+      }
       missing.push(adapterField);
       failureDetails.push({ field: adapterField, label: getFieldLabel(adapterField), value: String(value), reason: 'No matching field on page' });
       continue;
@@ -2117,6 +2214,15 @@ async function fillGenericPrescription(message, requestedEmr, progress, runId) {
           }
           ok = verifyFillResult(target, value, fieldDef.strategy);
         }
+      }
+    }
+
+    if (!ok && logicalField !== 'medication') {
+      const inferredElement = tryInferredFill(logicalField, value);
+      if (inferredElement) {
+        ok = true;
+        usedElement = inferredElement;
+        notes.push(`${getFieldLabel(adapterField)} matched by label`);
       }
     }
 

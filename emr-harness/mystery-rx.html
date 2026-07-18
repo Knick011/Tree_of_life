@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clinique Ste-Marie — Ordonnance</title>
+  <style>
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: #f2efe9; color: #2b2620; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; }
+    .shell { background: #fff; border: 1px solid #d8d2c6; border-radius: 6px; }
+    .head { padding: 14px 18px; background: #4a4238; color: #fff; font-size: 15px; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 10px 14px; border-bottom: 1px solid #eee7db; vertical-align: middle; }
+    td.lbl { width: 220px; background: #faf7f1; font-weight: 700; font-size: 13px; }
+    input, select, textarea { width: 100%; box-sizing: border-box; font: inherit; border: 1px solid #cfc7b8; border-radius: 4px; padding: 8px 10px; }
+    textarea { min-height: 64px; resize: vertical; }
+    .foot { padding: 12px 18px; color: #857a6a; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="shell">
+      <div class="head"><strong>Clinique Ste-Marie</strong> — Nouvelle ordonnance</div>
+      <table>
+        <tr>
+          <td class="lbl">Médicament</td>
+          <td><input id="f1" autocomplete="off" /></td>
+        </tr>
+        <tr>
+          <td class="lbl">Posologie</td>
+          <td><textarea id="f2"></textarea></td>
+        </tr>
+        <tr>
+          <td class="lbl">Quantité</td>
+          <td><input id="f3" /></td>
+        </tr>
+        <tr>
+          <td class="lbl">Renouvellements</td>
+          <td><input id="f4" /></td>
+        </tr>
+        <tr>
+          <td class="lbl">Durée</td>
+          <td><input id="f5" /></td>
+        </tr>
+        <tr>
+          <td class="lbl">Voie d'administration</td>
+          <td>
+            <select id="f6">
+              <option value=""></option>
+              <option value="PO">PO — orale</option>
+              <option value="TOP">Topique</option>
+              <option value="IM">IM</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td class="lbl">Note à la pharmacie</td>
+          <td><textarea id="f7"></textarea></td>
+        </tr>
+      </table>
+      <div class="foot">Page d'essai « EMR inconnu » : aucune correspondance d'attributs — seuls les libellés visibles identifient les champs.</div>
+    </div>
+  </div>
+</body>
+</html>

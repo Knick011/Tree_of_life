@@ -105,6 +105,17 @@ function createPayload(emrType, overrides = {}) {
   };
 
   const adapterFields = {
+    generic: {
+      medication: defaults.medicationDisplay,
+      sig: defaults.sig,
+      quantity: defaults.dispense.raw,
+      refills: defaults.refills,
+      duration: defaults.duration,
+      route: defaults.route,
+      frequency: defaults.frequencyCode,
+      indication: defaults.indication,
+      pharmacyNote: defaults.pharmacyNote,
+    },
     pssuite: {
       medication: defaults.medicationDisplay,
       instructions: defaults.sig,
@@ -347,6 +358,61 @@ async function testOscarLearnedMapping(context) {
   await page.close();
 }
 
+// Mystery-EMR page: French visible labels only, meaningless ids (f1..f7), no
+// name/aria attributes. Nothing selector-based can match — a successful fill
+// proves the semantic inference path end to end, including FAB exposure on an
+// unrecognized page once a draft is loaded.
+async function testMysteryEmrInferenceFill(context) {
+  const page = await context.newPage();
+  await page.goto(`${BASE_URL}/emr-harness/mystery-rx.html`, { waitUntil: 'domcontentloaded' });
+
+  // No adapter recognizes this page and no draft is loaded yet, so the TOL
+  // button must stay hidden.
+  await page.waitForTimeout(900);
+  const fabBeforePayload = await page.locator('#__tol_inline_fab').isVisible().catch(() => false);
+  if (fabBeforePayload) {
+    throw new Error('TOL widget should stay hidden on an unknown page until a draft is loaded.');
+  }
+
+  await writeClipboard(page, createPayload('generic', {
+    medicationDisplay: 'Nitrofurantoin 100 mg capsule',
+    dispense: { raw: '14 capsules', amount: '14', unit: 'capsules' },
+  }));
+
+  // Focusing a form field triggers the clipboard auto-load (user gesture).
+  await page.locator('#f2').click();
+  await page.locator('#__tol_inline_panel').waitFor({ state: 'visible', timeout: 6000 });
+  await page.locator('#__tol_inline_fill').click();
+  await page.waitForFunction(() => (document.querySelector('#f3')?.value || '').length > 0, null, { timeout: 15000 });
+
+  const values = await page.evaluate(() => ({
+    medication: document.querySelector('#f1')?.value || '',
+    sig: document.querySelector('#f2')?.value || '',
+    quantity: document.querySelector('#f3')?.value || '',
+    refills: document.querySelector('#f4')?.value || '',
+    duration: document.querySelector('#f5')?.value || '',
+    route: document.querySelector('#f6')?.value || '',
+    pharmacyNote: document.querySelector('#f7')?.value || '',
+  }));
+
+  if (!/nitrofurantoin/i.test(values.medication)) {
+    throw new Error(`Mystery EMR: medication not inferred: ${JSON.stringify(values)}`);
+  }
+  if (!/by mouth/i.test(values.sig)) {
+    throw new Error(`Mystery EMR: sig not inferred: ${JSON.stringify(values)}`);
+  }
+  if (values.quantity !== '14 capsules' || values.refills !== '0' || values.duration !== '7 days') {
+    throw new Error(`Mystery EMR: numeric fields wrong: ${JSON.stringify(values)}`);
+  }
+  if (values.route !== 'PO') {
+    throw new Error(`Mystery EMR: route select not inferred: ${JSON.stringify(values)}`);
+  }
+  if (!/pharmacy note/i.test(values.pharmacyNote)) {
+    throw new Error(`Mystery EMR: pharmacy note not inferred: ${JSON.stringify(values)}`);
+  }
+  await page.close();
+}
+
 async function testNextGenFill(context) {
   const page = await context.newPage();
   await page.goto(`${BASE_URL}/emr-harness/nextgen-rx.html`, { waitUntil: 'domcontentloaded' });
@@ -399,6 +465,7 @@ async function main() {
     await testOscarCandidateChoice(context);
     await testOscarLearnedMapping(context);
     await testNextGenFill(context);
+    await testMysteryEmrInferenceFill(context);
 
     console.log('TOL extension harness smoke test passed.');
   } finally {

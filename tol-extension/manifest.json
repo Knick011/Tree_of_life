@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TOL Scribe EMR Filler",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Fills prescription fields in supported EMRs from TOL Scribe clipboard payloads.",
   "permissions": [
     "activeTab",
@@ -55,6 +55,7 @@
       ],
       "js": [
         "emr-models.js",
+        "inference.js",
         "recorder.js",
         "content.js"
       ],
