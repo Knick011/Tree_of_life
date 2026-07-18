@@ -260,12 +260,34 @@ function renderFieldPreview(normalized) {
     const row = document.createElement('div');
     const label = document.createElement('span');
     const val = document.createElement('span');
+    row.dataset.field = name;
     label.textContent = prettifyFieldName(name);
     val.className = 'val';
     val.textContent = String(value);
     row.appendChild(label);
     row.appendChild(val);
     fieldList.appendChild(row);
+  });
+}
+
+// After a fill, mark each previewed field ✓/✗ so the clinician can see at a
+// glance what still needs manual entry before signing.
+function markFieldResults(missing) {
+  const missingSet = (missing || []).map((m) => String(m).toLowerCase());
+  fieldList.querySelectorAll('div[data-field]').forEach((row) => {
+    const name = row.dataset.field.toLowerCase();
+    const label = prettifyFieldName(row.dataset.field).toLowerCase();
+    const isMissing = missingSet.some(
+      (m) => m === name || m === label || m.includes(name) || label.includes(m),
+    );
+    row.classList.toggle('field-missed', isMissing);
+    row.classList.toggle('field-filled', !isMissing);
+  });
+}
+
+function clearFieldResults() {
+  fieldList.querySelectorAll('div[data-field]').forEach((row) => {
+    row.classList.remove('field-missed', 'field-filled');
   });
 }
 
@@ -307,6 +329,7 @@ function applyPayload(parsed, preferredEmr = '') {
   }
   state.rawPayload = parsed;
   state.normalized = normalized;
+  clearFieldResults();
   showReady(normalized);
 }
 
@@ -360,8 +383,12 @@ async function fillActivePage() {
     if (response?.success) {
       setStatus('ready', {
         title: `Filled ${response.filledCount} field${response.filledCount === 1 ? '' : 's'}`,
+        body: response.missing?.length
+          ? 'Review the ✗ fields below and complete them in the EMR before signing.'
+          : 'All previewed fields were filled. Review in the EMR before signing.',
         subtle: response.missing?.length ? `Missing: ${response.missing.join(', ')}` : '',
       });
+      markFieldResults(response.missing || []);
       fillBtn.textContent = 'Filled';
       setTimeout(() => {
         fillBtn.textContent = 'Fill Fields';
@@ -445,9 +472,21 @@ emrSelect.addEventListener('change', async () => {
   await detectCurrentPage();
 });
 
+const PUSHED_PAYLOAD_TTL = 4 * 60 * 60 * 1000; // 4 hours
+
 (async () => {
   const stored = await storageGet('emrType');
   if (stored?.emrType) emrSelect.value = stored.emrType;
   await detectCurrentPage();
+
+  // Prefer a payload pushed directly from the web app ("Send to EMR");
+  // clipboard stays as the fallback transport.
+  const pushed = await storageGet(['tolPushedPayload', 'tolPushedAt']);
+  const isFresh = pushed?.tolPushedPayload && Date.now() - (pushed.tolPushedAt || 0) < PUSHED_PAYLOAD_TTL;
+  if (isFresh) {
+    payloadInput.value = JSON.stringify(pushed.tolPushedPayload, null, 2);
+    applyPayload(pushed.tolPushedPayload, getSelectedEmr());
+    return;
+  }
   await readClipboard();
 })();

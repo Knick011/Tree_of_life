@@ -4523,6 +4523,160 @@ select:focus,
   background: var(--danger);
 }
 
+/* ─── Status-based alternative rows: red means blocked, nothing else ── */
+
+.alt-row.alt-status-eligible {
+  border-left: 3px solid var(--line);
+  background: var(--surface);
+}
+
+.alt-row.alt-status-caution {
+  border-left: 3px solid var(--caution);
+  background: rgba(212, 160, 23, 0.05);
+  border-color: rgba(212, 160, 23, 0.25);
+}
+
+.alt-row.alt-status-blocked {
+  border-left: 3px solid var(--danger);
+  background: rgba(192, 57, 43, 0.05);
+  border-color: rgba(192, 57, 43, 0.2);
+  opacity: 0.8;
+}
+
+/* ─── Tier badges (reason-based labels, not opaque scores) ── */
+
+.tier-badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.tier-badge.tier-firstline {
+  background: rgba(29, 131, 72, 0.12);
+  color: var(--success);
+}
+
+.tier-badge.tier-alt {
+  background: var(--surface-alt);
+  color: var(--muted);
+}
+
+.tier-badge.tier-caution {
+  background: rgba(212, 160, 23, 0.14);
+  color: #8a6508;
+}
+
+.tier-badge.tier-blocked {
+  background: rgba(192, 57, 43, 0.12);
+  color: var(--danger);
+}
+
+/* ─── Lookup detail actions ───────────────────────── */
+
+.lookup-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.lookup-action-primary {
+  flex: 1 1 auto;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--teal);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lookup-action-primary:hover {
+  background: #0a5c5f;
+}
+
+.lookup-action-secondary {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lookup-action-secondary:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+/* ─── Weight unit toggle ──────────────────────────── */
+
+.unit-toggle {
+  display: inline-flex;
+  margin-left: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.unit-toggle button {
+  border: 0;
+  background: transparent;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.unit-toggle button.active {
+  background: var(--teal);
+  color: #fff;
+}
+
+/* ─── Jump-to-draft (stacked layouts only) ────────── */
+
+.jump-to-draft {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .jump-to-draft {
+    display: block;
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 60;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--navy);
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 10px 30px rgba(26, 35, 50, 0.35);
+    cursor: pointer;
+  }
+}
+
+.copy-emr-fallback {
+  width: 100%;
+  margin-top: 6px;
+}
+
 /* ─── Pediatric dose calculation ─────────────────── */
 
 .peds-calc {

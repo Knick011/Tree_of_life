@@ -1,12 +1,10 @@
 (() => {
   const config = window.TOLConfig;
   const data = window.TOLData;
-  const catalog = window.TOLCatalog || [];
 
   const app = {
     config,
     data,
-    catalog,
     state: structuredClone(config.state),
     templates: structuredClone(data.DEFAULT_TEMPLATES.filter((item) => item.starter || item.id === 'tpl-cystitis-adult-ca')),
     dom: {},
@@ -20,6 +18,12 @@
     tourState: { open: false, index: 0 },
     TOUR_STORAGE_KEY: 'atlas-prescribe-tour-seen-v2',
   };
+
+  // Catalog files may load asynchronously after this script runs, so always
+  // read the live window.TOLCatalog rather than capturing it once.
+  Object.defineProperty(app, 'catalog', {
+    get: () => window.TOLCatalog || [],
+  });
 
   app.textFor = (map, lang) => {
     if (typeof map === 'string') {
@@ -68,12 +72,66 @@
   app.getConditionOptions = (domainValue, subtypeValue) =>
     app.data.CONDITIONS.filter((item) => item.domain === domainValue && item.subtype === subtypeValue);
   app.getSymptomsForCondition = (conditionValue) => app.data.CONDITION_SYMPTOMS[conditionValue] || [];
+  // Two catalog generations left near-identical entries for some conditions
+  // (e.g. "Nitrofurantoin" vs "Nitrofurantoin macrocrystals"). Collapse them by
+  // ingredient + strength so the option list never shows the same drug twice.
+  const FORMULATION_SUFFIXES = new Set([
+    'macrocrystals', 'tromethamine', 'ds', 'hcl', 'hydrochloride', 'sodium',
+    'potassium', 'monohydrate', 'dihydrate', 'trihydrate', 'succinate',
+  ]);
+
+  const medDedupeKey = (option) => {
+    const label = String(option.labels?.en || '')
+      .toLowerCase()
+      .replace(/[–—/]/g, '-')
+      .replace(/[()]/g, ' ');
+    const tokens = label.split(/\s+/).filter((t) => t && !FORMULATION_SUFFIXES.has(t));
+    if (!tokens.length) return null;
+    const ingredient = tokens[0].split('-').filter(Boolean).sort().join('-');
+    const qualifier = tokens.slice(1).join(' ');
+    const strengthDigits = String(option.order?.medication || '').replace(/\D+/g, '');
+    return `${ingredient}|${qualifier}|${strengthDigits}`;
+  };
+
+  const medRichness = (option) => {
+    let score = 0;
+    const regions = option.regionData || {};
+    if (Object.values(regions).some((r) => r && r.available && r.price > 0)) score += 4;
+    score += Math.min(3, (option.rules || []).length);
+    if (option.renalDosing) score += 1;
+    if (option.pedsData) score += 1;
+    return score;
+  };
+
+  const dedupeMedications = (list) => {
+    const byKey = new Map();
+    const order = [];
+    list.forEach((option) => {
+      const key = option._custom ? null : medDedupeKey(option);
+      if (!key) {
+        order.push(option);
+        return;
+      }
+      const existing = byKey.get(key);
+      if (!existing) {
+        byKey.set(key, option);
+        order.push(option);
+        return;
+      }
+      if (medRichness(option) > medRichness(existing)) {
+        order[order.indexOf(existing)] = option;
+        byKey.set(key, option);
+      }
+    });
+    return order;
+  };
+
   app.getMedicationOptionsForCondition = (conditionValue) => {
     const catalogMatches = app.catalog.filter((item) => item.condition === conditionValue);
     const customMatches = (window.TOLCustomMeds && window.TOLCustomMeds.list)
       ? window.TOLCustomMeds.list(conditionValue)
       : [];
-    return [...customMatches, ...catalogMatches];
+    return dedupeMedications([...customMatches, ...catalogMatches]);
   };
 
   // ─── Paediatric dose engine (BNFc age-banded) ────────────────────
@@ -546,9 +604,12 @@
       status = 'blocked';
       issues.push(`Age ${ctx.age}y falls outside the saved ${template.ageMin}-${template.ageMax}y band.`);
     }
-    if (ctx.weight < template.weightMin || ctx.weight > template.weightMax) {
+    if (ctx.weight > 0 && (ctx.weight < template.weightMin || ctx.weight > template.weightMax)) {
       status = 'blocked';
       issues.push(`Weight ${ctx.weight}kg falls outside the saved ${template.weightMin}-${template.weightMax}kg band.`);
+    } else if (ctx.weight <= 0 && status !== 'blocked') {
+      status = 'caution';
+      issues.push(`Weight not recorded — the saved ${template.weightMin}-${template.weightMax}kg band was not checked.`);
     }
     if (ctx.region !== template.region && status !== 'blocked') {
       status = 'caution';
@@ -1025,8 +1086,8 @@
 
     return {
       rx: rxText,
-      chart: `Assessment: ${conditionName}\n${app.t('copyTemplate')}: ${templateName}\nWhy this package surfaced: ${chartReason}\nPros: ${selected.pros.slice(0, 2).join('; ')}\nCons: ${selected.cons.slice(0, 2).join('; ')}\n${app.t('copyNoteDemo')}`,
-      pharmacy: `${app.t('copyIndication')}: ${conditionName}\nPackage: ${selected.order.medication}\nSig: ${sig}\nNotes: ${app.textFor(selected.order.pharmacy, ctx.language)}\n${app.t('copyNoteDemo')}`,
+      chart: `Assessment: ${conditionName}\n${app.t('copyTemplate')}: ${templateName}\nWhy this package surfaced: ${chartReason}\nPros: ${selected.pros.slice(0, 2).join('; ')}\nCons: ${selected.cons.slice(0, 2).join('; ')}`,
+      pharmacy: `${app.t('copyIndication')}: ${conditionName}\nPackage: ${selected.order.medication}\nSig: ${sig}\nNotes: ${app.textFor(selected.order.pharmacy, ctx.language)}`,
     };
   };
 
@@ -1049,7 +1110,6 @@
       `Assessment: ${app.currentConditionLabel(ctx)}`,
       `${app.t('copyTemplate')}: ${template?.name || app.t('outputTemplateNone')}`,
       `Quick pack: ${rows.length} medication${rows.length === 1 ? '' : 's'} grouped for review.`,
-      app.t('copyNoteDemo'),
     ].join('\n');
     const pharmacy = rows.map((row) =>
       `${row.title}\nSig: ${row.sig}${row.pharmacy ? `\nNotes: ${row.pharmacy}` : ''}`

@@ -801,10 +801,18 @@
     return null;
   }
 
+  // Weight only gates output when dosing actually depends on it (children).
+  // Adult prescribing renders immediately from age + condition.
+  function isWeightRequired() {
+    const s = app.state;
+    return s.age > 0 && s.age < 13;
+  }
+
   function isReady() {
     const s = app.state;
     if (s.workflowMode === 'lookup' || s.workflowMode === 'scores') return false;
-    if (s.age <= 0 || s.weight <= 0) return false;
+    if (s.age <= 0) return false;
+    if (isWeightRequired() && s.weight <= 0) return false;
     if (s.workflowMode === 'guided' && !s.condition) return false;
     if (s.workflowMode === 'template' && !s.templateId) return false;
     if (!s.region || !s.emrType || !s.policyModel) return false;
@@ -866,12 +874,22 @@
     }
     h += `</div>`;
 
-    // Weight field with stepper
+    // Weight field with stepper and kg/lb display toggle (state stays in kg;
+    // parents report pounds, dosing runs on kilograms)
+    const weightUnit = app._weightUnit === 'lb' ? 'lb' : 'kg';
+    const weightDisplay = !s.weight
+      ? ''
+      : weightUnit === 'lb'
+        ? Math.round(s.weight * 2.20462)
+        : s.weight;
     h += `<div class="field">`;
-    h += `<span>Weight (kg)</span>`;
+    h += `<span>Weight <span class="unit-toggle" role="group" aria-label="Weight unit">`;
+    h += `<button type="button" class="${weightUnit === 'kg' ? 'active' : ''}" data-weight-unit="kg">kg</button>`;
+    h += `<button type="button" class="${weightUnit === 'lb' ? 'active' : ''}" data-weight-unit="lb">lb</button>`;
+    h += `</span></span>`;
     h += `<div class="stepper-input">`;
     h += `<button type="button" class="stepper-btn" data-stepper="weight" data-dir="-1" ${s.weight <= 0 ? 'disabled' : ''}>-</button>`;
-    h += `<input type="text" inputMode="numeric" pattern="[0-9]*" class="stepper-value" value="${s.weight || ''}" placeholder="0" data-number-field="weight" />`;
+    h += `<input type="text" inputMode="numeric" pattern="[0-9]*" class="stepper-value" value="${weightDisplay}" placeholder="0" data-number-field="weight" />`;
     h += `<button type="button" class="stepper-btn" data-stepper="weight" data-dir="1">+</button>`;
     h += `</div>`;
     h += `</div>`;
@@ -885,7 +903,7 @@
     });
     h += `</div>`;
 
-    if (s.sex === 'female') {
+    if (s.sex === 'female' && (s.age <= 0 || s.age >= 12)) {
       h += `<div class="section-label">Pregnancy</div>`;
       h += `<div class="chip-group">`;
       app.config.PREGNANCY_OPTIONS.filter((o) => o.value !== 'na').forEach((o) => {
@@ -900,7 +918,9 @@
       h += `<button type="button" class="preset-btn ${Math.abs(s.egfr - p.value) < 1 ? 'active' : ''}" data-egfr-preset="${p.id}">${escape(p.label)}</button>`;
     });
     h += `</div>`;
-    h += `<div class="field"><input type="number" class="input-sm" min="0" max="200" value="${s.egfr}" data-number-field="egfr" /></div>`;
+    if (s.egfr !== 90) {
+      h += `<div class="field"><input type="number" class="input-sm" min="0" max="200" value="${s.egfr}" data-number-field="egfr" aria-label="Exact eGFR" /></div>`;
+    }
 
     h += `<details class="patient-fold"${s.allergies.length ? ' open' : ''}>`;
     h += `<summary><span>Allergies / exclusions</span><strong>${s.allergies.length ? `${s.allergies.length} selected` : 'None'}</strong></summary>`;
@@ -1226,7 +1246,9 @@
         const conditions = app.data.CONDITIONS
           .filter((condition) => condition.domain === domain.value && byCondition.has(condition.value))
           .map((condition) => {
-            const meds = byCondition.get(condition.value) || [];
+            // Same dedupe as the guided engine so both views agree
+            const meds = app.getMedicationOptionsForCondition(condition.value)
+              .filter((med) => !med._custom);
             const subtype = app.getSubtypeMeta(condition.subtype);
             const haystack = [
               text(domain),
@@ -1349,11 +1371,15 @@
     h += `<div class="formulary-med-list">`;
     medList.forEach((m) => {
       const regionData = m.regionData[region];
-      const price = regionData?.available ? app.formatCurrency(regionData.price, region) : 'n/a';
-      const status = !regionData?.available ? 'blocked' : regionData.preferred ? 'eligible' : 'caution';
+      const price = regionData?.available ? app.formatCurrency(regionData.price, region) : '';
+      const badge = !regionData?.available
+        ? `<span class="status-badge status-blocked">Unavailable</span>`
+        : regionData.preferred
+          ? `<span class="status-badge status-eligible">First-line</span>`
+          : '';
       h += `<button type="button" class="lookup-med-row ${selectedMed?.id === m.id ? 'active' : ''}" data-lookup-med="${m.id}" data-lookup-condition="${selectedCondition.meta.value}">`;
       h += `<span><strong>${escape(text(m.labels))}</strong><em>${escape(text(m.dose))}</em></span>`;
-      h += `<span class="lookup-meta"><span class="tag-sm">${escape(price)}</span><span class="status-badge status-${status}">${escape(status)}</span></span>`;
+      h += `<span class="lookup-meta">${price && price !== 'n/a' ? `<span class="tag-sm">${escape(price)}</span>` : ''}${badge}</span>`;
       h += `</button>`;
     });
     h += `</div>`;
@@ -1371,8 +1397,16 @@
       h += `<div class="formulary-price-row">`;
       app.config.REGIONS.forEach((r) => {
         const rd = selectedMed.regionData[r.value];
-        if (rd?.available) h += `<span class="tag-sm ${r.value === region ? 'tag-teal' : ''}">${escape(text(r))}: ${escape(app.formatCurrency(rd.price, r.value))}</span>`;
+        const rPrice = rd?.available ? app.formatCurrency(rd.price, r.value) : '';
+        if (rPrice && rPrice !== 'n/a') h += `<span class="tag-sm ${r.value === region ? 'tag-teal' : ''}">${escape(text(r))}: ${escape(rPrice)}</span>`;
       });
+      h += `</div>`;
+      // Lookup is the fastest mode — it must be able to finish the job, not
+      // dead-end into a read-only preview.
+      h += `<div class="lookup-actions">`;
+      h += `<button type="button" class="lookup-action-primary" data-lookup-use="${selectedMed.id}" data-lookup-cond="${escape(selectedCondition.meta.value)}">Use in Guided flow</button>`;
+      h += `<button type="button" class="lookup-action-secondary" data-lookup-copy-rx="${selectedMed.id}">Copy Rx</button>`;
+      h += `<button type="button" class="lookup-action-secondary" data-lookup-copy-emr="${selectedMed.id}" data-lookup-cond="${escape(selectedCondition.meta.value)}">${window.TOLExtension?.installed ? 'Send to EMR' : 'Copy for EMR'}</button>`;
       h += `</div>`;
       h += `</div>`;
     }
@@ -1596,24 +1630,38 @@
     });
     h += `</div>`;
 
-    // Calculate button
-    h += `<button type="button" class="score-calculate-btn" data-score-calculate>Calculate</button>`;
-
-    // Results (if calculated) — score + interpretation stay in center column
-    if (app._scoreResult) {
-      const r = app._scoreResult;
-      h += `<div class="score-result score-result-${r.risk || 'none'}">`;
-      h += `<div class="score-result-head">`;
-      if (r.score !== null && r.score !== undefined) {
-        h += `<div class="score-result-number">${r.score}${r.unit ? ' ' + r.unit : ''}${r.max ? ' / ' + r.max : ''}</div>`;
-      }
-      h += `<div class="score-result-label">${escape(r.label)}</div>`;
-      h += `</div>`;
-      h += `<div class="score-result-interp">${escape(r.interpretation)}</div>`;
-      h += `</div>`;
-    }
+    // Live result — recomputed on every input, no Calculate step
+    h += `<div id="scoreInlineResult">${scoreInlineResultHtml()}</div>`;
 
     return h;
+  }
+
+  function scoreInlineResultHtml() {
+    if (!app._scoreResult) return '';
+    const r = app._scoreResult;
+    let h = `<div class="score-result score-result-${r.risk || 'none'}">`;
+    h += `<div class="score-result-head">`;
+    if (r.score !== null && r.score !== undefined) {
+      h += `<div class="score-result-number">${r.score}${r.unit ? ' ' + r.unit : ''}${r.max ? ' / ' + r.max : ''}</div>`;
+    }
+    h += `<div class="score-result-label">${escape(r.label)}</div>`;
+    h += `</div>`;
+    h += `<div class="score-result-interp">${escape(r.interpretation)}</div>`;
+    h += `</div>`;
+    return h;
+  }
+
+  function recomputeScore() {
+    const calc = window.TOLScores?.getCalculator(app._activeScoreId);
+    app._scoreResult = calc ? calc.calculate(app._scoreValues || {}, app.state) : null;
+  }
+
+  // Update the inline result and right rail without a full re-render, so
+  // typing into number/select fields keeps focus.
+  function updateScoreResultInPlace() {
+    const target = document.getElementById('scoreInlineResult');
+    if (target) target.innerHTML = scoreInlineResultHtml();
+    renderOutputPanel();
   }
 
   function renderSettingsSection() {
@@ -1775,7 +1823,7 @@
       const s = app.state;
       const missing = [];
       if (s.age <= 0) missing.push('Age');
-      if (s.weight <= 0) missing.push('Weight');
+      if (isWeightRequired() && s.weight <= 0) missing.push('Weight (needed for pediatric dosing)');
       if (s.workflowMode === 'guided' && !s.condition) missing.push('Condition');
       if (s.workflowMode === 'template' && !s.templateId) missing.push('Template');
       dom.outputPanel.innerHTML = `<div class="output-empty">
@@ -1809,10 +1857,12 @@
 
     // Patient signals strip
     const bits = [
-      `${ctx.age}y`, `${ctx.weight}kg`, `eGFR ${ctx.egfr}`,
+      `${ctx.age}y`,
+      ctx.weight > 0 ? `${ctx.weight}kg` : null,
+      `eGFR ${ctx.egfr}`,
       text(SEX_OPTIONS.find((o) => o.value === ctx.sex)),
       ctx.workflowMode === 'guided' ? app.currentConditionLabel(ctx) : ctx.templateSnapshot?.name || '-',
-    ];
+    ].filter(Boolean);
     h += `<div class="review-strip" style="margin-right:44px">${bits.map((b) => `<span class="tag-sm">${escape(b)}</span>`).join('')}</div>`;
 
     // Template fit warning
@@ -1835,19 +1885,27 @@
     }
 
     // Build ranked list (all options sorted by score, selected first)
-    const RANK_COLORS = ['rank-green', 'rank-amber', 'rank-red'];
     const ranked = selected
       ? [selected, ...options.filter((o) => o.id !== app.selectedOptionId)]
       : options;
+    const priceBit = (p) => (p && p !== 'n/a' ? ` · ${escape(p)}` : '');
+    // Tier labels replace the old opaque numeric score badge: physicians need
+    // a reason-based label, not an unexplained number.
+    const tierFor = (o) => {
+      if (o.status === 'blocked') return { label: 'Blocked', cls: 'tier-blocked', title: o.primaryReason || 'Blocked for this patient or market' };
+      if (o.status === 'caution') return { label: 'Caution', cls: 'tier-caution', title: o.primaryReason || 'Needs review for this patient' };
+      if (o.regionData?.preferred) return { label: 'First-line', cls: 'tier-firstline', title: 'Locally preferred option' };
+      return { label: 'Alternative', cls: 'tier-alt', title: o.rationale || 'Eligible alternative' };
+    };
 
     // Primary selection
     if (selected) {
       const isCustom = !!selected._custom;
       const copyPack = app.buildCopyPack(selected, ctx);
       h += `<div class="output-actions"><button type="button" class="template-save-primary" data-save-as-template title="Save current case as template">+ Save as template</button></div>`;
-      h += `<div class="primary-card ${RANK_COLORS[0]}${isCustom ? ' is-custom' : ''}" data-option="${selected.id}" data-primary="1">`;
+      h += `<div class="primary-card rank-green${isCustom ? ' is-custom' : ''}" data-option="${selected.id}" data-primary="1">`;
       h += `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">`;
-      h += `<div><strong style="font-size:14px">${escape(selected.label)}</strong>${isCustom ? ' <span class="custom-badge">Custom</span>' : ''}<div style="color:var(--muted);font-size:12px">${escape(selected.dosePreview)} · ${escape(selected.price)}</div></div>`;
+      h += `<div><strong style="font-size:14px">${escape(selected.label)}</strong>${isCustom ? ' <span class="custom-badge">Custom</span>' : ''}<div style="color:var(--muted);font-size:12px">${escape(selected.dosePreview)}${priceBit(selected.price)}</div></div>`;
       h += `<div style="display:flex;align-items:center;gap:4px"><span class="selected-pill">Selected</span></div>`;
       h += `</div>`;
       h += `</div>`;
@@ -1856,14 +1914,14 @@
       const exclusions = app.state.exclusions || [];
       if (ranked.length > 1) {
         h += `<div class="section-label" style="margin-top:4px">Alternatives <span class="label-hint">(click to switch)</span></div>`;
-        ranked.slice(1).forEach((o, i) => {
-          const rankColor = RANK_COLORS[Math.min(i + 1, 2)];
+        ranked.slice(1).forEach((o) => {
+          const tier = tierFor(o);
           const excluded = exclusions.includes(o.id);
           const altIsCustom = !!o._custom;
-          h += `<div class="alt-row ${rankColor}${excluded ? ' is-excluded' : ''}${altIsCustom ? ' is-custom' : ''}" data-option="${o.id}" tabindex="0" role="button" aria-label="Select ${escape(o.label)}">`;
-          h += `<div><strong>${escape(o.label)}</strong>${altIsCustom ? ' <span class="custom-badge custom-badge-sm">Custom</span>' : ''}<span>${escape(o.dosePreview)} · ${escape(o.price)}</span></div>`;
+          h += `<div class="alt-row alt-status-${o.status}${excluded ? ' is-excluded' : ''}${altIsCustom ? ' is-custom' : ''}" data-option="${o.id}" tabindex="0" role="button" aria-label="Select ${escape(o.label)}">`;
+          h += `<div><strong>${escape(o.label)}</strong>${altIsCustom ? ' <span class="custom-badge custom-badge-sm">Custom</span>' : ''}<span>${escape(o.dosePreview)}${priceBit(o.price)}</span></div>`;
           h += `<div style="display:flex;align-items:center;gap:4px">`;
-          h += `<span class="score-badge score-${o.status}" title="Status: ${escape(o.status)}">${o.score}</span>`;
+          h += `<span class="tier-badge ${tier.cls}" title="${escape(tier.title)}">${escape(tier.label)}</span>`;
           if (altIsCustom) {
             h += `<button type="button" class="alt-exclude-btn" data-open-custom-drug data-edit-id="${o.id}" title="Edit custom drug" aria-label="Edit ${escape(o.label)}">✎</button>`;
           }
@@ -1986,8 +2044,14 @@
       // Copy all
       h += `<button type="button" class="copy-all-btn" data-copy-block="all">Copy All</button>`;
 
-      // Copy for EMR (structured JSON for browser extension)
-      h += `<button type="button" class="copy-emr-btn" data-copy-block="emr">Copy for EMR</button>`;
+      // EMR handoff: direct push to the extension when it is installed,
+      // clipboard JSON as the universal fallback.
+      if (window.TOLExtension?.installed) {
+        h += `<button type="button" class="copy-emr-btn" data-send-emr>Send to EMR extension</button>`;
+        h += `<button type="button" class="copy-btn copy-emr-fallback" data-copy-block="emr">Copy for EMR instead</button>`;
+      } else {
+        h += `<button type="button" class="copy-emr-btn" data-copy-block="emr">Copy for EMR</button>`;
+      }
 
       // Why this (collapsed)
       h += `<details class="fold-section" style="margin-top:6px">`;
@@ -2121,6 +2185,7 @@
 
   function renderRefineModal() {
     const el = dom.refineModal;
+    if (!el) return;
     if (!app._refineOpen || !app.processedSnapshot) {
       el.hidden = true;
       return;
@@ -2396,23 +2461,6 @@
       ],
     },
     {
-      id: 'refine',
-      title: 'Refine Prescription',
-      desc: 'Tell the system what the patient said to re-rank medications.',
-      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18M3 12h12M3 20h6"/></svg>',
-      setup: () => {
-        applyPatientPreset('adult-f');
-        app.state.domain = 'infection';
-        app.state.subtype = 'urinary';
-        app.applyConditionToState('cystitis');
-        render();
-      },
-      steps: [
-        { sel: '#refineBtn', text: 'Click the filter button to open Refine', wait: 1500 },
-        { sel: '.refine-modal-inner', text: 'Check what the patient told you — options re-rank', noClick: true, wait: 3000 },
-      ],
-    },
-    {
       id: 'copy-output',
       title: 'Copy & EMR Export',
       desc: 'Copy Rx, chart note, or structured JSON for EMR auto-fill.',
@@ -2664,7 +2712,7 @@
     renderClinicalPanel();
     renderOutputPanel();
     // Show refine button only when output is live
-    dom.refineBtn.classList.toggle('visible', !!app.processedSnapshot);
+    if (dom.refineBtn) dom.refineBtn.classList.toggle('visible', !!app.processedSnapshot);
     renderRefineModal();
     renderSaveTemplateModal();
     renderCustomDrugModal();
@@ -2884,6 +2932,11 @@
       }
       const labels = { rx: 'Rx copied', chart: 'Chart note copied', pharmacy: 'Pharmacy note copied', all: 'All sections copied', emr: 'EMR JSON copied' };
       showToast(labels[kind] || 'Copied');
+      // First EMR copy without the extension is the moment the install pitch
+      // actually lands — not the login screen.
+      if (kind === 'emr' && !window.TOLExtension?.installed) {
+        window.TOLExtensionPrompt?.maybePrompt?.();
+      }
       // Add to recent Rx tray on any successful copy
       const ctx = app.processedSnapshot;
       if (ctx?.condition) {
@@ -2900,6 +2953,80 @@
         }
       }
     } catch { /* fallback: user can select text */ }
+  }
+
+  async function sendToEmr() {
+    const ctx = app.processedSnapshot;
+    if (!ctx || !app.buildEmrPayload) return;
+    const options = app.evaluateOptions(ctx);
+    const sel = selectBestOption(options, ctx);
+    if (!sel) return;
+    const payload = app.buildEmrPayload(sel, ctx);
+    const sent = await (window.TOLExtension?.send?.(payload) ?? Promise.resolve(false));
+    if (sent) {
+      showToast('Sent to the EMR extension — open your EMR tab to fill');
+      const med = app.getOptionMeta(sel.id);
+      addRecentRx({
+        condition: ctx.condition,
+        optionId: sel.id,
+        patientPresetId: ctx.patientPresetId || '',
+        medication: med ? text(med.labels) : sel.label,
+      });
+    } else {
+      await copyBlock('emr');
+      showToast('Extension unreachable — EMR JSON copied to clipboard instead');
+    }
+  }
+
+  // ─── Lookup-mode actions: finish the job from the formulary card ──
+
+  function openLookupMedInGuided(medId, conditionValue) {
+    const med = app.getOptionMeta(medId);
+    if (!med) return;
+    app.applyConditionToState(conditionValue || med.condition);
+    app.state.workflowMode = 'guided';
+    autoProcess();
+    app.selectedOptionId = medId;
+    addRecentCondition(app.state.condition);
+    render();
+  }
+
+  async function copyLookupRx(medId) {
+    const med = app.getOptionMeta(medId);
+    if (!med?.order) return;
+    const rx = [
+      med.order.medication,
+      text(med.order.sig),
+      `Disp: ${med.order.dispense}`,
+      `Duration: ${med.order.duration}`,
+      `Refills: ${med.order.refills ?? 0}`,
+    ].filter(Boolean).join('\n');
+    try {
+      await navigator.clipboard.writeText(rx);
+      showToast('Rx copied');
+    } catch { /* user can select text manually */ }
+  }
+
+  async function copyLookupEmr(medId, conditionValue) {
+    const med = app.getOptionMeta(medId);
+    if (!med?.order || !app.buildEmrPayload) return;
+    const ctx = { ...app.state, condition: conditionValue || med.condition };
+    const evaluated = app.evaluateOption(med, ctx);
+    const payload = app.buildEmrPayload(evaluated, ctx);
+    if (window.TOLExtension?.installed) {
+      const sent = await window.TOLExtension.send(payload);
+      if (sent) {
+        showToast('Sent to the EMR extension — open your EMR tab to fill');
+        return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      showToast('EMR JSON copied');
+      if (!window.TOLExtension?.installed) {
+        window.TOLExtensionPrompt?.maybePrompt?.();
+      }
+    } catch { /* clipboard unavailable */ }
   }
 
   function loadScenario(id) {
@@ -2935,6 +3062,12 @@
 
       const egfr = e.target.closest('[data-egfr-preset]');
       if (egfr) return applyEgfrPreset(egfr.dataset.egfrPreset);
+
+      const weightUnitBtn = e.target.closest('[data-weight-unit]');
+      if (weightUnitBtn) {
+        app._weightUnit = weightUnitBtn.dataset.weightUnit === 'lb' ? 'lb' : 'kg';
+        return render();
+      }
 
       const stepper = e.target.closest('[data-stepper]');
       if (stepper) {
@@ -2998,6 +3131,24 @@
         return render();
       }
 
+      const lookupUseBtn = e.target.closest('[data-lookup-use]');
+      if (lookupUseBtn) {
+        e.stopPropagation();
+        return openLookupMedInGuided(lookupUseBtn.dataset.lookupUse, lookupUseBtn.dataset.lookupCond);
+      }
+
+      const lookupCopyRxBtn = e.target.closest('[data-lookup-copy-rx]');
+      if (lookupCopyRxBtn) {
+        e.stopPropagation();
+        return copyLookupRx(lookupCopyRxBtn.dataset.lookupCopyRx);
+      }
+
+      const lookupCopyEmrBtn = e.target.closest('[data-lookup-copy-emr]');
+      if (lookupCopyEmrBtn) {
+        e.stopPropagation();
+        return copyLookupEmr(lookupCopyEmrBtn.dataset.lookupCopyEmr, lookupCopyEmrBtn.dataset.lookupCond);
+      }
+
       const formularyCondition = e.target.closest('[data-formulary-condition]');
       if (formularyCondition) {
         const conditionValue = formularyCondition.dataset.formularyCondition;
@@ -3024,6 +3175,9 @@
 
       const copyBtn = e.target.closest('[data-copy-block]');
       if (copyBtn) return copyBlock(copyBtn.dataset.copyBlock);
+
+      const sendEmrBtn = e.target.closest('[data-send-emr]');
+      if (sendEmrBtn) return sendToEmr();
 
       const excludeBtn = e.target.closest('[data-toggle-exclude]');
       if (excludeBtn) {
@@ -3103,12 +3257,12 @@
         const calcId = openScore.dataset.openScore;
         const calc = window.TOLScores?.getCalculator(calcId);
         app._activeScoreId = calcId;
-        app._scoreResult = null;
         app._selectedScoreAction = null;
         // Auto-fill from patient context and track which fields were auto-filled
         const autoVals = calc ? window.TOLScores.autoFillFromPatient(calc, app.state) : {};
         app._scoreValues = autoVals;
         app._scoreAutoFields = new Set(Object.keys(autoVals));
+        recomputeScore();
         return render();
       }
 
@@ -3134,7 +3288,7 @@
         const fid = scoreBool.dataset.scoreBool;
         if (!app._scoreValues) app._scoreValues = {};
         app._scoreValues[fid] = !app._scoreValues[fid];
-        app._scoreResult = null;
+        recomputeScore();
         return render();
       }
 
@@ -3144,7 +3298,7 @@
         const val = Number(scaleBtn.dataset.scoreScaleVal);
         if (!app._scoreValues) app._scoreValues = {};
         app._scoreValues[fid] = val;
-        app._scoreResult = null;
+        recomputeScore();
         return render();
       }
 
@@ -3213,14 +3367,16 @@
       if (scoreSelect) {
         if (!app._scoreValues) app._scoreValues = {};
         app._scoreValues[scoreSelect] = e.target.value;
-        app._scoreResult = null;
+        recomputeScore();
+        updateScoreResultInPlace();
         return;
       }
       const scoreNumber = e.target.dataset.scoreNumber;
       if (scoreNumber) {
         if (!app._scoreValues) app._scoreValues = {};
         app._scoreValues[scoreNumber] = e.target.value;
-        app._scoreResult = null;
+        recomputeScore();
+        updateScoreResultInPlace();
         return;
       }
       const numField = e.target.dataset.numberField;
@@ -3228,6 +3384,10 @@
         // Strip non-numeric chars (input is type="text" for cursor support)
         const raw = e.target.value.replace(/[^0-9]/g, '');
         let val = Number(raw || 0);
+        // Weight input displays in the chosen unit but state stays in kg
+        if (numField === 'weight' && app._weightUnit === 'lb') {
+          val = Math.round((val / 2.20462) * 10) / 10;
+        }
         app.state[numField] = Math.max(0, val);
         // Check if domain conflicts after age change
         if (numField === 'age' && app.state.domain && getExcludedDomains().has(app.state.domain)) {
@@ -3239,7 +3399,7 @@
         // Don't full-render while typing — just update output panels
         autoProcess();
         renderOutputPanel();
-        dom.refineBtn.classList.toggle('visible', !!app.processedSnapshot);
+        if (dom.refineBtn) dom.refineBtn.classList.toggle('visible', !!app.processedSnapshot);
         // Update validation styling in-place
         const stepperEl = e.target.closest('.stepper-input');
         const ageV = numField === 'age' ? getAgeValidation() : null;
@@ -3302,18 +3462,22 @@
       renderHelpModal();
     });
 
-    dom.aiTeaserBtn.addEventListener('click', () => {
-      app._aiOpen = true;
-      renderAiModal();
-    });
-
-    dom.aiModal.addEventListener('click', (e) => {
-      const close = e.target.closest('[data-ai-close]');
-      if (close || e.target === dom.aiModal) {
-        app._aiOpen = false;
+    if (dom.aiTeaserBtn) {
+      dom.aiTeaserBtn.addEventListener('click', () => {
+        app._aiOpen = true;
         renderAiModal();
-      }
-    });
+      });
+    }
+
+    if (dom.aiModal) {
+      dom.aiModal.addEventListener('click', (e) => {
+        const close = e.target.closest('[data-ai-close]');
+        if (close || e.target === dom.aiModal) {
+          app._aiOpen = false;
+          renderAiModal();
+        }
+      });
+    }
 
     // Help modal events
     dom.helpModal.addEventListener('click', (e) => {
@@ -3334,7 +3498,7 @@
     });
 
     // Fixed refine button
-    dom.refineBtn.addEventListener('click', () => {
+    if (dom.refineBtn) dom.refineBtn.addEventListener('click', () => {
       app._refineOpen = true;
       app._refineSubmitted = false;
       app._refinePrefs = {};
@@ -3342,7 +3506,7 @@
     });
 
     // Refine modal events
-    dom.refineModal.addEventListener('click', (e) => {
+    if (dom.refineModal) dom.refineModal.addEventListener('click', (e) => {
       const close = e.target.closest('[data-refine-close]');
       if (close) { app._refineOpen = false; renderRefineModal(); render(); return; }
 
@@ -3404,6 +3568,46 @@
       // Skip shortcut shortcuts when typing in an editable field (preserve normal typing)
       const targetTag = (e.target.tagName || '').toUpperCase();
       const isEditable = ['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag) || e.target.isContentEditable;
+
+      // Enter inside a search box selects the top result, so the whole
+      // search → draft loop works without touching the mouse.
+      if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        const searchField = e.target.dataset?.searchField;
+        if (searchField === 'guidedSearch' && e.target.value.trim()) {
+          const first = document.querySelector('.option-item[data-set-field="condition"], .option-item[data-set-guided-subtype]');
+          if (first) { e.preventDefault(); first.click(); return; }
+        }
+        if (searchField === 'lookupSearch' && e.target.value.trim()) {
+          const first = document.querySelector('[data-formulary-condition]');
+          if (first) { e.preventDefault(); first.click(); return; }
+        }
+      }
+
+      // Ctrl+Enter — hand the draft to the EMR (extension push, else JSON copy)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (app.processedSnapshot) {
+          e.preventDefault();
+          if (window.TOLExtension?.installed) { sendToEmr(); } else { copyBlock('emr'); }
+          return;
+        }
+      }
+
+      // Keyboard support on the alternatives list
+      const focusedAlt = document.activeElement?.classList?.contains('alt-row') ? document.activeElement : null;
+      if (focusedAlt && !isEditable) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          focusedAlt.click();
+          return;
+        }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          const rows = [...document.querySelectorAll('.alt-row')];
+          const idx = rows.indexOf(focusedAlt);
+          const next = rows[idx + (e.key === 'ArrowDown' ? 1 : -1)];
+          if (next) { e.preventDefault(); next.focus(); }
+          return;
+        }
+      }
 
       // 1-9 select alternative
       if (!e.ctrlKey && !e.metaKey && !e.altKey && !isEditable && /^[1-9]$/.test(e.key)) {

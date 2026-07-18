@@ -175,6 +175,40 @@
       font-size: 10px;
       line-height: 1.45;
     }
+    .field-list div.field-filled span:first-child::before {
+      content: "✓ ";
+      color: #1d8348;
+      font-weight: 800;
+    }
+    .field-list div.field-missed span:first-child::before {
+      content: "✗ ";
+      color: #c0392b;
+      font-weight: 800;
+    }
+    .field-list div.field-missed .val {
+      color: #c0392b;
+    }
+    .shortcut-hint {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #eef2f4;
+      color: #5e6b78;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    .shortcut-hint kbd {
+      padding: 1px 5px;
+      border: 1px solid #d7dfe5;
+      border-radius: 4px;
+      background: #fff;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .advanced-body > * {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -211,32 +245,34 @@
     <p id="pageHint" class="hint">Detecting active page...</p>
 
     <div id="statusBox" class="status-box status-empty">
-      No TOL Scribe payload loaded yet. Use <strong>Copy for EMR</strong> in the app or paste JSON below.
+      No draft loaded yet. Use <strong>Send to EMR</strong> or <strong>Copy for EMR</strong> in TOL Scribe.
     </div>
 
     <div id="fieldList" class="field-list" hidden></div>
 
-    <div class="button-row">
-      <button id="fillBtn" class="btn-primary" disabled>Fill Fields</button>
-      <button id="readBtn" class="btn-secondary">Read Clipboard</button>
+    <button id="fillBtn" class="btn-primary" style="width:100%; margin-bottom: 8px;" disabled>Fill Fields</button>
+
+    <div class="shortcut-hint">
+      Tip: press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd> on the EMR page to open the on-page TOL panel — useful when the browser toolbar is hidden.
     </div>
-
-    <button id="openPanelBtn" class="btn-secondary" style="width:100%; margin-bottom: 8px;">Open Page Panel</button>
-
-    <button id="teachBtn" class="btn-secondary" style="width:100%; margin-bottom: 12px;">Teach this EMR (record fields)</button>
 
     <div class="section">
       <details>
-        <summary>Paste JSON manually</summary>
-        <div style="margin-top:10px">
-          <textarea id="payloadInput" spellcheck="false" placeholder="Paste the TOL Scribe EMR payload here"></textarea>
-          <button id="loadBtn" class="btn-secondary" style="width:100%">Load JSON</button>
+        <summary>Advanced</summary>
+        <div class="advanced-body">
+          <button id="readBtn" class="btn-secondary" style="width:100%">Read Clipboard</button>
+          <button id="openPanelBtn" class="btn-secondary" style="width:100%">Open Page Panel</button>
+          <button id="teachBtn" class="btn-secondary" style="width:100%">Teach this EMR (record fields)</button>
+          <div>
+            <textarea id="payloadInput" spellcheck="false" placeholder="Paste the TOL Scribe EMR payload here"></textarea>
+            <button id="loadBtn" class="btn-secondary" style="width:100%">Load JSON</button>
+          </div>
         </div>
       </details>
     </div>
 
     <div class="footer">
-      If the browser toolbar is hidden in the EMR window, use the page panel or the keyboard shortcut to open TOL directly on the prescription page.
+      Fills the reviewed draft into the prescription form. Final review and signing always stay inside the EMR.
     </div>
   </div>
 

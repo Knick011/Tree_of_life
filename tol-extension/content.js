@@ -1601,12 +1601,33 @@ function updateInlineUi() {
     sub.textContent = `Payload target: ${EMR_DEFS[inlineState.cachedNormalized.defaultEmr]?.label || inlineState.cachedNormalized.defaultEmr}`;
     draft.appendChild(strong);
     draft.appendChild(sub);
+    // Per-field ✓/✗ report from the last fill so the doctor can see exactly
+    // what still needs manual entry before signing.
+    const report = inlineState.lastFillReport;
+    if (report && (report.filled.length || report.missing.length)) {
+      const list = document.createElement('div');
+      list.style.cssText = 'margin-top:8px;display:grid;gap:2px;font-size:11px;';
+      report.filled.forEach((name) => {
+        const row = document.createElement('div');
+        row.style.color = '#1d8348';
+        row.textContent = `✓ ${getFieldLabel(name)}`;
+        list.appendChild(row);
+      });
+      report.missing.forEach((name) => {
+        const row = document.createElement('div');
+        row.style.color = '#c0392b';
+        row.style.fontWeight = '700';
+        row.textContent = `✗ ${getFieldLabel(name)} — complete in the EMR`;
+        list.appendChild(row);
+      });
+      draft.appendChild(list);
+    }
   } else {
     draft.replaceChildren();
     const strong = document.createElement('strong');
     strong.textContent = 'No draft loaded';
     const sub = document.createElement('div');
-    sub.textContent = 'Use Copy for EMR in TOL Scribe, then click Read clipboard here.';
+    sub.textContent = 'Use Send to EMR in TOL Scribe, or Copy for EMR and click Read clipboard here.';
     draft.appendChild(strong);
     draft.appendChild(sub);
   }
@@ -1630,6 +1651,7 @@ function cachePayload(payload, normalized, preferredEmr = '') {
   inlineState.cachedPayload = payload || null;
   inlineState.cachedNormalized = normalized || null;
   inlineState.oscarCandidateChoice = null;
+  inlineState.lastFillReport = null;
   if (preferredEmr) inlineState.preferredEmr = preferredEmr;
   updateInlineUi();
 }
@@ -1895,6 +1917,7 @@ async function fillOscarPrescription(message, progress, runId) {
   const result = await fillOscarRow(rowId, adapterFields, progress, runId);
   return {
     success: result.success,
+    filled: result.filled,
     filledCount: result.filled.length,
     missing: result.missing,
     detectedEmr: 'oscar',
@@ -2105,6 +2128,7 @@ async function fillGenericPrescription(message, requestedEmr, progress, runId) {
 
   return {
     success: filled.length > 0 && missingRequired.length === 0,
+    filled,
     filledCount: filled.length,
     missing: [...missingRequired, ...missing],
     failureDetails,
@@ -2251,6 +2275,10 @@ async function fillPrescription(message) {
         : await fillGenericPrescription({ ...message, emrType: effectiveEmr }, effectiveEmr, progress, runId);
 
     ensureActiveFillRun(runId);
+    inlineState.lastFillReport = {
+      filled: result.filled || [],
+      missing: result.missing || [],
+    };
     if (result.success) {
       inlineState.oscarCandidateChoice = null;
       inlineState.lastMessage = result.notes?.length ? `${result.message} ${result.notes.join(' · ')}` : result.message;
@@ -2308,14 +2336,41 @@ async function initInlineState() {
   }
   inlineState.detected = detectEmr();
   try {
-    const stored = await storageGet([STORAGE_KEY, DRUG_MAPPING_STORAGE_KEY]);
+    const stored = await storageGet([STORAGE_KEY, DRUG_MAPPING_STORAGE_KEY, 'tolPushedPayload', 'tolPushedAt']);
     if (stored?.[STORAGE_KEY]) inlineState.preferredEmr = stored[STORAGE_KEY];
     inlineState.drugMappings = stored?.[DRUG_MAPPING_STORAGE_KEY] || {};
+    // Draft pushed from the web app ("Send to EMR") — pre-load it so the
+    // panel is ready without any clipboard involvement.
+    const pushedFresh = stored?.tolPushedPayload && Date.now() - (stored.tolPushedAt || 0) < 4 * 60 * 60 * 1000;
+    if (pushedFresh && !inlineState.cachedPayload) {
+      const normalized = normalizePayload(stored.tolPushedPayload, inlineState.preferredEmr === 'auto' ? '' : inlineState.preferredEmr);
+      if (normalized) {
+        inlineState.cachedPayload = stored.tolPushedPayload;
+        inlineState.cachedNormalized = normalized;
+        inlineState.lastMessage = 'Draft received from TOL Scribe. Click Fill to apply.';
+      }
+    }
   } catch {
     // Ignore storage failures.
   }
   ensureInlineUi();
   updateInlineUi();
+
+  // Live push while this EMR tab is open: pre-load and surface the panel.
+  try {
+    ext.storage?.onChanged?.addListener((changes, area) => {
+      if (area !== 'local' || !changes.tolPushedPayload?.newValue) return;
+      if (isTolScribeSurface()) return;
+      const payload = changes.tolPushedPayload.newValue;
+      const normalized = normalizePayload(payload, inlineState.preferredEmr === 'auto' ? '' : inlineState.preferredEmr);
+      if (!normalized) return;
+      cachePayload(payload, normalized, normalized.defaultEmr);
+      inlineState.lastMessage = 'Draft received from TOL Scribe. Click Fill to apply.';
+      inlineState.panelOpen = true;
+      updateInlineUi();
+      showToast('TOL draft received. Click Fill or press Ctrl+Shift+Y.');
+    });
+  } catch { /* storage events unavailable */ }
 
   let refreshTimer = null;
   const refreshDetection = () => {

@@ -5,15 +5,34 @@ ext.runtime.onInstalled.addListener(() => {
 });
 
 ext.runtime.onMessageExternal?.addListener((message, sender, sendResponse) => {
-  if (message?.source !== 'tol-scribe-web' || message?.action !== 'ping') {
+  if (message?.source !== 'tol-scribe-web') {
     return false;
   }
 
-  sendResponse({
-    installed: true,
-    name: 'TOL Scribe EMR Filler',
-    version: ext.runtime.getManifest?.().version ?? null,
-  });
+  if (message.action === 'ping') {
+    sendResponse({
+      installed: true,
+      name: 'TOL Scribe EMR Filler',
+      version: ext.runtime.getManifest?.().version ?? null,
+    });
+    return false;
+  }
+
+  // Direct payload push from the web app ("Send to EMR"): store it so the
+  // popup and the inline page panel are pre-loaded without clipboard hops.
+  if (message.action === 'payload' && message.payload?._tol === true) {
+    ext.storage.local.set(
+      {
+        tolPushedPayload: message.payload,
+        tolPushedAt: Date.now(),
+      },
+      () => {
+        sendResponse({ ok: true });
+      },
+    );
+    return true; // keep the message channel open for the async response
+  }
+
   return false;
 });
 

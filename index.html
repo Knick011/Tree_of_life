@@ -35,7 +35,7 @@
         <span>&bull;</span>
         <a href="extension.html">Download extension</a>
       </div>
-      <p class="login-footer">For authorized clinicians only. Not for clinical use.</p>
+      <p class="login-footer">Pilot access for authorized clinicians. All drafts require clinician review before use.</p>
     </div>
   </div>
 
@@ -81,8 +81,8 @@
           <p class="extension-install-kicker">Recommended setup</p>
           <h2 id="extensionInstallTitle">Install the EMR filler extension</h2>
           <p>
-            TOL Scribe works best with the free browser extension. It moves the reviewed prescription draft
-            into supported EMRs so the clinician can finish review and signing inside the chart.
+            The free extension takes the draft you just prepared and fills it straight into supported
+            EMR prescription forms — no re-typing. Final review and signing stay inside the chart.
           </p>
         </div>
         <div class="extension-install-actions">
@@ -107,23 +107,13 @@
       <!-- Right column: Output -->
       <section class="col-output" id="colOutput">
         <div class="col-inner" id="outputPanel"></div>
-        <button id="refineBtn" class="refine-fab" type="button" aria-label="Refine">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
-        </button>
       </section>
     </main>
 
-    <button id="aiTeaserBtn" class="ai-teaser-fab" type="button" aria-label="Open AI preview">
-      <span class="ai-teaser-label">AI</span>
-    </button>
-
-    <div id="aiModal" class="ai-overlay" hidden></div>
+    <button id="jumpToDraftBtn" class="jump-to-draft" type="button">View draft ↓</button>
 
     <!-- Help modal -->
     <div id="helpModal" class="help-overlay" hidden></div>
-
-    <!-- Refine modal -->
-    <div id="refineModal" class="refine-overlay" hidden></div>
 
     <!-- Demo walkthrough elements -->
     <div id="demoSpotlight" class="demo-spotlight" hidden></div>
@@ -136,25 +126,38 @@
 
   <script src="app-config.js"></script>
   <script src="app-data.js"></script>
-  <script src="app-catalog-a.js"></script>
-  <script src="app-catalog-b.js"></script>
-  <script src="app-catalog-c.js"></script>
-  <script src="app-catalog-d.js"></script>
-  <script src="app-catalog-e.js"></script>
-  <script src="app-catalog-f.js"></script>
-  <script src="app-catalog-g.js"></script>
-  <script src="app-catalog-h.js"></script>
-  <script src="app-catalog-i.js"></script>
-  <script src="app-catalog-j.js"></script>
-  <script src="app-catalog-k.js"></script>
-  <script src="app-catalog-l.js"></script>
-  <script src="app-catalog-peds.js"></script>
-  <script src="app-catalog-arbs-sglt2.js"></script>
-  <script src="app-scores.js"></script>
   <script src="app-custom-meds.js"></script>
   <script src="app-interactions.js"></script>
   <script src="app-logic.js"></script>
   <script src="app-ui.js"></script>
+
+  <!-- Catalog + scores data (~1 MB) loads after first paint; the UI re-renders
+       once everything has arrived. app.catalog reads window.TOLCatalog live. -->
+  <script>
+  (() => {
+    const files = [
+      'app-catalog-a.js', 'app-catalog-b.js', 'app-catalog-c.js', 'app-catalog-d.js',
+      'app-catalog-e.js', 'app-catalog-f.js', 'app-catalog-g.js', 'app-catalog-h.js',
+      'app-catalog-i.js', 'app-catalog-j.js', 'app-catalog-k.js', 'app-catalog-l.js',
+      'app-catalog-peds.js', 'app-catalog-arbs-sglt2.js', 'app-scores.js',
+    ];
+    let remaining = files.length;
+    const done = () => {
+      remaining -= 1;
+      if (remaining === 0 && window.TOLUI?.render) {
+        window.TOLUI.render();
+      }
+    };
+    files.forEach((src) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = true;
+      s.onload = done;
+      s.onerror = done;
+      document.body.appendChild(s);
+    });
+  })();
+  </script>
 
   <!-- Auth gate — runs after all scripts are loaded -->
   <script>
@@ -244,6 +247,55 @@
       });
     }
 
+    // Bridge for the app UI: direct payload push into the extension so the
+    // doctor never has to carry JSON through the clipboard.
+    window.TOLExtension = {
+      installed: false,
+      send(payload) {
+        return new Promise((resolve) => {
+          const runtime = window.chrome?.runtime;
+          if (!runtime?.sendMessage) {
+            resolve(false);
+            return;
+          }
+          let settled = false;
+          const finish = (value) => {
+            if (settled) return;
+            settled = true;
+            resolve(value);
+          };
+          const timer = setTimeout(() => finish(false), 1500);
+          try {
+            runtime.sendMessage(
+              EXTENSION_ID,
+              { source: 'tol-scribe-web', action: 'payload', payload },
+              (response) => {
+                clearTimeout(timer);
+                finish(!runtime.lastError && response?.ok === true);
+              },
+            );
+          } catch {
+            clearTimeout(timer);
+            finish(false);
+          }
+        });
+      },
+    };
+
+    async function refreshExtensionInstalled() {
+      window.TOLExtension.installed = await pingExtension();
+      return window.TOLExtension.installed;
+    }
+
+    // The app calls this at the moment the user first needs the extension
+    // (an EMR copy without it installed) — not at login.
+    window.TOLExtensionPrompt = {
+      maybePrompt() {
+        if (shell.hidden) return;
+        showExtensionPrompt();
+      },
+    };
+
     function hideExtensionPrompt({ remember = false } = {}) {
       if (remember) {
         sessionStorage.setItem(EXTENSION_PROMPT_SESSION_KEY, '1');
@@ -259,18 +311,17 @@
       extensionStoreBtn.focus();
     }
 
-    async function maybePromptForExtension() {
+    async function syncExtensionState() {
       const token = ++extensionCheckToken;
-      const installed = await pingExtension();
+      const installed = await refreshExtensionInstalled();
       if (token !== extensionCheckToken || shell.hidden) return;
 
       if (installed) {
         hideExtensionPrompt();
         sessionStorage.removeItem(EXTENSION_PROMPT_SESSION_KEY);
-        return;
       }
-
-      showExtensionPrompt();
+      // Re-render so EMR buttons reflect direct-send availability
+      if (window.TOLUI?.render) window.TOLUI.render();
     }
 
     function ensureUiReady() {
@@ -289,7 +340,7 @@
 
       if (isAuthenticated) {
         ensureUiReady();
-        window.setTimeout(maybePromptForExtension, 250);
+        window.setTimeout(syncExtensionState, 250);
       } else {
         extensionCheckToken += 1;
         hideExtensionPrompt();
@@ -348,6 +399,14 @@
         hideExtensionPrompt({ remember: true });
       }
     });
+
+    // Stacked-layout helper: jump straight to the prescription draft
+    const jumpBtn = document.getElementById('jumpToDraftBtn');
+    if (jumpBtn) {
+      jumpBtn.addEventListener('click', () => {
+        document.getElementById('colOutput')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
 
     window.addEventListener('storage', (e) => {
       if (e.key !== SESSION_KEY) return;
