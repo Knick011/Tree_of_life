@@ -504,7 +504,7 @@ async function clearSearchFieldLikeUser(element, runId) {
 async function typeSearchFieldLikeUser(element, value, runId, options = {}) {
   if (!element || !value) return false;
   const text = String(value ?? '');
-  const delayMs = options.delayMs ?? 18;
+  const delayMs = options.delayMs ?? 10;
   await clearSearchFieldLikeUser(element, runId);
 
   for (const char of text) {
@@ -1694,12 +1694,15 @@ async function addOscarDrugRow(drugName, progress, runId) {
     const initialIds = new Set(getOscarRowIds());
     await setOscarSearchValue(query, runId);
 
+    // 1200ms per query keeps real AJAX autocompletes in reach while cutting
+    // the worst case (many non-matching queries) roughly in half — a doctor
+    // should not wait 15s to be offered candidate matches.
     const rankedOptions = await waitFor(() => {
       const options = getOscarAutocompleteOptions();
       if (!options.length) return null;
       const ranked = rankSearchOptions(searchField, drugName, options, getStoredDrugMapping('oscar', drugName));
       return ranked.length ? ranked : null;
-    }, 2200, 120, () => isActiveFillRun(runId));
+    }, 1200, 120, () => isActiveFillRun(runId));
 
     if (!rankedOptions?.length) continue;
 

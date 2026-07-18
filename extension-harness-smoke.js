@@ -1,5 +1,6 @@
 const { execFileSync } = require('child_process');
 const http = require('http');
+const os = require('os');
 const path = require('path');
 const fs = require('fs');
 const { chromium } = require('playwright');
@@ -202,7 +203,7 @@ async function testPsSuiteFill(context) {
   await page.locator('#__tol_inline_read').click();
   await page.locator('#__tol_inline_fill').click();
   try {
-    await page.waitForFunction(() => (document.querySelector('#txtQuantity')?.value || '').length > 0, null, { timeout: 8000 });
+    await page.waitForFunction(() => (document.querySelector('#txtQuantity')?.value || '').length > 0, null, { timeout: 15000 });
   } catch (error) {
     const debug = await page.evaluate(() => ({
       status: document.querySelector('#__tol_inline_status')?.textContent || '',
@@ -248,7 +249,9 @@ async function testOscarFill(context) {
   await openInlinePanel(page);
   await page.locator('#__tol_inline_read').click();
   await page.locator('#__tol_inline_fill').click();
-  await page.waitForFunction(() => (document.querySelector('#rxText input[id^="quantity_"]')?.value || '').length > 0, null, { timeout: 8000 });
+  // Fresh profile has no learned drug mapping, so the adapter walks several
+  // search queries (~1.2s each) before the matching one — allow for that.
+  await page.waitForFunction(() => (document.querySelector('#rxText input[id^="quantity_"]')?.value || '').length > 0, null, { timeout: 20000 });
 
   const values = await page.evaluate(() => {
     const instruction = document.querySelector('#rxText textarea[id^="instructions_"]');
@@ -288,13 +291,16 @@ async function testOscarCandidateChoice(context) {
   await openInlinePanel(page);
   await page.locator('#__tol_inline_read').click();
   await page.locator('#__tol_inline_fill').click();
-  await page.locator('.tol-inline-candidate-btn').first().waitFor({ state: 'visible', timeout: 10000 });
+  // "Dexamethasone 0.6 mg tablet" matches nothing until the bare-ingredient
+  // query, so the adapter burns through five searches before offering
+  // candidates — give it room.
+  await page.locator('.tol-inline-candidate-btn').first().waitFor({ state: 'visible', timeout: 25000 });
   const candidateText = await page.locator('.tol-inline-candidate-btn').first().textContent();
   if (!/DEXAMETHASONE/i.test(candidateText || '')) {
     throw new Error(`Expected clickable dexamethasone candidate, got: ${candidateText}`);
   }
   await page.locator('.tol-inline-candidate-btn').first().click();
-  await page.waitForFunction(() => (document.querySelector('#rxText input[id^="quantity_"]')?.value || '') === '5 tablets', null, { timeout: 10000 });
+  await page.waitForFunction(() => (document.querySelector('#rxText input[id^="quantity_"]')?.value || '') === '5 tablets', null, { timeout: 20000 });
 
   const values = await page.evaluate(() => ({
     drug: document.querySelector('#rxText input[id^="drugName_"]')?.value || '',
@@ -309,6 +315,38 @@ async function testOscarCandidateChoice(context) {
   await page.close();
 }
 
+// After the clinician picked "DEXAMETHASONE 0.5MG TABLET" for the 0.6 mg
+// draft in the previous test, the extension remembers the mapping. The same
+// payload must now fill silently — no candidate prompt on repeat use.
+async function testOscarLearnedMapping(context) {
+  const page = await context.newPage();
+  await page.goto(`${BASE_URL}/emr-harness/oscar-rx.html`, { waitUntil: 'domcontentloaded' });
+  await page.locator('#__tol_inline_fab').waitFor({ state: 'visible', timeout: 5000 });
+  await writeClipboard(page, createPayload('oscar', {
+    medicationDisplay: 'Dexamethasone 0.6 mg tablet',
+    dispense: { raw: '5 tablets', amount: '5', unit: 'tablets' },
+    unitType: 'tablet',
+    sig: 'Take 1 tablet by mouth once daily',
+    frequencyCode: 'OD',
+    duration: '5 days',
+  }));
+  await openInlinePanel(page);
+  await page.locator('#__tol_inline_read').click();
+  await page.locator('#__tol_inline_fill').click();
+  await page.waitForFunction(() => (document.querySelector('#rxText input[id^="quantity_"]')?.value || '') === '5 tablets', null, { timeout: 15000 });
+
+  const values = await page.evaluate(() => ({
+    drug: document.querySelector('#rxText input[id^="drugName_"]')?.value || '',
+    quantity: document.querySelector('#rxText input[id^="quantity_"]')?.value || '',
+    candidatesVisible: !!document.querySelector('.tol-inline-candidate-btn'),
+  }));
+
+  if (!/DEXAMETHASONE 0\.5MG/i.test(values.drug) || values.quantity !== '5 tablets' || values.candidatesVisible) {
+    throw new Error(`OSCAR learned-mapping fill failed: ${JSON.stringify(values)}`);
+  }
+  await page.close();
+}
+
 async function testNextGenFill(context) {
   const page = await context.newPage();
   await page.goto(`${BASE_URL}/emr-harness/nextgen-rx.html`, { waitUntil: 'domcontentloaded' });
@@ -317,7 +355,7 @@ async function testNextGenFill(context) {
   await openInlinePanel(page);
   await page.locator('#__tol_inline_read').click();
   await page.locator('#__tol_inline_fill').click();
-  await page.waitForFunction(() => (document.querySelector('#quantity')?.value || '').length > 0, null, { timeout: 8000 });
+  await page.waitForFunction(() => (document.querySelector('#quantity')?.value || '').length > 0, null, { timeout: 15000 });
 
   const values = await page.evaluate(() => ({
     medication: document.querySelector('#medication')?.value || '',
@@ -337,10 +375,16 @@ async function main() {
   buildExtension();
   const server = await startServer();
 
+  // A fresh profile per run keeps the suite hermetic: the extension remembers
+  // clinician drug-mapping choices in chrome.storage.local, and a reused
+  // profile would carry those learnings into the next run and change which
+  // code path executes (auto-select instead of candidate prompt).
+  const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tol-smoke-profile-'));
+
   let context;
   try {
     await waitForServer(`${BASE_URL}/index.html`);
-    context = await chromium.launchPersistentContext(path.join(ROOT, '.playwright-tol-profile'), {
+    context = await chromium.launchPersistentContext(profileDir, {
       headless: false,
       args: [
         `--disable-extensions-except=${CHROMIUM_EXTENSION_DIR}`,
@@ -353,12 +397,14 @@ async function main() {
     await testPsSuiteFill(context);
     await testOscarFill(context);
     await testOscarCandidateChoice(context);
+    await testOscarLearnedMapping(context);
     await testNextGenFill(context);
 
     console.log('TOL extension harness smoke test passed.');
   } finally {
     await context?.close().catch(() => {});
     await new Promise((resolve) => server.close(resolve));
+    fs.rmSync(profileDir, { recursive: true, force: true });
   }
 }
 

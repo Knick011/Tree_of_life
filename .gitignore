@@ -5,3 +5,5 @@ node_modules/
 .idea/
 Thumbs.db
 .build-extension/
+.playwright-auto-profile/
+.playwright-tol-profile/
